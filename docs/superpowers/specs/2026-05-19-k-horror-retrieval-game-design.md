@@ -1,324 +1,324 @@
-# K-Horror Retrieval Game Design
+# K-호러 회수 생존 게임 기획서
 
-## Summary
+## 개요
 
-This game is a K-horror reinterpretation of the Lethal Company-style retrieval survival loop. The player works for a suspicious cultural artifact recovery company, enters Korean-themed haunted locations at night, collects valuable artifacts to meet a quota, and escapes before folklore threats make the site too dangerous.
+이 게임은 `Lethal Company`류의 회수 생존 루프를 한국형 호러 테마로 재해석한 게임이다. 플레이어는 수상한 문화재 회수업체의 하청 직원으로, 밤마다 한국적 장소에 들어가 할당량을 채울 만큼의 물건을 회수하고, 귀신과 요괴, 민속 괴이가 장소를 장악하기 전에 탈출해야 한다.
 
-The core fantasy is not generic treasure hunting. It is the feeling of stepping into a forbidden Korean place, taking objects that should not be disturbed, and hearing the building react.
+핵심 판타지는 단순한 보물찾기가 아니다. 들어가면 안 되는 한국적 공간에 발을 들이고, 건드리면 안 되는 물건을 챙기며, 집과 장소가 그 행동에 반응하는 감각이다.
 
-## One-Line Pitch
+## 한 줄 소개
 
-A suspicious artifact recovery contractor enters hanok estates, old academies, temples, and ritual sites at night to meet a company quota by stealing or recovering cultural objects while Korean ghosts, yokai-like beings, and folklore anomalies awaken around them.
+수상한 문화재 회수업체의 하청 직원이 밤마다 한옥 고택, 폐서원, 암자, 굿당 같은 한국적 장소에 들어가 문화재급 물건으로 할당량을 채우고, 금기와 민속 괴이를 피해 탈출하는 K-호러 회수 생존 게임.
 
-## Design Goals
+## 디자인 목표
 
-- Preserve the Lethal Company-like loop: accept quota, enter dangerous site, collect items, decide whether to push deeper, escape, and settle value.
-- Give the game a clear K-theme through locations, artifacts, taboos, sound, and monster design.
-- Make greed the main decision pressure: valuable artifacts are deeper, heavier, and more spiritually dangerous.
-- Use sound as a gameplay signal, not just atmosphere.
-- Start with a single-player MVP that can later expand into cooperative multiplayer.
+- `Lethal Company`류의 기본 루프를 유지한다: 할당량 수락, 위험 지역 진입, 물건 회수, 더 깊이 들어갈지 판단, 탈출, 정산.
+- 장소, 회수품, 금기, 사운드, 몬스터 디자인을 통해 K-테마를 명확하게 만든다.
+- 욕심을 핵심 판단 압박으로 둔다. 비싼 물건일수록 더 깊고, 더 무겁고, 더 위험해야 한다.
+- 사운드를 단순 분위기가 아니라 플레이 판단에 쓰이는 신호로 만든다.
+- 첫 MVP는 싱글플레이로 제작하고, 이후 협동 멀티플레이로 확장할 수 있게 설계한다.
 
-## Player Role
+## 플레이어 역할
 
-The player is a low-level contractor for a suspicious cultural artifact recovery company. The company claims it is preserving or recovering displaced artifacts, but its methods are ambiguous and often illegal. It sends the player into abandoned or sealed Korean sites at night with a required recovery quota.
+플레이어는 수상한 문화재 회수업체의 말단 하청 직원이다. 회사는 자신들이 유실 문화재를 보존하거나 회수한다고 주장하지만, 실제 임무 방식은 법적, 윤리적으로 의심스럽다. 회사는 플레이어에게 밤중에 버려졌거나 봉쇄된 한국적 장소에 들어가 정해진 회수 할당량을 채우라고 지시한다.
 
-This role supports:
+이 역할은 다음 요소를 자연스럽게 지원한다.
 
-- A quota system.
-- Company messages and mission briefings.
-- Repeated visits to different themed maps.
-- Moral unease around disturbing cultural objects.
-- A future multiplayer crew structure.
+- 할당량 시스템.
+- 회사 메시지와 임무 브리핑.
+- 서로 다른 테마 맵으로 반복 출근하는 구조.
+- 문화재를 건드리는 데서 오는 불편함과 죄책감.
+- 향후 멀티플레이 팀 구조.
 
-## Core Loop
+## 핵심 루프
 
-1. The company assigns a quota and a target site.
-2. The player arrives outside the site with limited equipment.
-3. The player enters, explores, and identifies recoverable artifacts.
-4. Picking up artifacts raises value and risk.
-5. Breaking site taboos raises danger faster.
-6. Folklore threats escalate through sound, sightings, route disruption, and pursuit.
-7. The player chooses whether to leave safely or push deeper for higher-value artifacts.
-8. Escaped artifacts are sold or submitted toward the quota.
-9. Failure creates debt, penalties, or pressure for the next run.
+1. 회사가 할당량과 목표 장소를 지정한다.
+2. 플레이어는 제한된 장비를 들고 장소 외부에 도착한다.
+3. 플레이어는 내부에 진입해 회수 가능한 물건을 탐색한다.
+4. 물건을 집을수록 회수 가치와 위험이 함께 오른다.
+5. 장소의 금기를 어기면 위험이 더 빠르게 상승한다.
+6. 귀신, 요괴, 민속 괴이는 소리, 목격, 길 차단, 추격으로 단계적으로 압박한다.
+7. 플레이어는 안전하게 나갈지, 더 비싼 물건을 위해 깊이 들어갈지 결정한다.
+8. 탈출에 성공한 물건은 할당량 정산에 반영된다.
+9. 실패하면 빚, 페널티, 다음 임무 압박이 발생한다.
 
-## MVP Scope
+## MVP 범위
 
-The first MVP should prove the retrieval loop, greed pressure, Korean horror identity, and sound-driven threat escalation.
+첫 MVP는 회수 루프, 욕심 압박, 한국형 호러 정체성, 사운드 기반 위협 상승이 제대로 작동하는지 검증하는 데 집중한다.
 
-Included in MVP:
+MVP에 포함할 요소:
 
-- One map: Jongga Estate.
-- One main threat: Mourning-Clothes Apparition.
-- One secondary anomaly: Will-o'-the-wisp style spirit fire.
-- A small artifact set with value, weight, and resentment impact.
-- A resentment meter that escalates the haunting.
-- Basic quota and extraction flow.
-- Sound events tied to resentment stages.
+- 첫 맵: 종가 고택.
+- 메인 위협 1종: 상복 귀신.
+- 보조 괴이 1종: 혼불.
+- 가치, 무게, 원한 상승량을 가진 소규모 회수품 세트.
+- 괴이 현상을 단계적으로 강화하는 원한 수치.
+- 기본 할당량과 탈출 흐름.
+- 원한 단계에 따라 변화하는 사운드 이벤트.
 
-Deferred:
+MVP에서 제외할 요소:
 
-- Online multiplayer.
-- Large procedural generation.
-- Full economy and equipment shop.
-- Multiple playable maps.
-- Large monster roster.
-- Complex narrative branching.
+- 온라인 멀티플레이.
+- 대형 절차 생성 맵.
+- 완성형 경제 시스템과 장비 상점.
+- 여러 개의 플레이 가능 맵.
+- 대규모 몬스터 로스터.
+- 복잡한 분기형 서사.
 
-## Map 1: Jongga Estate
+## 첫 맵: 종가 고택
 
-### Theme
+### 테마
 
-The first map is an old clan estate. It should feel like a place where family rites, inheritance, and ancestral rules still matter. The horror comes from entering a house that is not empty, even though no living person should be there.
+첫 맵은 오래된 종가 고택이다. 제사, 가문, 상속, 조상에 대한 규칙이 아직 살아 있는 장소처럼 느껴져야 한다. 공포는 비어 있어야 할 집에 들어갔는데, 그 집이 비어 있지 않다는 감각에서 나온다.
 
-### Scale
+### 규모
 
-The map should feel comparable to a normal Lethal Company indoor facility in traversal commitment: large enough that reaching the deepest valuable area and returning is stressful, but small enough to learn after several runs.
+맵은 일반적인 `Lethal Company` 실내 시설 정도의 체감 규모를 목표로 한다. 가장 깊은 고가치 구역까지 들어갔다가 돌아오는 일이 충분히 부담스러워야 하지만, 여러 번 플레이하면 구조를 학습할 수 있을 정도의 크기여야 한다.
 
-Target feel:
+목표 체감:
 
-- Entry to deepest area should take long enough that retreat is a meaningful decision.
-- Returning with heavy items should be slower and riskier.
-- Some routes should become less reliable after the first artifact is taken.
-- The player should feel safe near the entrance, uncertain in the middle, and exposed in the deepest rooms.
+- 입구에서 가장 깊은 구역까지 가는 시간이 퇴각 판단을 만들 만큼 길어야 한다.
+- 무거운 물건을 들고 돌아올 때 이동이 느려지고 위험해져야 한다.
+- 첫 물건을 집은 뒤 일부 경로가 덜 안정적으로 변해야 한다.
+- 플레이어는 입구 근처에서는 비교적 안전하고, 중간 구역에서는 불안하며, 가장 깊은 방에서는 노출됐다고 느껴야 한다.
 
-### Areas
+### 구역
 
-- Front Gate: extraction-adjacent area, initial safety, vehicle return point.
-- Outer Yard: open space where distant figures and sound cues can be staged.
-- Sarangchae: early exploration zone with low-value objects and signs of prior human presence.
-- Anchae: deeper residential zone with medium-value artifacts and stronger haunting.
-- Storage Building: cramped item-dense area with noise hazards.
-- Rear Yard: transition space where navigation can become unreliable.
-- Shrine Room: highest-value and highest-risk zone, tied to ancestral rites and taboos.
+- 대문: 탈출 지점과 가까운 시작 구역. 초기 안전지대와 차량 복귀 지점.
+- 바깥마당: 멀리 보이는 형상과 사운드 큐를 배치하기 좋은 열린 공간.
+- 사랑채: 낮은 가치의 물건과 이전 사람 흔적이 있는 초반 탐색 구역.
+- 안채: 중간 가치의 물건과 강한 괴이 현상이 있는 깊은 주거 구역.
+- 곳간: 물건이 많지만 좁고 소음 위험이 큰 구역.
+- 뒤뜰: 동선이 헷갈리거나 변하기 시작하는 전환 구역.
+- 사당: 가장 비싼 물건과 가장 큰 위험이 있는 구역. 제사와 금기의 중심.
 
-## First-Run Pacing
+## 첫 플레이 흐름
 
-Before the first artifact is collected, the site is already dark and uneasy, but the threat appears human rather than supernatural. The player may see a person in mourning clothes standing in the yard, passing behind a paper door, or watching from the far side of a room. It should be unclear whether this is a caretaker, another intruder, or someone from a funeral.
+첫 물건을 회수하기 전부터 장소는 어둡고 스산하다. 다만 이때 위협은 초자연적 존재라기보다 사람처럼 보여야 한다. 플레이어는 마당에 서 있는 상복 입은 사람, 한지문 뒤로 지나가는 그림자, 방 끝에서 지켜보는 형상을 볼 수 있다. 이 존재가 관리인인지, 다른 침입자인지, 장례와 관련된 사람인지 분명하지 않아야 한다.
 
-After the first artifact is collected, the site reacts. Doors move, sound cues change, the mourning figure becomes impossible to explain, and the resentment system activates.
+첫 물건을 집는 순간 장소가 반응한다. 문이 움직이고, 사운드 큐가 바뀌며, 상복 입은 형상은 더 이상 사람으로 설명하기 어려워진다. 이때부터 원한 수치가 활성화된다.
 
-This creates a clean genre turn:
+이 흐름은 명확한 장르 전환을 만든다.
 
-- Before first pickup: "Someone may be here."
-- After first pickup: "Something was waiting for me to take that."
+- 첫 회수 전: "여기 누가 있는 것 같다."
+- 첫 회수 후: "내가 가져가길 기다리고 있던 무언가가 있다."
 
-## Artifacts
+## 회수품
 
-Artifacts should feel culturally specific and physically grounded.
+회수품은 한국적이고 물리적으로 납득 가능한 물건이어야 한다.
 
-Examples:
+예시:
 
-- Brass ritual bowl.
-- Old porcelain vessel.
-- Ancestral tablet case.
-- Folded funeral cloth.
-- Calligraphy scroll.
-- Clan genealogy book.
-- Ritual candlestick.
-- Lacquered chest.
-- Old norigae or hair ornament.
-- Shrine bell.
+- 놋 제기.
+- 오래된 백자.
+- 신주함.
+- 접힌 상복 천.
+- 서예 족자.
+- 족보.
+- 제사용 촛대.
+- 나전칠기 함.
+- 오래된 노리개나 비녀.
+- 사당 방울.
 
-Each artifact should have:
+각 회수품은 다음 정보를 가진다.
 
-- Value.
-- Weight or carry burden.
-- Resentment gain.
-- Optional taboo tag, such as shrine item, funeral item, ancestor item, or document item.
+- 가치.
+- 무게 또는 운반 부담.
+- 원한 상승량.
+- 선택적 금기 태그: 사당 물건, 상례 물건, 조상 물건, 문서 물건 등.
 
-## Taboos
+## 금기
 
-Taboos are rules the site seems to enforce. They should be simple enough for players to learn through signs, company warnings, and consequences.
+금기는 장소가 강제하는 규칙이다. 플레이어가 표식, 회사 경고, 결과를 통해 학습할 수 있을 만큼 단순해야 한다.
 
-Initial Jongga Estate taboos:
+종가 고택의 초기 금기:
 
-- Do not disturb shrine objects.
-- Do not move ritual vessels out of order.
-- Do not step over marked thresholds.
-- Do not extinguish shrine candles.
-- Do not read certain names aloud or inspect forbidden records too long.
+- 사당 물건을 함부로 건드리지 말 것.
+- 제기 위치를 어지럽히지 말 것.
+- 표시된 문턱을 밟거나 넘지 말 것.
+- 사당 촛불을 끄지 말 것.
+- 특정 이름을 소리 내 읽거나 금지된 기록을 오래 들여다보지 말 것.
 
-Taboos are not instant fail states. They increase resentment and may trigger local sound or visual events.
+금기는 즉시 실패 조건이 아니다. 금기를 어기면 원한 수치가 오르고, 해당 위치에서 사운드나 시각 이벤트가 발생할 수 있다.
 
-## Resentment System
+## 원한 수치 시스템
 
-The resentment system combines greed and ritual violation into one escalating danger value.
+원한 수치는 욕심과 의식 위반을 하나로 묶는 위험 상승 값이다.
 
-Suggested scoring:
+권장 점수:
 
-- Cheap artifact: +1 resentment.
-- Medium artifact: +2 resentment.
-- Cultural treasure-class artifact: +3 resentment.
-- Shrine artifact: +5 resentment.
-- Minor taboo violation: +2 resentment.
-- Major taboo violation: +4 resentment.
+- 값싼 물건: 원한 +1.
+- 중간 가치 물건: 원한 +2.
+- 문화재급 물건: 원한 +3.
+- 사당 물건: 원한 +5.
+- 사소한 금기 위반: 원한 +2.
+- 큰 금기 위반: 원한 +4.
 
-Stages:
+단계:
 
-- Stage 0: dormant unease before the first pickup.
-- Stage 1: subtle sounds and distant movement.
-- Stage 2: the mourning figure appears clearly but does not fully pursue.
-- Stage 3: doors, routes, and lights become hostile.
-- Stage 4: active pursuit begins.
-- Stage 5: extraction becomes heavily contested through locked paths, false sounds, or lethal proximity.
+- 0단계: 첫 회수 전의 잠든 불안.
+- 1단계: 희미한 소리와 먼 움직임.
+- 2단계: 상복 귀신이 명확하게 보이지만 아직 완전한 추격은 하지 않음.
+- 3단계: 문, 경로, 조명이 적대적으로 변함.
+- 4단계: 적극적인 추격 시작.
+- 5단계: 잠긴 길, 거짓 소리, 치명적인 접근으로 탈출이 강하게 방해됨.
 
-The key decision is whether the next artifact is worth the next resentment stage.
+핵심 판단은 다음 물건 하나가 다음 원한 단계로 넘어갈 만큼 가치 있는지 결정하는 것이다.
 
-## Threats
+## 위협
 
-### Main Threat: Mourning-Clothes Apparition
+### 메인 위협: 상복 귀신
 
-The Mourning-Clothes Apparition is the first map's main monster. It initially reads as a human figure in mourning clothes. After the first artifact pickup, it becomes increasingly unnatural.
+상복 귀신은 첫 맵의 메인 몬스터다. 처음에는 상복을 입은 사람처럼 보이지만, 첫 물건을 집은 뒤 점점 비정상적인 존재로 드러난다.
 
-Behavior:
+행동:
 
-- Appears at long range before first pickup.
-- Becomes clearer as resentment rises.
-- Responds strongly to shrine items and taboo violations.
-- Blocks paths before it fully chases.
-- Begins active pursuit at high resentment.
+- 첫 회수 전에는 먼 거리에서만 등장한다.
+- 원한 수치가 오를수록 더 선명하게 나타난다.
+- 사당 물건과 금기 위반에 강하게 반응한다.
+- 완전히 추격하기 전에는 길목을 막거나 시야에 걸린다.
+- 높은 원한 단계에서 적극적인 추격을 시작한다.
 
-Presentation:
+연출:
 
-- White or pale mourning clothes.
-- Slow, dragging movement.
-- Face partly hidden or unreadable.
-- Sometimes framed behind doors, screens, or courtyard darkness.
+- 흰색 또는 창백한 상복.
+- 느리고 질질 끄는 움직임.
+- 일부 가려져 있거나 읽을 수 없는 얼굴.
+- 문, 병풍, 마당 어둠 뒤에 걸쳐 보이는 구도.
 
-### Secondary Anomaly: Spirit Fire
+### 보조 괴이: 혼불
 
-Spirit Fire is a smaller folklore anomaly used for misdirection and pressure.
+혼불은 길을 헷갈리게 하고 압박을 주는 보조 민속 괴이다.
 
-Behavior:
+행동:
 
-- Appears in yards, corridors, or near valuable items.
-- Can lure the player toward deeper rooms.
-- Can mark unsafe routes or foreshadow apparition movement.
-- Should not be the main killer in the first MVP.
+- 마당, 복도, 비싼 물건 근처에 나타난다.
+- 플레이어를 더 깊은 방으로 유도할 수 있다.
+- 위험한 경로를 표시하거나 상복 귀신의 이동을 예고할 수 있다.
+- 첫 MVP에서는 주 살해자가 아니라 압박과 유도 역할에 집중한다.
 
-### Object Anomalies
+### 의식 물건 괴이
 
-Some artifacts or ritual objects can become active hazards.
+일부 회수품이나 의식 물건은 능동적인 위험 요소가 될 수 있다.
 
-Examples:
+예시:
 
-- Ritual vessels clink when moved out of order.
-- A scroll slowly unfurls after being disturbed.
-- A shrine bell rings from a room the player just left.
-- A wooden figure changes orientation when not watched.
+- 제기 위치를 어지럽히면 그릇이 서로 부딪히는 소리가 난다.
+- 건드린 족자가 천천히 펼쳐진다.
+- 방금 떠난 방에서 사당 방울이 울린다.
+- 보지 않는 사이 목각상이 방향을 바꾼다.
 
-These effects support the resentment system and sound design without requiring many full AI monsters in the first build.
+이 효과들은 첫 빌드에서 많은 AI 몬스터를 만들지 않고도 원한 시스템과 사운드 디자인을 강화한다.
 
-## Broader Monster Pool
+## 전체 몬스터 풀
 
-The full game should include ghosts, yokai-like beings, and Korean folklore anomalies rather than only ghosts.
+전체 게임은 귀신만 나오는 게임이 아니라 귀신, 요괴형 존재, 한국 민속 괴이를 모두 포함해야 한다.
 
-Categories:
+분류:
 
-- Ghosts: mourning apparition, vengeful spirit, virgin ghost, ancestral spirit, grim reaper-like watcher.
-- Yokai-like beings: dokkaebi, dueoksini, eoduksini, shapeshifting trickster spirits.
-- Sound mimic beings: Jangsanbeom-inspired voice mimicry or mountain-call anomalies.
-- Object spirits: cursed mask, moving wooden figure, haunted scroll, ringing ritual tools.
-- Place anomalies: endless corridor, closing gate, changing yard, extinguishing shrine.
+- 귀신 계열: 상복 귀신, 원혼, 처녀귀신, 조상령, 저승사자형 감시자.
+- 요괴 계열: 도깨비, 두억시니, 어둑시니, 둔갑형 장난꾼.
+- 소리 흉내 계열: 장산범에서 영감을 받은 목소리 흉내 괴이, 산속 부름 현상.
+- 물건 괴이 계열: 저주받은 탈, 움직이는 목각상, 들린 족자, 울리는 무구.
+- 장소 괴이 계열: 끝없는 복도, 닫히는 대문, 바뀌는 마당, 꺼지는 사당.
 
-Map pairing examples:
+맵별 조합 예시:
 
-- Jongga Estate: mourning apparition, spirit fire, ritual object anomalies.
-- Old Seowon: book/name-based anomaly, shadow scholar, forbidden records.
-- Mountain Hermitage: voice mimic, bell anomaly, temple-object spirit.
-- Abandoned Hanok Village: dokkaebi misdirection, moving alleys, household spirits.
-- Shaman Ritual House: bells, masks, ritual knives, spirit-possession anomalies.
+- 종가 고택: 상복 귀신, 혼불, 의식 물건 괴이.
+- 폐서원: 이름과 책에 반응하는 괴이, 그림자 선비, 금지된 기록.
+- 산속 암자: 목소리 흉내 괴이, 종소리 괴이, 불교 의식 물건 괴이.
+- 폐한옥 마을: 도깨비식 유도와 장난, 바뀌는 골목, 집터 괴이.
+- 무당집/굿당: 방울, 탈, 신칼, 무구와 관련된 빙의형 괴이.
 
-## Sound Design
+## 사운드 디자인
 
-Sound should communicate state, location, and threat. The player should learn to read the site through audio.
+사운드는 상태, 위치, 위협을 전달해야 한다. 플레이어는 소리를 통해 장소를 읽는 법을 배워야 한다.
 
-Baseline ambience:
+기본 환경음:
 
-- Wind through wooden frames.
-- Paper doors shaking.
-- Old floorboards creaking.
-- Distant insects or mountain night ambience.
-- Occasional fabric movement.
+- 나무 틈으로 들어오는 바람.
+- 흔들리는 한지문.
+- 삐걱이는 마루.
+- 먼 벌레 소리나 산속 밤 분위기.
+- 가끔 들리는 천 스치는 소리.
 
-Pre-pickup human-like cues:
+첫 회수 전의 사람 같은 소리:
 
-- Distant footsteps.
-- A low cough.
-- A door sliding shut.
-- Cloth brushing across wood.
-- A faint funeral wail far outside.
+- 먼 발소리.
+- 낮은 기침 소리.
+- 미닫이문이 닫히는 소리.
+- 나무 위를 스치는 옷자락 소리.
+- 아주 먼 곳의 희미한 곡소리.
 
-Post-pickup haunting cues:
+첫 회수 후의 괴이 소리:
 
-- Mourning cloth dragging nearby.
-- Ritual vessels clinking.
-- Shrine candles fluttering or going out.
-- Bowing sounds from the shrine room.
-- Breath behind the player.
-- A funeral wail that moves closer as resentment rises.
+- 가까이서 끌리는 상복 자락.
+- 서로 부딪히는 제기.
+- 흔들리거나 꺼지는 사당 촛불.
+- 사당 안쪽에서 들리는 절하는 소리.
+- 플레이어 뒤의 숨소리.
+- 원한 수치가 오를수록 가까워지는 곡소리.
 
-Gameplay audio rules:
+플레이 오디오 규칙:
 
-- Low resentment uses ambiguous sounds.
-- Medium resentment uses directional warnings.
-- High resentment uses misleading sounds and pursuit cues.
-- Important sounds must remain readable even when atmospheric layers are active.
+- 낮은 원한 단계에서는 애매한 소리를 사용한다.
+- 중간 원한 단계에서는 방향성을 가진 경고음을 사용한다.
+- 높은 원한 단계에서는 거짓 소리와 추격 신호를 함께 사용한다.
+- 중요한 소리는 분위기 레이어가 깔려 있어도 플레이어가 판단할 수 있을 만큼 읽혀야 한다.
 
-## Systems And Components
+## 시스템과 구성 요소
 
-The design should be split into clear systems:
+기획은 다음 시스템 단위로 나누어 구현할 수 있어야 한다.
 
-- Quota System: tracks required value, recovered value, debt or penalties.
-- Artifact System: defines value, weight, category, and resentment impact.
-- Inventory System: limits carrying capacity and slows the player under burden.
-- Resentment System: tracks danger escalation from artifacts and taboos.
-- Taboo System: detects ritual rule violations and triggers resentment changes.
-- Threat Director: selects sightings, sounds, route interference, and pursuit states.
-- Map System: defines rooms, routes, extraction, locked paths, and high-value zones.
-- Audio System: plays ambience, positional cues, monster cues, and false cues.
-- Extraction System: determines whether carried artifacts are successfully banked.
+- 할당량 시스템: 요구 금액, 회수 금액, 빚 또는 페널티를 추적한다.
+- 회수품 시스템: 가치, 무게, 분류, 원한 상승량을 정의한다.
+- 인벤토리 시스템: 운반 가능량을 제한하고, 무거울수록 플레이어를 느리게 만든다.
+- 원한 수치 시스템: 회수품과 금기 위반으로 인한 위험 상승을 추적한다.
+- 금기 시스템: 의식 규칙 위반을 감지하고 원한 변화를 발생시킨다.
+- 위협 감독 시스템: 목격, 소리, 경로 방해, 추격 상태를 선택한다.
+- 맵 시스템: 방, 경로, 탈출 지점, 잠긴 길, 고가치 구역을 정의한다.
+- 오디오 시스템: 환경음, 위치성 신호, 몬스터 신호, 거짓 신호를 재생한다.
+- 탈출 시스템: 플레이어가 들고 나온 물건을 성공적으로 정산할지 결정한다.
 
-## Data Flow
+## 데이터 흐름
 
-1. The player interacts with an artifact or taboo-sensitive object.
-2. The Artifact System or Taboo System emits a resentment change.
-3. The Resentment System updates the current stage.
-4. The Threat Director reads the stage and chooses events.
-5. The Audio System and Map System present those events through sound, sightings, doors, lights, or route changes.
-6. The player either extracts, drops items, hides, or pushes deeper.
-7. Extracted artifacts update quota progress.
+1. 플레이어가 회수품이나 금기 감지 오브젝트와 상호작용한다.
+2. 회수품 시스템 또는 금기 시스템이 원한 변화를 발생시킨다.
+3. 원한 수치 시스템이 현재 단계를 갱신한다.
+4. 위협 감독 시스템이 현재 단계를 읽고 이벤트를 선택한다.
+5. 오디오 시스템과 맵 시스템이 소리, 목격, 문, 조명, 경로 변화로 이벤트를 표현한다.
+6. 플레이어는 탈출하거나, 물건을 버리거나, 숨거나, 더 깊이 들어간다.
+7. 탈출에 성공한 회수품은 할당량 진행도에 반영된다.
 
-## Failure And Penalty
+## 실패와 페널티
 
-Failure should create pressure without ending the entire game too quickly.
+실패는 전체 게임을 너무 빨리 끝내기보다 다음 플레이에 압박을 주는 방식이어야 한다.
 
-Possible penalties:
+가능한 페널티:
 
-- Lost carried artifacts.
-- Increased debt.
-- Reduced next-run equipment quality.
-- More aggressive company messaging.
-- Higher quota pressure after repeated failures.
+- 들고 있던 회수품 상실.
+- 빚 증가.
+- 다음 출근 장비 성능 하락.
+- 더 공격적인 회사 메시지.
+- 반복 실패 후 더 높은 할당량 압박.
 
-For the MVP, use a simple debt or failed-run counter rather than a complex campaign economy.
+MVP에서는 복잡한 캠페인 경제 대신 단순한 빚 또는 실패 카운터를 사용한다.
 
-## Testing Criteria
+## 테스트 기준
 
-The design is working if:
+다음 조건을 만족하면 기획이 제대로 작동한다고 본다.
 
-- Players understand the objective within the first minute.
-- The first artifact pickup clearly changes the site's behavior.
-- Players can describe why taking one more item is risky.
-- Sound cues help players make decisions instead of only startling them.
-- The mourning apparition feels human at first and supernatural after activation.
-- The player can escape with a small haul, but deeper greed often causes a close call or death.
+- 플레이어가 첫 1분 안에 목표를 이해한다.
+- 첫 물건 회수 직후 장소의 행동이 명확히 바뀐다.
+- 플레이어가 왜 물건 하나를 더 챙기는 것이 위험한지 설명할 수 있다.
+- 사운드 큐가 단순한 깜짝 연출이 아니라 판단에 도움을 준다.
+- 상복 귀신은 초반에는 사람처럼 느껴지고, 활성화 후에는 초자연적 존재로 느껴진다.
+- 플레이어는 적은 양을 챙기면 탈출할 수 있지만, 깊은 욕심은 자주 아슬아슬한 탈출이나 죽음으로 이어진다.
 
-## MVP Decisions
+## MVP 결정 사항
 
-- Working title for planning: K-Horror Retrieval Game.
-- Company framing: the company presents itself as a legitimate cultural artifact recovery contractor, but the missions feel legally and morally suspicious.
-- First build target: first-person 3D single-player prototype.
-- Quota penalty: a failed run loses carried artifacts and adds debt equal to the quota shortfall; three failed quota checks ends the prototype contract.
-- First map threat names: Mourning-Clothes Apparition for the main threat, Spirit Fire for the secondary anomaly, and Ritual Object Anomalies for haunted artifacts.
+- 기획용 임시 제목: K-호러 회수 생존 게임.
+- 회사 설정: 회사는 합법적인 문화재 회수업체처럼 보이지만, 임무는 법적, 윤리적으로 수상하게 느껴진다.
+- 첫 빌드 목표: 1인칭 3D 싱글플레이 프로토타입.
+- 할당량 페널티: 실패한 출근에서는 들고 있던 회수품을 잃고, 부족한 할당량만큼 빚이 추가된다. 할당량 검사를 3번 실패하면 프로토타입 계약이 종료된다.
+- 첫 맵 위협 이름: 메인 위협은 상복 귀신, 보조 괴이는 혼불, 물건 기반 위험은 의식 물건 괴이로 부른다.
