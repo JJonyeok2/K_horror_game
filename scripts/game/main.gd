@@ -32,7 +32,7 @@ func _ready() -> void:
 
 func _process(_delta: float) -> void:
 	var interaction_label := ""
-	var interactor := player.get_node_or_null("Camera3D/Interactor")
+	var interactor := player.get_node_or_null("Camera3D/Interactor") as PlayerInteractor
 	if interactor != null:
 		interaction_label = interactor.current_label
 	hud.update_status(
