@@ -1,0 +1,23 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/player/player_controller.gd" id="1_player"]
+[ext_resource type="Script" path="res://scripts/player/interactor.gd" id="2_interactor"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape_player"]
+height = 1.8
+radius = 0.35
+
+[node name="Player" type="CharacterBody3D"]
+script = ExtResource("1_player")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("CapsuleShape_player")
+
+[node name="Camera3D" type="Camera3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.55, 0)
+
+[node name="Interactor" type="RayCast3D" parent="Camera3D"]
+target_position = Vector3(0, 0, -2.4)
+enabled = true
+script = ExtResource("2_interactor")
+actor_path = NodePath("../..")
