@@ -15,6 +15,7 @@ shape = SubResource("CapsuleShape_player")
 
 [node name="Camera3D" type="Camera3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.55, 0)
+current = true
 
 [node name="Interactor" type="RayCast3D" parent="Camera3D"]
 target_position = Vector3(0, 0, -2.4)

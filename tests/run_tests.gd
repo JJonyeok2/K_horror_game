@@ -5,6 +5,7 @@ const TESTS := [
 	"res://tests/core/test_inventory.gd",
 	"res://tests/core/test_resentment_tracker.gd",
 	"res://tests/core/test_threat_director.gd",
+	"res://tests/runtime/test_scene_boot.gd",
 ]
 
 func _initialize() -> void:
