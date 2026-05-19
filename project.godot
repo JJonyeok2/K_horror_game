@@ -28,3 +28,7 @@ interact={
 "deadzone": 0.5,
 "events": [Object(InputEventKey,"physical_keycode":69)]
 }
+jump={
+"deadzone": 0.5,
+"events": [Object(InputEventKey,"physical_keycode":32)]
+}

@@ -6,6 +6,7 @@ const TESTS := [
 	"res://tests/core/test_resentment_tracker.gd",
 	"res://tests/core/test_threat_director.gd",
 	"res://tests/runtime/test_scene_boot.gd",
+	"res://tests/runtime/test_jongga_map.gd",
 ]
 
 func _initialize() -> void:

@@ -18,6 +18,8 @@ func run() -> Array[String]:
 	test_main_scene_loads(t)
 	test_player_scene_loads(t)
 	test_player_camera_is_current(t)
+	test_jump_action_is_configured(t)
+	test_player_exposes_jump_velocity(t)
 	return t.failures
 
 func test_runtime_scripts_parse(t: TestAssertions) -> void:
@@ -38,4 +40,14 @@ func test_player_camera_is_current(t: TestAssertions) -> void:
 	var player: Node = scene.instantiate()
 	var camera: Camera3D = player.get_node("Camera3D")
 	t.assert_true(camera.current, "player camera is explicitly current")
+	player.free()
+
+func test_jump_action_is_configured(t: TestAssertions) -> void:
+	t.assert_true(InputMap.has_action("jump"), "project has jump input action")
+
+func test_player_exposes_jump_velocity(t: TestAssertions) -> void:
+	var scene: PackedScene = load("res://scenes/player/Player.tscn")
+	var player: Node = scene.instantiate()
+	var jump_velocity: Variant = player.get("jump_velocity")
+	t.assert_true(jump_velocity != null and jump_velocity > 0.0, "player exposes positive jump velocity")
 	player.free()

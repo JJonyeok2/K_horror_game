@@ -24,7 +24,7 @@ func _ready() -> void:
 	map.build(self)
 	player = PlayerScene.instantiate() as Node3D
 	add_child(player)
-	player.global_position = Vector3(0, 1, -8)
+	player.global_position = Vector3(0, 1.25, -8)
 	hud = HUDScript.new()
 	add_child(hud)
 	resentment.resentment_changed.connect(_on_resentment_changed)
@@ -39,8 +39,8 @@ func _process(_delta: float) -> void:
 	hud.update_status(
 		quota.recovered_value,
 		quota.required_value,
-		inventory.total_weight(),
-		inventory.max_weight,
+		inventory.used_slots(),
+		inventory.max_slots,
 		resentment.stage(),
 		interaction_label
 	)
