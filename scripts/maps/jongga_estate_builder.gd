@@ -16,6 +16,8 @@ func build(main: Node) -> void:
 	var extraction := ExtractionScene.instantiate()
 	add_child(extraction)
 	extraction.global_position = Vector3(0, 0.5, 2)
+	if main.has_method("register_extraction_zone"):
+		main.register_extraction_zone(extraction)
 
 func _create_floor(label: String, pos: Vector3, scale: Vector3, color: Color) -> void:
 	var body := StaticBody3D.new()

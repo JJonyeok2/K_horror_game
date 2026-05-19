@@ -7,11 +7,12 @@ const QuotaTracker := preload("res://scripts/core/quota_tracker.gd")
 const ResentmentTracker := preload("res://scripts/core/resentment_tracker.gd")
 const ThreatDirector := preload("res://scripts/core/threat_director.gd")
 
-var player: Node
+var player: PlayerController
+var extraction_zone: ExtractionZone
 var quota := QuotaTracker.new(800)
 var resentment := ResentmentTracker.new()
 var threat_director := ThreatDirector.new()
-var audio_director: Node
+var audio_director: AudioDirector
 
 func _ready() -> void:
 	audio_director = AudioDirectorScript.new()
@@ -25,17 +26,23 @@ func _ready() -> void:
 	resentment.resentment_changed.connect(_on_resentment_changed)
 	print("K Horror Retrieval Prototype booted")
 
-func register_artifact(artifact: Variant) -> void:
+func register_artifact(artifact: Artifact) -> void:
 	artifact.picked_up.connect(_on_artifact_picked_up)
 
-func _on_artifact_picked_up(definition: Variant) -> void:
+func register_extraction_zone(zone: ExtractionZone) -> void:
+	extraction_zone = zone
+	extraction_zone.extracted.connect(_on_extracted)
+
+func _on_artifact_picked_up(definition: ArtifactDefinition) -> void:
 	resentment.add_resentment(definition.resentment_gain, "%s 회수" % definition.display_name)
 
 func _on_resentment_changed(_value: int, stage: int, _reason: String) -> void:
 	audio_director.play_stage_cues(threat_director.audio_cues_for_stage(stage))
 
 func extract_player_inventory() -> void:
-	var value := player.inventory.total_value()
-	player.inventory.clear()
+	if extraction_zone != null:
+		extraction_zone.extract_inventory(player.inventory)
+
+func _on_extracted(value: int) -> void:
 	quota.add_recovered_value(value)
 	print("정산:%d / 할당량:%d" % [quota.recovered_value, quota.required_value])
