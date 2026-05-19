@@ -1,0 +1,18 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/props/artifact.gd" id="1_artifact"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_artifact"]
+size = Vector3(0.45, 0.3, 0.45)
+
+[sub_resource type="BoxShape3D" id="BoxShape_artifact"]
+size = Vector3(0.45, 0.3, 0.45)
+
+[node name="Artifact" type="StaticBody3D"]
+script = ExtResource("1_artifact")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_artifact")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("BoxShape_artifact")
