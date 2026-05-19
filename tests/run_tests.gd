@@ -2,6 +2,7 @@ extends SceneTree
 
 const TESTS := [
 	"res://tests/core/test_quota_tracker.gd",
+	"res://tests/core/test_inventory.gd",
 ]
 
 func _initialize() -> void:
