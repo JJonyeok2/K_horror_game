@@ -6,6 +6,7 @@ const JonggaEstateBuilder := preload("res://scripts/maps/jongga_estate_builder.g
 const QuotaTracker := preload("res://scripts/core/quota_tracker.gd")
 const ResentmentTracker := preload("res://scripts/core/resentment_tracker.gd")
 const ThreatDirector := preload("res://scripts/core/threat_director.gd")
+const HUDScript := preload("res://scripts/ui/hud.gd")
 
 var player: PlayerController
 var extraction_zone: ExtractionZone
@@ -13,6 +14,7 @@ var quota := QuotaTracker.new(800)
 var resentment := ResentmentTracker.new()
 var threat_director := ThreatDirector.new()
 var audio_director: AudioDirector
+var hud: HUD
 
 func _ready() -> void:
 	audio_director = AudioDirectorScript.new()
@@ -23,8 +25,24 @@ func _ready() -> void:
 	player = PlayerScene.instantiate()
 	add_child(player)
 	player.global_position = Vector3(0, 1, 4)
+	hud = HUDScript.new()
+	add_child(hud)
 	resentment.resentment_changed.connect(_on_resentment_changed)
 	print("K Horror Retrieval Prototype booted")
+
+func _process(_delta: float) -> void:
+	var interaction_label := ""
+	var interactor := player.get_node_or_null("Camera3D/Interactor")
+	if interactor != null:
+		interaction_label = interactor.current_label
+	hud.update_status(
+		quota.recovered_value,
+		quota.required_value,
+		player.inventory.total_weight(),
+		player.inventory.max_weight,
+		resentment.stage(),
+		interaction_label
+	)
 
 func register_artifact(artifact: Artifact) -> void:
 	artifact.picked_up.connect(_on_artifact_picked_up)
