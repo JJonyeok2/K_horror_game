@@ -24,7 +24,7 @@ func _ready() -> void:
 	map.build(self)
 	player = PlayerScene.instantiate()
 	add_child(player)
-	player.global_position = Vector3(0, 1, 4)
+	player.global_position = Vector3(0, 1, -5)
 	hud = HUDScript.new()
 	add_child(hud)
 	resentment.resentment_changed.connect(_on_resentment_changed)

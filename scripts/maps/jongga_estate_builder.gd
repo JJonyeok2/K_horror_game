@@ -15,7 +15,7 @@ func build(main: Node) -> void:
 	_spawn_artifact(main, "사당 방울", 700, 2.0, 5, Vector3(0, 0.4, -36), ["shrine_item"])
 	var extraction := ExtractionScene.instantiate()
 	add_child(extraction)
-	extraction.global_position = Vector3(0, 0.5, 2)
+	extraction.global_position = Vector3(0, 0.5, -4)
 	if main.has_method("register_extraction_zone"):
 		main.register_extraction_zone(extraction)
 
