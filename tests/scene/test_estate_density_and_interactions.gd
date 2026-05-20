@@ -19,8 +19,11 @@ func _initialize() -> void:
 	_assert_courtyard_density(main)
 	_assert_courtyard_compression(main)
 	_assert_courtyard_route_is_obscured(main)
+	_assert_visible_route_branches_are_sealed(main)
 	_assert_return_route_is_not_straight(main)
+	_assert_courtyard_salgut_installation(main)
 	_assert_roofed_buildings(main)
+	_assert_larger_main_house_and_hidden_interior(main)
 	_assert_courtyard_building_silhouettes(main)
 	_assert_korean_ghost_haunts(main)
 	_assert_taller_walls_and_posts(main)
@@ -149,6 +152,31 @@ func _assert_return_route_is_not_straight(main: Node) -> void:
 	if left.global_position.x >= 0.0 or right.global_position.x <= 0.0:
 		_fail("Return route baffles should alternate left/right to break the straight path")
 
+func _assert_visible_route_branches_are_sealed(main: Node) -> void:
+	var required := [
+		"RouteBranchSealLeftLoop",
+		"RouteBranchSealRightLoop",
+		"StorehouseBrokenGapSeal",
+		"BackyardBrokenGapSeal",
+	]
+	for label in required:
+		_assert_node_with_collision(main, label)
+
+func _assert_courtyard_salgut_installation(main: Node) -> void:
+	var required := [
+		"CourtyardSalgutPoleNorth",
+		"CourtyardSalgutPoleSouth",
+		"CourtyardSalgutRopeA",
+		"CourtyardSalgutRopeB",
+		"CourtyardSalgutClothA",
+		"CourtyardSalgutAltar",
+	]
+	for label in required:
+		_assert_node_with_collision(main, label)
+	var cloth := main.find_child("CourtyardSalgutClothA", true, false) as Node3D
+	if cloth != null and cloth.global_position.y < 2.2:
+		_fail("Courtyard salgut cloth should hang overhead, not sit on the floor")
+
 func _assert_roofed_buildings(main: Node) -> void:
 	var required_roofs := [
 		"MainHouseRoof",
@@ -173,6 +201,36 @@ func _assert_forest_canopy_does_not_cover_center_path(main: Node) -> void:
 		if covers_center:
 			_fail("%s covers the center approach like a ceiling" % node.name)
 			return
+
+func _assert_larger_main_house_and_hidden_interior(main: Node) -> void:
+	var roof := main.find_child("MainHouseRoof", true, false)
+	var roof_size := _box_shape_size(roof)
+	if roof_size.x < 44.0 or roof_size.z < 38.0:
+		_fail("Main house should read as larger than the current courtyard-facing block: %s" % roof_size)
+		return
+	var required := [
+		"MainHouseHiddenFrontChamber",
+		"MainHouseHiddenMiddleChamber",
+		"MainHouseHiddenDeepChamber",
+		"MainHouseHiddenFalseWall",
+		"MainHouseHiddenBackWall",
+	]
+	for label in required:
+		_assert_node_with_collision(main, label)
+	var front := main.find_child("MainHouseHiddenFrontChamber", true, false) as Node3D
+	var middle := main.find_child("MainHouseHiddenMiddleChamber", true, false) as Node3D
+	var deep := main.find_child("MainHouseHiddenDeepChamber", true, false) as Node3D
+	if front == null or middle == null or deep == null:
+		return
+	var front_size := _box_shape_size(front)
+	var middle_size := _box_shape_size(middle)
+	var deep_size := _box_shape_size(deep)
+	if not (front.global_position.z > middle.global_position.z and middle.global_position.z > deep.global_position.z):
+		_fail("Hidden interior chambers should pull deeper into the house")
+		return
+	if not (front_size.x > middle_size.x and middle_size.x > deep_size.x):
+		_fail("Hidden interior chambers should narrow as the player goes deeper")
+		return
 
 func _assert_courtyard_building_silhouettes(main: Node) -> void:
 	var required := [

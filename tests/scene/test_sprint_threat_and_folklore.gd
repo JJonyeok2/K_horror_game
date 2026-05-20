@@ -100,6 +100,9 @@ func _assert_folklore_route_props(main: Node) -> void:
 			return
 
 func _assert_threat_manifestation(main: Node) -> void:
+	var player := main.get("player") as Node3D
+	if player != null:
+		player.global_position = Vector3(0.0, 1.34, -86.0)
 	var resentment: Variant = main.get("resentment")
 	resentment.call("add_resentment", 8, "test escalation")
 	for _i in range(4):
@@ -113,6 +116,9 @@ func _assert_threat_manifestation(main: Node) -> void:
 		return
 	if not bool(threat.get_meta("can_phase_through_walls", false)):
 		_fail("High-stage threat should be marked as wall-phasing")
+		return
+	if str(threat.get_meta("threat_zone", "")) != "inner_building_only":
+		_fail("High-stage threat should be marked as building-only")
 		return
 
 func _fail(message: String) -> void:

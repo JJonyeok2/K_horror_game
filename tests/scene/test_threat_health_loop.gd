@@ -18,11 +18,15 @@ func _initialize() -> void:
 	player.set("movement_enabled", true)
 	player.set("velocity", Vector3.ZERO)
 
-	await _assert_stage_three_cannot_spawn_attacking_ghost(main, player)
+	await _assert_stage_three_dokkaebi_stays_outside_gate(main, player)
 	if _failed:
 		quit(1)
 		return
-	await _assert_stage_four_threat_pursues_and_attacks(main, player)
+	await _assert_stage_four_ignores_courtyard_until_building(main, player)
+	if _failed:
+		quit(1)
+		return
+	await _assert_stage_five_swaps_to_dalgyal_pattern(main, player)
 	if _failed:
 		quit(1)
 		return
@@ -31,36 +35,75 @@ func _initialize() -> void:
 		quit(1)
 		return
 
-	print("THREAT_HEALTH_LOOP: spawn pursue fixed cadence damage player_down")
+	print("THREAT_HEALTH_LOOP: zone gated ghost patterns and player_down")
 	quit(0)
 
-func _assert_stage_three_cannot_spawn_attacking_ghost(main: Node, player: Node3D) -> void:
+func _assert_stage_three_dokkaebi_stays_outside_gate(main: Node, player: Node3D) -> void:
+	player.global_position = Vector3(0.0, 1.34, 120.0)
 	var starting_health := float(player.get("health"))
 	var relic := ArtifactDefinition.new("warning relic", 10, 1.0, 5, [], 1)
 	main.call("_on_artifact_picked_up", relic)
-	for _i in range(260):
-		await physics_frame
-	if float(player.get("health")) != starting_health:
-		_fail("Threat damaged player before high resentment stage")
-		return
-	if main.find_child("ThreatApparition", true, false) != null:
-		_fail("Wall-phasing ThreatApparition should not spawn before stage 4")
-		return
-
-func _assert_stage_four_threat_pursues_and_attacks(main: Node, player: Node3D) -> void:
-	var relic := ArtifactDefinition.new("cursed relic", 10, 1.0, 3, [], 1)
-	main.call("_on_artifact_picked_up", relic)
-	for _i in range(2):
+	for _i in range(8):
 		await physics_frame
 	var threat := main.find_child("ThreatApparition", true, false) as Node3D
 	if threat == null:
-		_fail("ThreatApparition did not spawn at resentment stage 4")
+		_fail("Stage 3 dokkaebi did not spawn outside the gate")
+		return
+	if str(threat.get_meta("ghost_type", "")) != "dokkaebi":
+		_fail("Stage 3 threat should be dokkaebi")
+		return
+	if str(threat.get_meta("threat_zone", "")) != "outside_gate_forest":
+		_fail("Dokkaebi should be marked as outside-gate forest threat")
+		return
+	if str(threat.get_meta("attack_pattern", "")) != "dokkaebi_forest_trickster":
+		_fail("Dokkaebi should use forest trickster attack pattern")
+		return
+	var gate := main.find_child("OuterEstateGate", true, false) as Node3D
+	if gate != null and threat.global_position.z <= gate.global_position.z:
+		_fail("Dokkaebi spawned inside the gate instead of outside/forest")
+		return
+
+	player.global_position = Vector3(0.0, 1.34, -40.0)
+	for _i in range(60):
+		await physics_frame
+	if threat.visible:
+		_fail("Dokkaebi should disappear once player is inside the gate")
+		return
+	if float(player.get("health")) != starting_health:
+		_fail("Dokkaebi damaged player after leaving its outside-gate zone")
+		return
+
+func _assert_stage_four_ignores_courtyard_until_building(main: Node, player: Node3D) -> void:
+	player.global_position = Vector3(0.0, 1.34, -42.0)
+	var relic := ArtifactDefinition.new("cursed relic", 10, 1.0, 3, [], 1)
+	main.call("_on_artifact_picked_up", relic)
+	for _i in range(30):
+		await physics_frame
+	var threat := main.find_child("ThreatApparition", true, false) as Node3D
+	if threat == null:
+		_fail("ThreatApparition node missing after stage escalation")
+		return
+	if threat.visible:
+		_fail("Stage 4 threat should not appear in the open courtyard")
+		return
+
+	player.global_position = Vector3(0.0, 1.34, -86.0)
+	for _i in range(4):
+		await physics_frame
+	if not threat.visible:
+		_fail("Stage 4 threat did not appear after entering the building")
 		return
 	if not bool(threat.get_meta("can_phase_through_walls", false)):
 		_fail("High-stage ThreatApparition should explicitly be wall-phasing")
 		return
-	if str(threat.get_meta("ghost_type", "")) == "":
-		_fail("High-stage ThreatApparition should expose its ghost type")
+	if str(threat.get_meta("ghost_type", "")) != "sangbok_ghost":
+		_fail("Stage 4 threat should be sangbok ghost")
+		return
+	if str(threat.get_meta("threat_zone", "")) != "inner_building_only":
+		_fail("Stage 4 threat should be building-only")
+		return
+	if str(threat.get_meta("attack_pattern", "")) != "sangbok_steady_pursuit":
+		_fail("Stage 4 threat should use steady pursuit")
 		return
 	var before_distance := threat.global_position.distance_to(player.global_position)
 	for _i in range(90):
@@ -80,7 +123,27 @@ func _assert_stage_four_threat_pursues_and_attacks(main: Node, player: Node3D) -
 	for _i in range(130):
 		await physics_frame
 	if float(player.get("health")) >= health_before_attack:
-		_fail("Threat did not damage player while in range at stage 2")
+		_fail("Threat did not damage player while in range at stage 4")
+		return
+
+func _assert_stage_five_swaps_to_dalgyal_pattern(main: Node, player: Node3D) -> void:
+	player.global_position = Vector3(0.0, 1.34, -98.0)
+	var relic := ArtifactDefinition.new("deep relic", 10, 1.0, 4, [], 1)
+	main.call("_on_artifact_picked_up", relic)
+	for _i in range(6):
+		await physics_frame
+	var threat := main.find_child("ThreatApparition", true, false) as Node3D
+	if threat == null:
+		_fail("ThreatApparition missing after stage 5 escalation")
+		return
+	if str(threat.get_meta("ghost_type", "")) != "dalgyal_gwisin":
+		_fail("Stage 5 threat should swap to dalgyal gwisin")
+		return
+	if str(threat.get_meta("attack_pattern", "")) != "dalgyal_blind_lunge":
+		_fail("Stage 5 threat should use blind lunge pattern")
+		return
+	if str(threat.get_meta("threat_zone", "")) != "inner_building_only":
+		_fail("Stage 5 threat should remain building-only")
 		return
 
 func _assert_health_zero_disables_player(main: Node, player: Node3D) -> void:

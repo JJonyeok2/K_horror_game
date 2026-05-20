@@ -1,15 +1,15 @@
 extends RefCounted
 class_name ThreatDirector
 
-const DAMAGE_PER_HIT_BY_STAGE := [0, 0, 0, 0, 20, 30]
-const ATTACK_RANGE_BY_STAGE := [0.0, 0.0, 0.0, 0.0, 2.0, 2.4]
-const ATTACK_INTERVAL_SECONDS_BY_STAGE := [0.0, 0.0, 0.0, 0.0, 2.0, 2.0]
-const PURSUIT_SPEED_BY_STAGE := [0.0, 0.0, 0.0, 0.0, 3.4, 4.0]
+const DAMAGE_PER_HIT_BY_STAGE := [0, 0, 0, 8, 20, 30]
+const ATTACK_RANGE_BY_STAGE := [0.0, 0.0, 0.0, 1.35, 2.0, 2.4]
+const ATTACK_INTERVAL_SECONDS_BY_STAGE := [0.0, 0.0, 0.0, 2.8, 2.0, 1.35]
+const PURSUIT_SPEED_BY_STAGE := [0.0, 0.0, 0.0, 2.1, 3.4, 4.6]
 const TRAP_TRIGGER_RESENTMENT_BY_STAGE := [0, 0, 1, 1, 2, 3]
 const GHOST_ROSTER := [
-	{"id": "sangbok_ghost", "display_name": "상복귀", "role": "wall_phasing_hunter"},
-	{"id": "dalgyal_gwisin", "display_name": "달걀귀", "role": "late_hunter"},
-	{"id": "dokkaebi", "display_name": "도깨비", "role": "gate_trickster"},
+	{"id": "dokkaebi", "display_name": "도깨비", "role": "gate_trickster", "stage": 3, "zone": "outside_gate_forest", "attack_pattern": "dokkaebi_forest_trickster"},
+	{"id": "sangbok_ghost", "display_name": "상복귀", "role": "wall_phasing_hunter", "stage": 4, "zone": "inner_building_only", "attack_pattern": "sangbok_steady_pursuit"},
+	{"id": "dalgyal_gwisin", "display_name": "달걀귀", "role": "late_hunter", "stage": 5, "zone": "inner_building_only", "attack_pattern": "dalgyal_blind_lunge"},
 	{"id": "eoduksini", "display_name": "어둑시니", "role": "darkness_pressure"},
 	{"id": "well_spirit", "display_name": "우물귀", "role": "courtyard_ambush"},
 ]
@@ -60,10 +60,30 @@ func ghost_roster() -> Array:
 
 func ghost_type_for_stage(stage: int) -> String:
 	match _clamped_stage(stage):
+		3:
+			return "dokkaebi"
 		4:
 			return "sangbok_ghost"
 		5:
 			return "dalgyal_gwisin"
+	return ""
+
+func threat_zone_for_stage(stage: int) -> String:
+	match _clamped_stage(stage):
+		3:
+			return "outside_gate_forest"
+		4, 5:
+			return "inner_building_only"
+	return ""
+
+func attack_pattern_for_stage(stage: int) -> String:
+	match _clamped_stage(stage):
+		3:
+			return "dokkaebi_forest_trickster"
+		4:
+			return "sangbok_steady_pursuit"
+		5:
+			return "dalgyal_blind_lunge"
 	return ""
 
 func damage_per_hit(stage: int) -> int:

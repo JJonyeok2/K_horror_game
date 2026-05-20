@@ -135,21 +135,21 @@ const FLOOR_ZONES := [
 	{
 		"name": "BuildingFrontPad",
 		"position": Vector3(0.0, 0.08, -69.0),
-		"size": Vector3(34.0, 0.30, 10.0),
+		"size": Vector3(44.0, 0.30, 10.0),
 		"material_key": "stone",
 		"tags": ["required_route", "house_front"]
 	},
 	{
 		"name": "ToenmaruPorch",
 		"position": Vector3(0.0, 0.42, -75.0),
-		"size": Vector3(38.0, 0.55, 5.0),
+		"size": Vector3(48.0, 0.55, 5.0),
 		"material_key": "aged_wood",
 		"tags": ["툇마루", "porch", "transition"]
 	},
 	{
 		"name": "MainHouseInterior",
-		"position": Vector3(0.0, 0.05, -86.0),
-		"size": Vector3(32.0, 0.30, 25.0),
+		"position": Vector3(0.0, 0.05, -93.0),
+		"size": Vector3(44.0, 0.30, 39.0),
 		"material_key": "old_plaster",
 		"tags": ["required_route", "interior"]
 	},
@@ -214,7 +214,7 @@ const WALL_SEGMENTS := [
 	{"name": "LeftWallGapSouth", "position": Vector3(-16.4, 1.6, -98.0), "size": Vector3(0.7, 3.2, 12.0), "material_key": "old_plaster", "tags": ["wall_gap", "storehouse_loop"]},
 	{"name": "RightWallGapNorth", "position": Vector3(16.4, 1.6, -78.0), "size": Vector3(0.7, 3.2, 9.0), "material_key": "old_plaster", "tags": ["wall_gap", "backyard_loop"]},
 	{"name": "RightWallGapSouth", "position": Vector3(16.4, 1.6, -99.0), "size": Vector3(0.7, 3.2, 11.0), "material_key": "old_plaster", "tags": ["wall_gap", "backyard_loop"]},
-	{"name": "MainHouseBackWall", "position": Vector3(0.0, 1.75, -99.0), "size": Vector3(33.0, 3.5, 0.8), "material_key": "old_plaster", "tags": ["main_house"]},
+	{"name": "MainHouseBackWall", "position": Vector3(0.0, 1.75, -113.0), "size": Vector3(45.0, 3.5, 0.8), "material_key": "old_plaster", "tags": ["main_house"]},
 	{"name": "StorehouseOuterWall", "position": Vector3(-33.5, 1.35, -92.0), "size": Vector3(0.7, 2.7, 45.0), "material_key": "old_plaster", "tags": ["storehouse_loop"]},
 	{"name": "StorehouseBrokenWallA", "position": Vector3(-18.0, 1.35, -83.0), "size": Vector3(0.7, 2.7, 9.0), "material_key": "old_plaster", "tags": ["wall_break", "storehouse_loop"]},
 	{"name": "StorehouseBrokenWallB", "position": Vector3(-18.0, 1.35, -105.0), "size": Vector3(0.7, 2.7, 10.0), "material_key": "old_plaster", "tags": ["wall_break", "storehouse_loop"]},
