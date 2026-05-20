@@ -19,6 +19,12 @@
 *.VC.db
 .vs/
 
-# Generated locally from the existing Godot-side source assets.
-Assets/External/ambientcg/materials/
-Assets/KHorrorGame/Materials/AmbientCG/
+# Keep Unity runtime texture copies portable; ignore heavyweight source/interchange files.
+Assets/External/ambientcg/materials/**/*.blend
+Assets/External/ambientcg/materials/**/*.blend.meta
+Assets/External/ambientcg/materials/**/*.mtlx
+Assets/External/ambientcg/materials/**/*.mtlx.meta
+Assets/External/ambientcg/materials/**/*.tres
+Assets/External/ambientcg/materials/**/*.tres.meta
+Assets/External/ambientcg/materials/**/*.usdc
+Assets/External/ambientcg/materials/**/*.usdc.meta
