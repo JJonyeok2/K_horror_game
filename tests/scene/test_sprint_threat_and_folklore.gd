@@ -15,7 +15,8 @@ func _initialize() -> void:
 		_fail("Main did not create player")
 		return
 
-	_assert_sprint_stamina(player)
+	await _assert_sprint_stamina(player)
+	await _assert_exhausted_walk_recovery(player)
 	_assert_folklore_route_props(main)
 	await _assert_threat_manifestation(main)
 	if _failed:
@@ -47,6 +48,40 @@ func _assert_sprint_stamina(player: Node3D) -> void:
 	if float(player.get("stamina_ratio")) >= 1.0:
 		_fail("Stamina ratio did not reflect drain")
 		return
+
+func _assert_exhausted_walk_recovery(player: Node3D) -> void:
+	var max_stamina := float(player.get("max_stamina_seconds"))
+	var threshold_value: Variant = player.get("exhausted_recovery_threshold_seconds")
+	var recovery_threshold := 1.0 if threshold_value == null else float(threshold_value)
+	if recovery_threshold <= 0.0:
+		recovery_threshold = 1.0
+	var normal_speed := await _measure_forward_walk_speed(player, max_stamina)
+	var exhausted_speed := await _measure_forward_walk_speed(player, 0.0)
+	if not exhausted_speed < normal_speed * 0.98:
+		_fail("Fully depleted stamina should slow walking: normal=%s exhausted=%s" % [normal_speed, exhausted_speed])
+		return
+	var low_recovery_speed := await _measure_forward_walk_speed(player, recovery_threshold * 0.5)
+	if not low_recovery_speed < normal_speed * 0.98:
+		_fail("Exhausted walking recovered too early: normal=%s low_recovery=%s" % [normal_speed, low_recovery_speed])
+		return
+	var recovered_speed := await _measure_forward_walk_speed(player, min(max_stamina, recovery_threshold + 0.5))
+	if absf(recovered_speed - normal_speed) > 0.05:
+		_fail("Walking speed did not recover after stamina threshold: normal=%s recovered=%s" % [normal_speed, recovered_speed])
+		return
+	var exhausted_multiplier: Variant = player.get("exhausted_walk_multiplier")
+	if exhausted_multiplier == null or float(exhausted_multiplier) <= 0.0 or float(exhausted_multiplier) >= 1.0:
+		_fail("Exhausted walk multiplier should be between 0.0 and 1.0, got %s" % exhausted_multiplier)
+		return
+
+func _measure_forward_walk_speed(player: Node3D, stamina: float) -> float:
+	player.set("stamina_seconds", stamina)
+	player.set("movement_enabled", true)
+	Input.action_release("sprint")
+	Input.action_press("move_forward")
+	await physics_frame
+	Input.action_release("move_forward")
+	var player_velocity: Vector3 = player.get("velocity")
+	return Vector2(player_velocity.x, player_velocity.z).length()
 
 func _assert_folklore_route_props(main: Node) -> void:
 	var required := [

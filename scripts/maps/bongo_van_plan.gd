@@ -25,6 +25,15 @@ const COLOR_TRIM := Color(0.08, 0.08, 0.075)
 const COLOR_GLASS := Color(0.16, 0.27, 0.32)
 const COLOR_LIGHT := Color(0.94, 0.86, 0.58)
 const COLOR_TAIL_LIGHT := Color(0.72, 0.08, 0.05)
+const COLOR_MONITOR_BACKING := Color(0.035, 0.04, 0.035)
+const COLOR_MONITOR_SCREEN := Color(0.02, 0.17, 0.13)
+const COLOR_MONITOR_GLOW := Color(0.42, 0.95, 0.72)
+
+const QUOTA_MONITOR_NAME = "BongoQuotaMonitor"
+const QUOTA_MONITOR_TEXT = "회수 현황\n₩0 / 목표"
+const QUOTA_MONITOR_POSITION := Vector3(0.0, 1.62, 276.0)
+const QUOTA_MONITOR_BACKING_SIZE := Vector3(1.42, 0.88, 0.12)
+const QUOTA_MONITOR_SCREEN_SIZE := Vector3(1.12, 0.58, 0.08)
 
 const STRUCTURAL_PARTS = [
 	{

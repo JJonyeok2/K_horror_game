@@ -503,6 +503,28 @@ func _create_bongo_van() -> void:
 			body.rotation_degrees = rotation
 		else:
 			_add_visual_box_world(label, position, size, color, material_key, rotation)
+	_create_bongo_quota_monitor()
+
+func _create_bongo_quota_monitor() -> void:
+	var monitor := Node3D.new()
+	monitor.name = BongoVanPlanScript.QUOTA_MONITOR_NAME
+	add_child(monitor)
+	monitor.global_position = BongoVanPlanScript.QUOTA_MONITOR_POSITION
+
+	_add_visual_box(monitor, "BongoQuotaMonitorBacking", Vector3.ZERO, BongoVanPlanScript.QUOTA_MONITOR_BACKING_SIZE, BongoVanPlanScript.COLOR_MONITOR_BACKING, "metal")
+	_add_visual_box(monitor, "BongoQuotaMonitorScreen", Vector3(0.0, 0.0, -0.07), BongoVanPlanScript.QUOTA_MONITOR_SCREEN_SIZE, BongoVanPlanScript.COLOR_MONITOR_SCREEN)
+
+	var label := Label3D.new()
+	label.name = "BongoQuotaMonitorText"
+	label.text = BongoVanPlanScript.QUOTA_MONITOR_TEXT
+	label.position = Vector3(0.0, -0.06, -0.13)
+	label.pixel_size = 0.018
+	label.modulate = BongoVanPlanScript.COLOR_MONITOR_GLOW
+	label.outline_modulate = Color(0.0, 0.0, 0.0)
+	label.outline_size = 8
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	monitor.add_child(label)
 
 func _create_extraction_zone() -> void:
 	var extraction := ExtractionScene.instantiate()

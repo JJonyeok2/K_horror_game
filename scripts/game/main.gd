@@ -10,6 +10,11 @@ const ThreatDirector := preload("res://scripts/core/threat_director.gd")
 const HUDScript := preload("res://scripts/ui/hud.gd")
 const StartupSequence := preload("res://scripts/game/startup_sequence.gd")
 const PerformanceSettingsScript := preload("res://scripts/game/performance_settings.gd")
+const FALLBACK_THREAT_DAMAGE: float = 18.0
+const FALLBACK_THREAT_ATTACK_RANGE: float = 1.65
+const FALLBACK_THREAT_ATTACK_CADENCE: float = 1.0
+const FALLBACK_THREAT_PURSUIT_SPEED: float = 2.85
+const THREAT_PLAYER_OFFSET := Vector3(0.0, 1.15, 0.0)
 
 var player: Node
 var quota := QuotaTracker.new(800)
@@ -21,6 +26,9 @@ var startup_sequence := StartupSequence.new()
 var _startup_time: float = 0.0
 var _startup_done: bool = false
 var _side_passage_triggered: bool = false
+var _threat_attack_elapsed: float = 0.0
+var _player_down: bool = false
+var player_down: bool = false
 
 func _ready() -> void:
 	audio_director = AudioDirectorScript.new()
@@ -104,6 +112,10 @@ func _process(delta: float) -> void:
 		player.stamina_ratio,
 		player.is_sprinting
 	)
+	_update_bongo_quota_monitor()
+
+func _physics_process(delta: float) -> void:
+	_update_threat_health_loop(delta)
 
 func _update_startup_sequence(delta: float) -> void:
 	if _startup_done:
@@ -115,7 +127,8 @@ func _update_startup_sequence(delta: float) -> void:
 		camera.position.y = 1.55 + sin(_startup_time * 8.0) * 0.018
 	if _startup_time >= 5.0:
 		_startup_done = true
-		player.movement_enabled = true
+		if not _player_down:
+			player.movement_enabled = true
 		if camera != null:
 			camera.position = Vector3(0, 1.55, 0)
 		print("BONGO_VAN_DOOR: 철컥, 낡은 봉고차 문이 열립니다.")
@@ -135,18 +148,149 @@ func _on_resentment_changed(value: int, stage: int, reason: String) -> void:
 func _update_threat_manifestation(stage: int) -> void:
 	if stage < 2:
 		return
+	_ensure_threat_manifestation(stage)
+
+func _ensure_threat_manifestation(stage: int) -> Node3D:
 	var threat := find_child("ThreatApparition", true, false) as Node3D
 	if threat == null:
 		threat = Node3D.new()
 		threat.name = "ThreatApparition"
 		add_child(threat)
 		_create_threat_visual(threat)
-	var player_node: Node3D = player as Node3D
-	var player_position: Vector3 = Vector3.ZERO
-	if player_node != null:
-		player_position = player_node.global_position
-	threat.global_position = player_position + Vector3(0.0, 1.15, -18.0 + float(stage) * -1.5)
+		var player_node: Node3D = player as Node3D
+		var player_position: Vector3 = Vector3.ZERO
+		if player_node != null:
+			player_position = player_node.global_position
+		threat.global_position = player_position + THREAT_PLAYER_OFFSET + Vector3(0.0, 0.0, -18.0 + float(stage) * -1.5)
+		threat.add_to_group("threats")
+		threat.set_meta("entity_type", "ghost")
+		threat.set_meta("is_threat_entity", true)
 	threat.visible = true
+	return threat
+
+func _update_threat_health_loop(delta: float) -> void:
+	if _player_down or player == null:
+		return
+	var stage := resentment.stage()
+	if stage < 2:
+		_threat_attack_elapsed = 0.0
+		return
+	var player_node: Node3D = player as Node3D
+	if player_node == null:
+		return
+	var threat := _ensure_threat_manifestation(stage)
+	var target_position := player_node.global_position + THREAT_PLAYER_OFFSET
+	var distance_to_player := threat.global_position.distance_to(target_position)
+	var attack_range := _threat_attack_range(stage)
+	if distance_to_player > max(attack_range * 0.45, 0.2):
+		var step := _threat_pursuit_speed(stage) * delta
+		threat.global_position = threat.global_position.move_toward(target_position, step)
+		distance_to_player = threat.global_position.distance_to(target_position)
+	if distance_to_player <= attack_range:
+		_threat_attack_elapsed += delta
+		var attack_cadence := _threat_attack_cadence(stage)
+		while _threat_attack_elapsed >= attack_cadence and not _player_down:
+			_threat_attack_elapsed -= attack_cadence
+			_apply_threat_damage(stage)
+	else:
+		_threat_attack_elapsed = 0.0
+
+func _apply_threat_damage(stage: int) -> void:
+	var damage := _threat_damage(stage)
+	if damage <= 0.0:
+		return
+	if player.has_method("apply_damage"):
+		player.apply_damage(damage)
+	else:
+		var current_health := float(player.get("health"))
+		var max_health: float = max(float(player.get("max_health")), 1.0)
+		var next_health: float = clamp(current_health - damage, 0.0, max_health)
+		player.set("health", next_health)
+		player.set("health_ratio", clamp(next_health / max_health, 0.0, 1.0))
+	if float(player.get("health")) <= 0.0:
+		_mark_player_down()
+
+func _mark_player_down() -> void:
+	if _player_down:
+		return
+	_player_down = true
+	player_down = true
+	player.set("movement_enabled", false)
+	print("PLAYER_DOWN: health depleted by ThreatApparition")
+
+func _threat_damage(stage: int) -> float:
+	return _threat_profile_float(
+		stage,
+		["damage", "damage_per_attack", "attack_damage", "damage_per_hit"],
+		["damage_per_hit", "damage_for_stage", "attack_damage_for_stage", "damage_per_attack_for_stage", "threat_damage_for_stage"],
+		FALLBACK_THREAT_DAMAGE
+	)
+
+func _threat_attack_range(stage: int) -> float:
+	return _threat_profile_float(
+		stage,
+		["attack_range", "range", "damage_range"],
+		["attack_range", "attack_range_for_stage", "threat_attack_range_for_stage", "damage_range_for_stage"],
+		FALLBACK_THREAT_ATTACK_RANGE
+	)
+
+func _threat_attack_cadence(stage: int) -> float:
+	return max(
+		_threat_profile_float(
+			stage,
+			["attack_cadence", "cadence", "attack_interval", "attack_interval_seconds"],
+			["attack_interval_seconds", "attack_cadence_for_stage", "threat_attack_cadence_for_stage", "attack_interval_for_stage"],
+			FALLBACK_THREAT_ATTACK_CADENCE
+		),
+		0.05
+	)
+
+func _threat_pursuit_speed(stage: int) -> float:
+	return _threat_profile_float(
+		stage,
+		["pursuit_speed", "speed", "move_speed"],
+		["pursuit_speed", "pursuit_speed_for_stage", "threat_pursuit_speed_for_stage", "move_speed_for_stage"],
+		FALLBACK_THREAT_PURSUIT_SPEED
+	)
+
+func _threat_profile_float(stage: int, profile_keys: Array, method_names: Array, fallback: float) -> float:
+	var profile: Variant = _threat_damage_profile(stage)
+	if typeof(profile) == TYPE_DICTIONARY:
+		for key in profile_keys:
+			if profile.has(key) and _is_number(profile[key]):
+				return max(float(profile[key]), 0.0)
+	for method_name in method_names:
+		var value: Variant = _call_threat_director(method_name, stage)
+		if _is_number(value):
+			return max(float(value), 0.0)
+	return fallback
+
+func _threat_damage_profile(stage: int) -> Variant:
+	for method_name in ["damage_profile_for_stage", "threat_damage_profile_for_stage", "damage_profile"]:
+		var profile: Variant = _call_threat_director(method_name, stage)
+		if typeof(profile) == TYPE_DICTIONARY:
+			return profile
+	return null
+
+func _call_threat_director(method_name: String, stage: int) -> Variant:
+	if not threat_director.has_method(method_name):
+		return null
+	for method in threat_director.get_method_list():
+		if str(method.get("name", "")) == method_name:
+			var args: Array = method.get("args", [])
+			if args.is_empty():
+				return threat_director.call(method_name)
+			return threat_director.call(method_name, stage)
+	return threat_director.call(method_name, stage)
+
+func _is_number(value: Variant) -> bool:
+	return typeof(value) == TYPE_FLOAT or typeof(value) == TYPE_INT
+
+func _update_bongo_quota_monitor() -> void:
+	var label := find_child("BongoQuotaMonitorText", true, false) as Label3D
+	if label == null:
+		return
+	label.text = "회수 현황\n₩%d / ₩%d" % [quota.recovered_value, quota.required_value]
 
 func _create_threat_visual(root: Node3D) -> void:
 	var body := MeshInstance3D.new()
@@ -186,6 +330,7 @@ func extract_player_inventory() -> void:
 	if player.has_method("refresh_held_item_views"):
 		player.refresh_held_item_views()
 	quota.add_recovered_value(value)
+	_update_bongo_quota_monitor()
 	print("정산:%d / 할당량:%d" % [quota.recovered_value, quota.required_value])
 
 func _on_risky_side_passage_entered(body: Node) -> void:

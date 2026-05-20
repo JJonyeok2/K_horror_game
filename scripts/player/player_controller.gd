@@ -7,6 +7,8 @@ const ArtifactScene := preload("res://scenes/props/Artifact.tscn")
 
 @export var base_speed: float = 4.5
 @export var sprint_speed_multiplier: float = 1.65
+@export var exhausted_walk_multiplier: float = 0.65
+@export var exhausted_recovery_threshold_seconds: float = 1.0
 @export var max_stamina_seconds: float = 15.0
 @export var stamina_recovery_seconds: float = 11.0
 @export var mouse_sensitivity: float = 0.0025
@@ -23,6 +25,7 @@ var health_ratio: float = 1.0
 var is_sprinting: bool = false
 var camera: Camera3D
 var _held_mounts: Node3D
+var _is_exhausted: bool = false
 
 func _ready() -> void:
 	camera = $Camera3D
@@ -56,13 +59,23 @@ func _physics_process(delta: float) -> void:
 	var weight_ratio: float = clamp(inventory.total_weight() / inventory.max_weight, 0.0, 1.0)
 	var speed: float = lerp(base_speed, base_speed * 0.55, weight_ratio)
 	var wants_sprint := movement_enabled and Input.is_action_pressed("sprint") and direction.length() > 0.0
-	is_sprinting = wants_sprint and stamina_seconds > 0.0
+	if stamina_seconds <= 0.0:
+		_is_exhausted = true
+	elif _is_exhausted and stamina_seconds >= exhausted_recovery_threshold_seconds:
+		_is_exhausted = false
+	is_sprinting = wants_sprint and not _is_exhausted and stamina_seconds > 0.0
 	if is_sprinting:
 		speed *= sprint_speed_multiplier
 		stamina_seconds = max(stamina_seconds - delta, 0.0)
+		if stamina_seconds <= 0.0:
+			_is_exhausted = true
 	else:
+		if _is_exhausted:
+			speed *= exhausted_walk_multiplier
 		var recovery_rate := max_stamina_seconds / stamina_recovery_seconds
 		stamina_seconds = min(stamina_seconds + recovery_rate * delta, max_stamina_seconds)
+		if _is_exhausted and stamina_seconds >= exhausted_recovery_threshold_seconds:
+			_is_exhausted = false
 	_update_stamina_ratio()
 	velocity.x = direction.x * speed
 	velocity.z = direction.z * speed
