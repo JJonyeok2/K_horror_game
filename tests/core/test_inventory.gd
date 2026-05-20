@@ -10,6 +10,7 @@ func run() -> Array[String]:
 	test_inventory_adds_small_items_to_each_hand(t)
 	test_inventory_large_item_uses_both_hands(t)
 	test_inventory_rejects_item_without_free_hand_slots(t)
+	test_inventory_rejects_null_items(t)
 	test_inventory_can_pop_last_item(t)
 	return t.failures
 
@@ -57,6 +58,11 @@ func test_inventory_rejects_item_without_free_hand_slots(t: TestAssertions) -> v
 	t.assert_true(inv.try_add(fourth), "inventory accepts fourth hand item")
 	t.assert_true(not inv.try_add(fifth), "inventory rejects item when four slots are full")
 	t.assert_equal(inv.total_value(), 100, "rejected item does not add value")
+
+func test_inventory_rejects_null_items(t: TestAssertions) -> void:
+	var inv := Inventory.new(10.0)
+	t.assert_true(not inv.try_add(null), "inventory safely rejects null items")
+	t.assert_equal(inv.items.size(), 0, "null item is not appended")
 
 func test_inventory_can_pop_last_item(t: TestAssertions) -> void:
 	var inv := Inventory.new(10.0)

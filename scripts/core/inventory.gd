@@ -11,6 +11,8 @@ func _init(p_max_weight: float = 10.0) -> void:
 	max_weight = max(p_max_weight, 0.0)
 
 func try_add(item: ArtifactDefinition) -> bool:
+	if item == null:
+		return false
 	if item.hand_slots > free_hand_slots():
 		return false
 	items.append(item)

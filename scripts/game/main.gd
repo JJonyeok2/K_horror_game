@@ -758,9 +758,14 @@ func _create_threat_visual(root: Node3D) -> void:
 	marker_light.omni_range = 5.0
 	root.add_child(marker_light)
 
-func extract_player_inventory() -> void:
+func extract_player_inventory() -> bool:
+	if current_map_id != MAP_JONGGA_ESTATE:
+		print("고택 현장의 봉고차 안에서만 물건을 적재할 수 있습니다.")
+		return false
+	if player == null or player.inventory == null:
+		return false
 	if player.inventory.items.is_empty():
-		return
+		return false
 	var deposited_items: Array = player.inventory.items.duplicate()
 	var value: int = player.inventory.total_value()
 	for item: ArtifactDefinition in deposited_items:
@@ -772,14 +777,15 @@ func extract_player_inventory() -> void:
 		player.refresh_held_item_views()
 	_update_bongo_quota_monitor()
 	print("보관:%d 미정산:%d / 할당량:%d" % [value, pending_recovered_value, quota.required_value])
+	return true
 
-func settle_stored_cargo() -> void:
+func settle_stored_cargo() -> bool:
 	if current_map_id != MAP_SETTLEMENT_OFFICE:
 		print("정산소에 도착해야 정산할 수 있습니다.")
-		return
+		return false
 	if pending_recovered_value <= 0:
 		print("정산할 물품이 없습니다.")
-		return
+		return false
 	var settled_value := pending_recovered_value
 	quota.add_recovered_value(settled_value)
 	pending_recovered_value = 0
@@ -787,33 +793,64 @@ func settle_stored_cargo() -> void:
 	_clear_pending_cargo_visuals()
 	_update_bongo_quota_monitor()
 	print("정산:%d / 할당량:%d" % [quota.recovered_value, quota.required_value])
+	return true
 
 func depart_bongo() -> bool:
 	if current_map_id == MAP_BONGO_HUB:
-		travel_to_retrieval_map(MAP_JONGGA_ESTATE)
-		print("BONGO_DEPARTURE: 봉고차가 회수 지점으로 출발합니다.")
-		return true
+		if travel_to_retrieval_map(MAP_JONGGA_ESTATE):
+			print("BONGO_DEPARTURE: 봉고차가 회수 지점으로 출발합니다.")
+			return true
+		return false
 	return return_to_bongo_hub()
 
 func return_to_bongo_hub() -> bool:
+	if bongo_traveling or current_map_id == MAP_BONGO_TRAVEL:
+		print("봉고차가 이미 이동 중입니다.")
+		return false
 	if current_map_id == MAP_BONGO_HUB:
 		print("이미 봉고차 내부입니다.")
 		return false
 	bongo_departed = true
-	_begin_bongo_travel(MAP_BONGO_HUB)
+	if not _begin_bongo_travel(MAP_BONGO_HUB):
+		return false
 	print("BONGO_RETURN: 봉고차 내부로 복귀합니다.")
 	return true
 
-func travel_to_retrieval_map(map_id: String = MAP_JONGGA_ESTATE) -> void:
+func travel_to_retrieval_map(map_id: String = MAP_JONGGA_ESTATE) -> bool:
+	if bongo_traveling or current_map_id == MAP_BONGO_TRAVEL:
+		print("봉고차가 이미 이동 중입니다.")
+		return false
+	if current_map_id != MAP_BONGO_HUB:
+		print("봉고차 허브에서만 회수 지점으로 출발할 수 있습니다.")
+		return false
+	if pending_recovered_value > 0:
+		print("미정산 물품을 먼저 정산소로 가져가세요.")
+		return false
+	if map_id != MAP_JONGGA_ESTATE:
+		print("지원하지 않는 회수 지점입니다: %s" % map_id)
+		return false
 	selected_retrieval_map_id = map_id
-	_begin_bongo_travel(map_id)
+	return _begin_bongo_travel(map_id)
 
-func travel_to_settlement_map() -> void:
-	_begin_bongo_travel(MAP_SETTLEMENT_OFFICE)
+func travel_to_settlement_map() -> bool:
+	if bongo_traveling or current_map_id == MAP_BONGO_TRAVEL:
+		print("봉고차가 이미 이동 중입니다.")
+		return false
+	if current_map_id != MAP_BONGO_HUB:
+		print("봉고차 허브로 복귀한 뒤 정산소로 이동할 수 있습니다.")
+		return false
+	if pending_recovered_value <= 0:
+		print("정산소로 가져갈 미정산 물품이 없습니다.")
+		return false
+	return _begin_bongo_travel(MAP_SETTLEMENT_OFFICE)
 
-func _begin_bongo_travel(destination_id: String) -> void:
+func _begin_bongo_travel(destination_id: String) -> bool:
 	if bongo_traveling:
-		return
+		return false
+	if destination_id == "" or destination_id == current_map_id:
+		return false
+	if not [MAP_BONGO_HUB, MAP_JONGGA_ESTATE, MAP_SETTLEMENT_OFFICE].has(destination_id):
+		return false
 	bongo_traveling = true
 	bongo_travel_destination_id = destination_id
 	current_map_id = MAP_BONGO_TRAVEL
@@ -826,6 +863,7 @@ func _begin_bongo_travel(destination_id: String) -> void:
 	_hide_threat_manifestation()
 	_update_bongo_quota_monitor()
 	print("BONGO_TRAVEL_START:%s" % destination_id)
+	return true
 
 func _update_bongo_travel(delta: float) -> void:
 	if not bongo_traveling:

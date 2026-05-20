@@ -283,6 +283,18 @@ func _assert_extraction_zone_inside_van(main: Node, player: Node3D) -> void:
 	if str(main.get("current_map_id")) == "bongo_travel":
 		_fail("Loading cargo should not start map travel by itself")
 		return
+	var return_button := main.find_child("BongoDepartureButton", true, false)
+	if return_button == null or not return_button.has_method("interact"):
+		_fail("Van has no interactive return button")
+		return
+	return_button.interact(player)
+	for _i in range(90):
+		if str(main.get("current_map_id")) != "bongo_travel":
+			break
+		await physics_frame
+	if str(main.get("current_map_id")) != "bongo_hub":
+		_fail("Return button did not move player back to the bongo hub before settlement")
+		return
 	var settlement_selector := main.find_child("BongoSettlementMapSelector", true, false)
 	if settlement_selector == null or not settlement_selector.has_method("interact"):
 		_fail("Van has no interactive settlement map selector")
