@@ -40,6 +40,10 @@ sprint={
 "deadzone": 0.5,
 "events": [Object(InputEventKey,"physical_keycode":4194325)]
 }
+restart_run={
+"deadzone": 0.5,
+"events": [Object(InputEventKey,"physical_keycode":82)]
+}
 
 [k_horror]
 

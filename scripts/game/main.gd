@@ -36,6 +36,8 @@ var _startup_done: bool = false
 var _side_passage_triggered: bool = false
 var _threat_attack_elapsed: float = 0.0
 var _threat_pattern_elapsed: float = 0.0
+var _threat_attack_elapsed_by_stage: Dictionary = {}
+var _threat_pattern_elapsed_by_stage: Dictionary = {}
 var _player_down: bool = false
 var player_down: bool = false
 var bongo_departed: bool = false
@@ -64,6 +66,8 @@ func _ready() -> void:
 	player.movement_enabled = false
 	hud = HUDScript.new()
 	add_child(hud)
+	if hud.has_signal("restart_requested"):
+		hud.restart_requested.connect(restart_run)
 	resentment.resentment_changed.connect(_on_resentment_changed)
 	print("BONGO_VAN: 오래된 봉고차가 비포장 길을 덜컹이며 들어옵니다.")
 	print("K Horror Retrieval Prototype booted")
@@ -115,6 +119,8 @@ func _add_lantern_light(label: String, position: Vector3, color: Color, energy: 
 	lamp.global_position = position
 
 func _process(delta: float) -> void:
+	if _player_down and Input.is_action_just_pressed("restart_run"):
+		restart_run()
 	_update_bongo_travel(delta)
 	_update_startup_sequence(delta)
 	var interaction_label: String = ""
@@ -133,6 +139,8 @@ func _process(delta: float) -> void:
 		player.stamina_ratio,
 		player.is_sprinting
 	)
+	if hud.has_method("set_player_down"):
+		hud.set_player_down(_player_down)
 	_update_bongo_quota_monitor()
 
 func _physics_process(delta: float) -> void:
@@ -171,18 +179,21 @@ func _on_resentment_changed(value: int, stage: int, reason: String) -> void:
 	_update_threat_manifestation(stage)
 
 func _update_threat_manifestation(stage: int) -> void:
-	if not _threat_can_damage(stage) or not _threat_zone_allows_player(stage):
-		_hide_threat_manifestation()
-		return
-	_ensure_threat_manifestation(stage)
+	for threat_stage in _threat_active_stages(stage):
+		if _threat_can_damage(threat_stage) and _threat_zone_allows_player(threat_stage):
+			_ensure_threat_manifestation(threat_stage)
+		else:
+			if _threat_can_damage(threat_stage):
+				_ensure_threat_manifestation(threat_stage)
+			_hide_threat_for_stage(threat_stage)
 
 func _ensure_threat_manifestation(stage: int) -> Node3D:
-	var threat := find_child("ThreatApparition", true, false) as Node3D
+	var threat := find_child(_threat_node_name_for_stage(stage), true, false) as Node3D
 	var ghost_type := _threat_ghost_type(stage)
 	var should_reposition := false
 	if threat == null:
 		threat = Node3D.new()
-		threat.name = "ThreatApparition"
+		threat.name = _threat_node_name_for_stage(stage)
 		add_child(threat)
 		_create_threat_visual(threat)
 		threat.add_to_group("threats")
@@ -191,8 +202,8 @@ func _ensure_threat_manifestation(stage: int) -> Node3D:
 		should_reposition = not threat.visible or str(threat.get_meta("ghost_type", "")) != ghost_type
 	if should_reposition:
 		threat.global_position = _threat_spawn_position(stage)
-		_threat_attack_elapsed = 0.0
-		_threat_pattern_elapsed = 0.0
+		_threat_attack_elapsed_by_stage[stage] = 0.0
+		_threat_pattern_elapsed_by_stage[stage] = 0.0
 	_apply_threat_metadata(threat, stage, ghost_type)
 	_apply_threat_visual_profile(threat, ghost_type)
 	threat.visible = true
@@ -202,48 +213,65 @@ func _update_threat_health_loop(delta: float) -> void:
 	if _player_down or player == null:
 		return
 	var stage := resentment.stage()
-	if not _threat_can_damage(stage) or not _threat_zone_allows_player(stage):
-		_threat_attack_elapsed = 0.0
-		_hide_threat_manifestation()
-		return
 	var player_node: Node3D = player as Node3D
 	if player_node == null:
 		return
-	var threat := _ensure_threat_manifestation(stage)
-	var target_position := player_node.global_position + THREAT_PLAYER_OFFSET
-	var distance_to_player := threat.global_position.distance_to(target_position)
-	var attack_range := _threat_attack_range(stage)
-	_threat_pattern_elapsed += delta
-	if distance_to_player > max(attack_range * 0.45, 0.2):
-		_move_threat_toward_target(threat, target_position, stage, distance_to_player, delta)
-		distance_to_player = threat.global_position.distance_to(target_position)
-	if distance_to_player <= attack_range:
-		_threat_attack_elapsed += delta
-		var attack_cadence := _threat_attack_cadence(stage)
-		while _threat_attack_elapsed >= attack_cadence and not _player_down:
-			_threat_attack_elapsed -= attack_cadence
-			_apply_threat_damage(stage)
-	else:
-		_threat_attack_elapsed = 0.0
+	var active_stages := _threat_active_stages(stage)
+	if active_stages.is_empty():
+		_hide_threat_manifestation()
+		return
+	for threat_stage in active_stages:
+		if not _threat_can_damage(threat_stage) or not _threat_zone_allows_player(threat_stage):
+			_threat_attack_elapsed_by_stage[threat_stage] = 0.0
+			if _threat_can_damage(threat_stage):
+				_ensure_threat_manifestation(threat_stage)
+			_hide_threat_for_stage(threat_stage)
+			continue
+		var threat := _ensure_threat_manifestation(threat_stage)
+		var target_position := player_node.global_position + THREAT_PLAYER_OFFSET
+		var distance_to_player := threat.global_position.distance_to(target_position)
+		var attack_range := _threat_attack_range(threat_stage)
+		_threat_pattern_elapsed_by_stage[threat_stage] = float(_threat_pattern_elapsed_by_stage.get(threat_stage, 0.0)) + delta
+		if distance_to_player > max(attack_range * 0.45, 0.2):
+			_move_threat_toward_target(threat, target_position, threat_stage, distance_to_player, delta)
+			distance_to_player = threat.global_position.distance_to(target_position)
+		if distance_to_player <= attack_range:
+			_threat_attack_elapsed_by_stage[threat_stage] = float(_threat_attack_elapsed_by_stage.get(threat_stage, 0.0)) + delta
+			var attack_cadence := _threat_attack_cadence(threat_stage)
+			while float(_threat_attack_elapsed_by_stage.get(threat_stage, 0.0)) >= attack_cadence and not _player_down:
+				_threat_attack_elapsed_by_stage[threat_stage] = float(_threat_attack_elapsed_by_stage.get(threat_stage, 0.0)) - attack_cadence
+				_apply_threat_damage(threat_stage)
+		else:
+			_threat_attack_elapsed_by_stage[threat_stage] = 0.0
 
 func _move_threat_toward_target(threat: Node3D, target_position: Vector3, stage: int, _distance_to_player: float, delta: float) -> void:
 	var pattern := _threat_attack_pattern(stage)
 	var speed := _threat_pursuit_speed(stage)
 	var move_target := target_position
 	if pattern == "dokkaebi_forest_trickster":
-		var side := -1.0 if int(_threat_pattern_elapsed / 1.2) % 2 == 0 else 1.0
+		var pattern_elapsed := float(_threat_pattern_elapsed_by_stage.get(stage, 0.0))
+		var side := -1.0 if int(pattern_elapsed / 1.2) % 2 == 0 else 1.0
 		move_target = target_position + Vector3(side * 3.0, 0.0, -1.2)
 		move_target.z = max(move_target.z, OUTER_GATE_Z + 3.0)
 	elif pattern == "dalgyal_blind_lunge":
-		var lunge_window := fmod(_threat_pattern_elapsed, 1.8)
+		var lunge_window := fmod(float(_threat_pattern_elapsed_by_stage.get(stage, 0.0)), 1.8)
 		if lunge_window >= 1.05:
 			speed *= 1.65
 	threat.global_position = threat.global_position.move_toward(move_target, speed * delta)
 
 func _hide_threat_manifestation() -> void:
-	var threat := find_child("ThreatApparition", true, false) as Node3D
+	for node in get_tree().get_nodes_in_group("threats"):
+		var threat := node as Node3D
+		if threat != null:
+			threat.visible = false
+
+func _hide_threat_for_stage(stage: int) -> void:
+	var threat := find_child(_threat_node_name_for_stage(stage), true, false) as Node3D
 	if threat != null:
 		threat.visible = false
+
+func _threat_node_name_for_stage(stage: int) -> String:
+	return "ThreatApparitionStage%d" % stage
 
 func _apply_threat_metadata(threat: Node3D, stage: int, ghost_type: String) -> void:
 	threat.set_meta("entity_type", "ghost")
@@ -306,7 +334,42 @@ func _mark_player_down() -> void:
 	_player_down = true
 	player_down = true
 	player.set("movement_enabled", false)
+	if hud != null and hud.has_method("set_player_down"):
+		hud.set_player_down(true)
 	print("PLAYER_DOWN: health depleted by ThreatApparition")
+
+func restart_run() -> void:
+	if player == null:
+		return
+	_player_down = false
+	player_down = false
+	bongo_departed = false
+	bongo_traveling = false
+	bongo_travel_destination_id = ""
+	current_map_id = MAP_BONGO_HUB
+	selected_retrieval_map_id = ""
+	_side_passage_triggered = false
+	_threat_attack_elapsed = 0.0
+	_threat_pattern_elapsed = 0.0
+	_threat_attack_elapsed_by_stage.clear()
+	_threat_pattern_elapsed_by_stage.clear()
+	resentment.current_value = 0
+	resentment.history.clear()
+	if player.has_method("reset_status"):
+		player.reset_status()
+	else:
+		player.set("health", player.get("max_health"))
+		player.set("health_ratio", 1.0)
+		player.set("stamina_seconds", player.get("max_stamina_seconds"))
+		player.set("stamina_ratio", 1.0)
+		player.inventory.clear()
+	_move_player_to(BongoVanPlanScript.PLAYER_START_POSITION)
+	_hide_threat_manifestation()
+	_update_bongo_hub_exit_state()
+	if hud != null and hud.has_method("set_player_down"):
+		hud.set_player_down(false)
+	_update_bongo_quota_monitor()
+	print("RUN_RESTART: 봉고차 내부에서 다시 시작합니다.")
 
 func _threat_damage(stage: int) -> float:
 	return _threat_profile_float(
@@ -333,6 +396,20 @@ func _threat_ghost_type(stage: int) -> String:
 	if typeof(value) == TYPE_STRING:
 		return str(value)
 	return "sangbok_ghost" if stage >= 4 else ""
+
+func _threat_active_stages(stage: int) -> Array[int]:
+	var value: Variant = _call_threat_director("active_threat_stages_for_stage", stage)
+	if typeof(value) == TYPE_ARRAY:
+		var result: Array[int] = []
+		for item in value:
+			if _is_number(item):
+				result.append(int(item))
+		return result
+	var result: Array[int] = []
+	for threat_stage in range(3, clamp(stage, 0, 5) + 1):
+		if _threat_ghost_type(threat_stage) != "":
+			result.append(threat_stage)
+	return result
 
 func _threat_zone_for_stage(stage: int) -> String:
 	var value: Variant = _call_threat_director("threat_zone_for_stage", stage)

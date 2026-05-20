@@ -1,11 +1,14 @@
 extends CanvasLayer
 class_name HUD
 
+signal restart_requested
+
 var label: Label
 var health_back: ColorRect
 var health_fill: ColorRect
 var stamina_back: ColorRect
 var stamina_fill: ColorRect
+var restart_button: Button
 
 const GAUGE_WIDTH: float = 220.0
 const GAUGE_HEIGHT: float = 14.0
@@ -42,6 +45,20 @@ func _ready() -> void:
 	stamina_fill.size = Vector2(GAUGE_FILL_WIDTH, GAUGE_FILL_HEIGHT)
 	stamina_fill.color = Color(0.54, 0.78, 0.42, 0.95)
 	stamina_back.add_child(stamina_fill)
+	restart_button = Button.new()
+	restart_button.name = "RestartRunButton"
+	restart_button.text = "다시 시작 (R)"
+	restart_button.visible = false
+	restart_button.anchor_left = 0.5
+	restart_button.anchor_right = 0.5
+	restart_button.anchor_top = 0.5
+	restart_button.anchor_bottom = 0.5
+	restart_button.offset_left = -96.0
+	restart_button.offset_right = 96.0
+	restart_button.offset_top = 38.0
+	restart_button.offset_bottom = 82.0
+	restart_button.pressed.connect(_on_restart_pressed)
+	add_child(restart_button)
 
 func _place_right_gauge(gauge: ColorRect, top: float) -> void:
 	gauge.anchor_left = 1.0
@@ -80,3 +97,10 @@ func update_status(
 	health_fill.color = Color(0.94, 0.35, 0.18, 0.96) if health_ratio < 0.3 else Color(0.72, 0.12, 0.1, 0.96)
 	stamina_fill.size.x = GAUGE_FILL_WIDTH * clamp(stamina_ratio, 0.0, 1.0)
 	stamina_fill.color = Color(0.78, 0.55, 0.35, 0.95) if stamina_ratio < 0.25 else Color(0.54, 0.78, 0.42, 0.95)
+
+func set_player_down(is_down: bool) -> void:
+	if restart_button != null:
+		restart_button.visible = is_down
+
+func _on_restart_pressed() -> void:
+	restart_requested.emit()

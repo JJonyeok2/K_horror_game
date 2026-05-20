@@ -1,6 +1,7 @@
 extends SceneTree
 
 const MainScene := preload("res://scenes/Main.tscn")
+const ArtifactDefinition := preload("res://scripts/core/artifact_definition.gd")
 
 var _failed := false
 
@@ -17,6 +18,7 @@ func _initialize() -> void:
 
 	await _travel_to_jongga_estate(main, player)
 	await _assert_sprint_stamina(player)
+	await _assert_weight_slows_movement_and_drains_sprint(player)
 	await _assert_exhausted_walk_recovery(player)
 	_assert_folklore_route_props(main)
 	await _assert_threat_manifestation(main)
@@ -64,6 +66,18 @@ func _assert_sprint_stamina(player: Node3D) -> void:
 		_fail("Stamina ratio did not reflect drain")
 		return
 
+func _assert_weight_slows_movement_and_drains_sprint(player: Node3D) -> void:
+	var empty_walk_speed := await _measure_forward_walk_speed(player, float(player.get("max_stamina_seconds")))
+	var empty_drain := await _measure_sprint_drain(player, 0.0)
+	var heavy_walk_speed := await _measure_weighted_walk_speed(player, 10.5)
+	var heavy_drain := await _measure_sprint_drain(player, 10.5)
+	if not heavy_walk_speed < empty_walk_speed * 0.72:
+		_fail("Heavy carried weight should noticeably slow walking: empty=%s heavy=%s" % [empty_walk_speed, heavy_walk_speed])
+		return
+	if not heavy_drain > empty_drain * 1.25:
+		_fail("Heavy carried weight should drain sprint stamina faster: empty=%s heavy=%s" % [empty_drain, heavy_drain])
+		return
+
 func _assert_exhausted_walk_recovery(player: Node3D) -> void:
 	var max_stamina := float(player.get("max_stamina_seconds"))
 	var threshold_value: Variant = player.get("exhausted_recovery_threshold_seconds")
@@ -89,14 +103,47 @@ func _assert_exhausted_walk_recovery(player: Node3D) -> void:
 		return
 
 func _measure_forward_walk_speed(player: Node3D, stamina: float) -> float:
+	player.inventory.clear()
+	if player.has_method("refresh_held_item_views"):
+		player.refresh_held_item_views()
+	return await _measure_weighted_walk_speed(player, 0.0, stamina)
+
+func _measure_weighted_walk_speed(player: Node3D, carried_weight: float, stamina: float = -1.0) -> float:
+	player.inventory.clear()
+	if carried_weight > 0.0:
+		player.call("try_collect_artifact", ArtifactDefinition.new("weight test", 10, carried_weight, 0, [], 1))
 	player.set("stamina_seconds", stamina)
+	if stamina < 0.0:
+		player.set("stamina_seconds", float(player.get("max_stamina_seconds")))
 	player.set("movement_enabled", true)
 	Input.action_release("sprint")
 	Input.action_press("move_forward")
 	await physics_frame
 	Input.action_release("move_forward")
 	var player_velocity: Vector3 = player.get("velocity")
+	player.inventory.clear()
+	if player.has_method("refresh_held_item_views"):
+		player.refresh_held_item_views()
 	return Vector2(player_velocity.x, player_velocity.z).length()
+
+func _measure_sprint_drain(player: Node3D, carried_weight: float) -> float:
+	player.inventory.clear()
+	if carried_weight > 0.0:
+		player.call("try_collect_artifact", ArtifactDefinition.new("sprint weight test", 10, carried_weight, 0, [], 1))
+	var max_stamina := float(player.get("max_stamina_seconds"))
+	player.set("stamina_seconds", max_stamina)
+	player.set("movement_enabled", true)
+	Input.action_press("move_forward")
+	Input.action_press("sprint")
+	for _i in range(45):
+		await physics_frame
+	Input.action_release("sprint")
+	Input.action_release("move_forward")
+	var drained := max_stamina - float(player.get("stamina_seconds"))
+	player.inventory.clear()
+	if player.has_method("refresh_held_item_views"):
+		player.refresh_held_item_views()
+	return drained
 
 func _assert_folklore_route_props(main: Node) -> void:
 	var required := [
@@ -122,7 +169,7 @@ func _assert_threat_manifestation(main: Node) -> void:
 	resentment.call("add_resentment", 8, "test escalation")
 	for _i in range(4):
 		await process_frame
-	var threat := main.find_child("ThreatApparition", true, false) as Node3D
+	var threat := _first_visible_threat(main)
 	if threat == null:
 		_fail("Threat apparition did not spawn when resentment reached high stage")
 		return
@@ -135,6 +182,13 @@ func _assert_threat_manifestation(main: Node) -> void:
 	if str(threat.get_meta("threat_zone", "")) != "inner_building_only":
 		_fail("High-stage threat should be marked as building-only")
 		return
+
+func _first_visible_threat(main: Node) -> Node3D:
+	for node in main.get_tree().get_nodes_in_group("threats"):
+		var threat := node as Node3D
+		if threat != null and threat.visible:
+			return threat
+	return null
 
 func _fail(message: String) -> void:
 	_failed = true

@@ -68,6 +68,21 @@ func ghost_type_for_stage(stage: int) -> String:
 			return "dalgyal_gwisin"
 	return ""
 
+func active_ghost_types_for_stage(stage: int) -> Array[String]:
+	var result: Array[String] = []
+	for threat_stage in range(3, _clamped_stage(stage) + 1):
+		var ghost_type := ghost_type_for_stage(threat_stage)
+		if ghost_type != "":
+			result.append(ghost_type)
+	return result
+
+func active_threat_stages_for_stage(stage: int) -> Array[int]:
+	var result: Array[int] = []
+	for threat_stage in range(3, _clamped_stage(stage) + 1):
+		if ghost_type_for_stage(threat_stage) != "":
+			result.append(threat_stage)
+	return result
+
 func threat_zone_for_stage(stage: int) -> String:
 	match _clamped_stage(stage):
 		3:

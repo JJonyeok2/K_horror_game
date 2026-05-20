@@ -9,6 +9,7 @@ const ArtifactScene := preload("res://scenes/props/Artifact.tscn")
 @export var sprint_speed_multiplier: float = 1.65
 @export var exhausted_walk_multiplier: float = 0.65
 @export var exhausted_recovery_threshold_seconds: float = 1.0
+@export var weight_stamina_drain_multiplier: float = 1.0
 @export var max_stamina_seconds: float = 15.0
 @export var stamina_recovery_seconds: float = 11.0
 @export var mouse_sensitivity: float = 0.0025
@@ -67,7 +68,8 @@ func _physics_process(delta: float) -> void:
 	is_sprinting = wants_sprint and not _is_exhausted and stamina_seconds > 0.0
 	if is_sprinting:
 		speed *= sprint_speed_multiplier
-		stamina_seconds = max(stamina_seconds - delta, 0.0)
+		var drain_multiplier := 1.0 + weight_ratio * weight_stamina_drain_multiplier
+		stamina_seconds = max(stamina_seconds - delta * drain_multiplier, 0.0)
 		if stamina_seconds <= 0.0:
 			_is_exhausted = true
 	else:
@@ -101,6 +103,17 @@ func heal(amount: float) -> void:
 
 func _update_health_ratio() -> void:
 	health_ratio = clamp(health / max_health, 0.0, 1.0)
+
+func reset_status() -> void:
+	health = max_health
+	stamina_seconds = max_stamina_seconds
+	_is_exhausted = false
+	is_sprinting = false
+	velocity = Vector3.ZERO
+	inventory.clear()
+	refresh_held_item_views()
+	_update_health_ratio()
+	_update_stamina_ratio()
 
 func try_collect_artifact(item: ArtifactDefinition) -> bool:
 	var accepted: bool = inventory.try_add(item)

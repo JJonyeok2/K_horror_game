@@ -19,6 +19,8 @@ const PerformanceSettingsScript := preload("res://scripts/game/performance_setti
 const SPAWN_POINT := BongoVanPlanScript.PLAYER_START_POSITION
 const GATE_NODE_NAME := "OuterEstateGate"
 const GATE_POSITION := Vector3(0.0, 0.0, -12.0)
+const ESTATE_WALL_MIN_HEIGHT: float = 5.6
+const ESTATE_ROOF_MIN_CENTER_Y: float = 5.45
 
 const MATERIAL_SURFACES := {
 	"packed_earth": "packed_courtyard_dirt",
@@ -114,6 +116,11 @@ func _create_planned_walls() -> void:
 			_create_box("ApproachWallLeftNorth", Vector3(position.x, position.y, 16.0), Vector3(size.x, size.y, 18.0), _fallback_color(material_key), material_key)
 			_create_box("ApproachWallLeftMiddleSeal", Vector3(position.x, position.y, 1.0), Vector3(size.x, size.y, 12.0), _fallback_color(material_key), material_key)
 			_create_box("ApproachWallLeftSouth", Vector3(position.x, position.y, -7.0), Vector3(size.x, size.y, 4.0), _fallback_color(material_key), material_key)
+			continue
+		if label == "ApproachWallRight":
+			_create_box("ApproachWallRightNorth", Vector3(position.x, position.y, 16.0), Vector3(size.x, size.y, 18.0), _fallback_color(material_key), material_key)
+			_create_box("ApproachWallRightMiddleSeal", Vector3(position.x, position.y, 1.0), Vector3(size.x, size.y, 12.0), _fallback_color(material_key), material_key)
+			_create_box("ApproachWallRightSouth", Vector3(position.x, position.y, -7.0), Vector3(size.x, size.y, 4.0), _fallback_color(material_key), material_key)
 			continue
 		if label == "OuterEstateGateLeftWall":
 			_create_box("OuterEstateGateLeftWallInner", Vector3(-7.0, position.y, position.z), Vector3(2.9, size.y, size.z), _fallback_color(material_key), material_key)
@@ -723,6 +730,9 @@ func _create_tall_wall_box(label: String, position: Vector3, size: Vector3, mate
 	return _create_box(label, raised_position, raised_size, _fallback_color(material_key), material_key)
 
 func _create_box(label: String, position: Vector3, size: Vector3, color: Color, material_key: String = "") -> StaticBody3D:
+	var adjusted := _adjust_estate_structure_box(label, position, size)
+	position = adjusted["position"]
+	size = adjusted["size"]
 	var body := StaticBody3D.new()
 	body.name = label
 	add_child(body)
@@ -738,12 +748,43 @@ func _keep_bottom_position(position: Vector3, original_size: Vector3, raised_siz
 	return Vector3(position.x, bottom_y + raised_size.y * 0.5, position.z)
 
 func _create_child_body(parent: Node3D, label: String, local_position: Vector3, size: Vector3, color: Color, material_key: String = "") -> StaticBody3D:
+	var adjusted := _adjust_estate_structure_box(label, local_position, size)
+	local_position = adjusted["position"]
+	size = adjusted["size"]
 	var body := StaticBody3D.new()
 	body.name = label
 	parent.add_child(body)
 	body.position = local_position
 	_add_mesh_and_collision(body, size, color, material_key)
 	return body
+
+func _adjust_estate_structure_box(label: String, position: Vector3, size: Vector3) -> Dictionary:
+	if _skip_estate_height_adjustment(label):
+		return {"position": position, "size": size}
+	if _is_estate_wall_like(label):
+		var raised_size := _heightened_size(size, ESTATE_WALL_MIN_HEIGHT)
+		return {"position": _keep_bottom_position(position, size, raised_size), "size": raised_size}
+	if label.contains("Roof") and size.y <= 0.8:
+		position.y = max(position.y, ESTATE_ROOF_MIN_CENTER_Y)
+	return {"position": position, "size": size}
+
+func _skip_estate_height_adjustment(label: String) -> bool:
+	return (
+		label.begins_with("Bongo")
+		or label.begins_with("Settlement")
+		or label.begins_with("StoredCargo")
+		or label.begins_with("Threat")
+	)
+
+func _is_estate_wall_like(label: String) -> bool:
+	return (
+		label.contains("Wall")
+		or label.contains("Post")
+		or label.contains("Pillar")
+		or label.contains("GateBypassBlock")
+		or label.contains("GateSideSeam")
+		or label.contains("ApproachWall")
+	)
 
 func _create_cylinder(label: String, position: Vector3, radius: float, height: float, color: Color, material_key: String = "") -> StaticBody3D:
 	var body := StaticBody3D.new()

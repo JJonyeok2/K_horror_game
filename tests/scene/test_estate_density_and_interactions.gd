@@ -67,19 +67,26 @@ func _assert_long_approach_distance(main: Node) -> void:
 		_fail("Bongo-to-gate approach is too short for a one-minute walk: %s" % distance)
 
 func _assert_approach_side_wall_gap_closed(main: Node) -> void:
-	var seal := main.find_child("ApproachWallLeftMiddleSeal", true, false) as Node3D
+	_assert_approach_wall_seal(main, "ApproachWallLeftMiddleSeal", true)
+	_assert_approach_wall_seal(main, "ApproachWallRightMiddleSeal", false)
+
+func _assert_approach_wall_seal(main: Node, label: String, should_be_left: bool) -> void:
+	var seal := main.find_child(label, true, false) as Node3D
 	if seal == null:
-		_fail("Approach left wall has an open gap before the main gate")
+		_fail("%s is missing before the main gate" % label)
 		return
-	_assert_node_with_collision(main, "ApproachWallLeftMiddleSeal")
+	_assert_node_with_collision(main, label)
 	var size := _box_shape_size(seal)
 	var min_z := seal.global_position.z - size.z * 0.5
 	var max_z := seal.global_position.z + size.z * 0.5
 	if min_z > -5.0 or max_z < 7.0:
-		_fail("Approach wall seal does not cover the pre-gate gap: %s..%s" % [min_z, max_z])
+		_fail("%s does not cover the pre-gate gap: %s..%s" % [label, min_z, max_z])
 		return
-	if seal.global_position.x > -4.5:
-		_fail("Approach wall seal should stay on the left wall, not block the center route")
+	if should_be_left and seal.global_position.x > -4.5:
+		_fail("%s should stay on the left wall, not block the center route" % label)
+		return
+	if not should_be_left and seal.global_position.x < 4.5:
+		_fail("%s should stay on the right wall, not block the center route" % label)
 		return
 
 func _assert_gate_bypass_blocked(main: Node) -> void:
@@ -284,12 +291,18 @@ func _assert_korean_ghost_haunts(main: Node) -> void:
 
 func _assert_taller_walls_and_posts(main: Node) -> void:
 	var minimum_heights := {
-		"GateLeftPost": 4.5,
-		"GateRightPost": 4.5,
-		"CourtyardOuterWallLeft": 4.0,
-		"CourtyardOuterWallRight": 4.0,
-		"MainHouseFrontWallLeft": 4.0,
-		"MainHouseFrontWallRight": 4.0,
+		"ApproachWallLeftMiddleSeal": 5.2,
+		"ApproachWallRightMiddleSeal": 5.2,
+		"GateLeftPost": 5.2,
+		"GateRightPost": 5.2,
+		"CourtyardOuterWallLeft": 5.2,
+		"CourtyardOuterWallRight": 5.2,
+		"MainHouseFrontWallLeft": 5.2,
+		"MainHouseFrontWallRight": 5.2,
+		"FrontSarangchaeBackWall": 5.0,
+		"FrontStorehouseAnnexBackWall": 5.0,
+		"ServantQuartersBackWall": 5.0,
+		"CollapsedKitchenBackWall": 5.0,
 	}
 	for label: String in minimum_heights.keys():
 		var node := main.find_child(label, true, false)
@@ -300,6 +313,24 @@ func _assert_taller_walls_and_posts(main: Node) -> void:
 		var min_height: float = minimum_heights[label]
 		if size.y < min_height:
 			_fail("%s is too low: %s" % [label, size.y])
+			return
+	var minimum_roof_tops := {
+		"MainHouseRoof": 5.4,
+		"FrontSarangchaeRoof": 5.3,
+		"FrontStorehouseAnnexRoof": 5.3,
+		"ServantQuartersRoof": 5.3,
+		"CollapsedKitchenRoof": 5.3,
+		"DwitganOuthouseRoof": 5.3,
+	}
+	for label: String in minimum_roof_tops.keys():
+		var node := main.find_child(label, true, false) as Node3D
+		if node == null:
+			_fail("Missing taller roof candidate: %s" % label)
+			return
+		var size := _box_shape_size(node)
+		var top_y := node.global_position.y + size.y * 0.5
+		if top_y < minimum_roof_tops[label]:
+			_fail("%s roof top is too low: %s" % [label, top_y])
 			return
 	var front_wall := main.find_child("MainHouseFrontWallLeft", true, false)
 	var material := _first_standard_material(front_wall)
