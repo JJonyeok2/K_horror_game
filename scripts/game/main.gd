@@ -57,6 +57,7 @@ var pending_cargo_items: Array[ArtifactDefinition] = []
 var _stored_cargo_visual_index: int = 0
 var _bongo_travel_elapsed: float = 0.0
 var _world_map_root: Node3D
+var _bongo_monitor_open: bool = false
 
 func _ready() -> void:
 	audio_director = AudioDirectorScript.new()
@@ -733,15 +734,34 @@ func _is_number(value: Variant) -> bool:
 
 func _update_bongo_quota_monitor() -> void:
 	var label := find_child("BongoQuotaMonitorText", true, false) as Label3D
-	if label == null:
-		return
-	if bongo_traveling:
-		label.text = "이동 중\n최종 ₩%d / ₩%d\n%s" % [quota.recovered_value, quota.required_value, _current_map_label()]
-		return
-	if bongo_departed:
-		label.text = "복귀 출발\n최종 ₩%d / ₩%d\n%s" % [quota.recovered_value, quota.required_value, _current_map_label()]
-		return
-	label.text = "최종 ₩%d / ₩%d\n미정산 ₩%d\n%s" % [quota.recovered_value, quota.required_value, pending_recovered_value, _current_map_label()]
+	if label != null:
+		label.text = "이동\n..." if bongo_traveling else "단말기\nE"
+	if hud != null and hud.has_method("update_bongo_monitor"):
+		hud.update_bongo_monitor("봉고 단말기", _bongo_monitor_body_text(), _bongo_monitor_open)
+
+func toggle_bongo_monitor_panel() -> void:
+	_bongo_monitor_open = not _bongo_monitor_open
+	_update_bongo_quota_monitor()
+
+func open_bongo_monitor_panel() -> void:
+	_bongo_monitor_open = true
+	_update_bongo_quota_monitor()
+
+func close_bongo_monitor_panel() -> void:
+	_bongo_monitor_open = false
+	_update_bongo_quota_monitor()
+
+func _bongo_monitor_body_text() -> String:
+	var cargo_line := "No pending cargo / 미정산 화물 없음"
+	if pending_recovered_value > 0:
+		cargo_line = "Pending cargo loaded / 미정산 화물 적재: %d" % pending_recovered_value
+	return "Final / 최종: %d / %d\nPending / 미정산: %d\nLocation / 위치: %s\n%s\n\n단말기를 다시 누르면 닫힙니다." % [
+		quota.recovered_value,
+		quota.required_value,
+		pending_recovered_value,
+		_current_map_label(),
+		cargo_line,
+	]
 
 func _create_threat_visual(root: Node3D) -> void:
 	var body := MeshInstance3D.new()
@@ -870,6 +890,7 @@ func _begin_bongo_travel(destination_id: String) -> bool:
 	bongo_travel_destination_id = destination_id
 	current_map_id = MAP_BONGO_TRAVEL
 	_bongo_travel_elapsed = 0.0
+	_bongo_monitor_open = false
 	_refresh_world_scope_visibility()
 	_update_bongo_hub_exit_state()
 	if player != null:

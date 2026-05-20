@@ -41,12 +41,18 @@ func _assert_bongo_quota_monitor(main: Node) -> void:
 	if abs(local_delta.x) > floor_size.x * 0.5 or abs(local_delta.z) > floor_size.z * 0.5:
 		_fail("BongoQuotaMonitor is outside van footprint: delta=%s floor_size=%s" % [local_delta, floor_size])
 		return
-	var quota_text := _quota_monitor_text(monitor)
-	if quota_text == "":
-		_fail("BongoQuotaMonitor has no Label3D or TextMesh text")
+	if not monitor.has_method("interact"):
+		_fail("BongoQuotaMonitor should open a HUD terminal through interaction")
 		return
-	if quota_text.find("최종") == -1 or quota_text.find("미정산") == -1:
-		_fail("BongoQuotaMonitor text does not show final and pending values: %s" % quota_text)
+	var quota_label := _quota_monitor_label(monitor)
+	if quota_label == null:
+		_fail("BongoQuotaMonitor has no compact Label3D prompt")
+		return
+	if quota_label.pixel_size > 0.012:
+		_fail("BongoQuotaMonitor world text is too large for the van: %s" % quota_label.pixel_size)
+		return
+	if str(quota_label.text).length() > 16:
+		_fail("BongoQuotaMonitor should keep details out of world text: %s" % str(quota_label.text))
 		return
 
 func _assert_bongo_map_selector_starts_retrieval_map(main: Node) -> void:
@@ -116,9 +122,11 @@ func _assert_bongo_deposit_waits_for_manual_settlement(main: Node) -> void:
 		_fail("Deposited item should remain visible in the van before settlement")
 		return
 	var monitor := main.find_child("BongoQuotaMonitor", true, false)
-	var quota_text := _quota_monitor_text(monitor)
-	if quota_text.find("미정산") == -1 or quota_text.find("70") == -1:
-		_fail("BongoQuotaMonitor did not show pending value after deposit: %s" % quota_text)
+	monitor.interact(player)
+	await process_frame
+	var quota_text := _hud_monitor_text(main)
+	if quota_text.find("Pending") == -1 or quota_text.find("70") == -1:
+		_fail("HUD monitor panel did not show pending value after deposit: %s" % quota_text)
 		return
 	var departure_button := main.find_child("BongoDepartureButton", true, false)
 	if departure_button == null or not departure_button.has_method("interact"):
@@ -183,9 +191,11 @@ func _assert_bongo_deposit_waits_for_manual_settlement(main: Node) -> void:
 	if int(main.get("map_travel_count")) != 3:
 		_fail("Manual settlement should not add another map travel after arriving at the office")
 		return
-	quota_text = _quota_monitor_text(monitor)
-	if quota_text.find("최종") == -1 or quota_text.find("70") == -1:
-		_fail("BongoQuotaMonitor did not show finalized quota after settlement: %s" % quota_text)
+	monitor.interact(player)
+	await process_frame
+	quota_text = _hud_monitor_text(main)
+	if quota_text.find("Final") == -1 or quota_text.find("70") == -1:
+		_fail("HUD monitor panel did not show finalized quota after settlement: %s" % quota_text)
 		return
 	await _assert_settlement_bongo_returns_to_hub(main, player)
 
@@ -273,6 +283,27 @@ func _quota_monitor_text(root: Node) -> String:
 		if nested != "":
 			return nested
 	return ""
+
+func _quota_monitor_label(root: Node) -> Label3D:
+	for child in root.get_children():
+		if child is Label3D:
+			return child as Label3D
+		var nested := _quota_monitor_label(child)
+		if nested != null:
+			return nested
+	return null
+
+func _hud_monitor_text(main: Node) -> String:
+	var hud := main.get("hud") as CanvasLayer
+	if hud == null:
+		return ""
+	var panel := hud.find_child("BongoMonitorPanel", true, false) as Control
+	if panel == null or not panel.visible:
+		return ""
+	var body := hud.find_child("BongoMonitorBody", true, false) as Label
+	if body == null or not body.visible:
+		return ""
+	return str(body.text)
 
 func _wait_for_travel_complete(main: Node) -> void:
 	for _i in range(90):

@@ -9,6 +9,9 @@ var health_fill: ColorRect
 var stamina_back: ColorRect
 var stamina_fill: ColorRect
 var restart_button: Button
+var bongo_monitor_panel: ColorRect
+var bongo_monitor_title: Label
+var bongo_monitor_body: Label
 
 const GAUGE_WIDTH: float = 220.0
 const GAUGE_HEIGHT: float = 14.0
@@ -59,6 +62,7 @@ func _ready() -> void:
 	restart_button.offset_bottom = 82.0
 	restart_button.pressed.connect(_on_restart_pressed)
 	add_child(restart_button)
+	_create_bongo_monitor_panel()
 
 func _place_right_gauge(gauge: ColorRect, top: float) -> void:
 	gauge.anchor_left = 1.0
@@ -97,6 +101,48 @@ func update_status(
 	health_fill.color = Color(0.94, 0.35, 0.18, 0.96) if health_ratio < 0.3 else Color(0.72, 0.12, 0.1, 0.96)
 	stamina_fill.size.x = GAUGE_FILL_WIDTH * clamp(stamina_ratio, 0.0, 1.0)
 	stamina_fill.color = Color(0.78, 0.55, 0.35, 0.95) if stamina_ratio < 0.25 else Color(0.54, 0.78, 0.42, 0.95)
+
+func _create_bongo_monitor_panel() -> void:
+	bongo_monitor_panel = ColorRect.new()
+	bongo_monitor_panel.name = "BongoMonitorPanel"
+	bongo_monitor_panel.visible = false
+	bongo_monitor_panel.anchor_left = 0.5
+	bongo_monitor_panel.anchor_right = 0.5
+	bongo_monitor_panel.anchor_top = 0.5
+	bongo_monitor_panel.anchor_bottom = 0.5
+	bongo_monitor_panel.offset_left = -230.0
+	bongo_monitor_panel.offset_right = 230.0
+	bongo_monitor_panel.offset_top = -165.0
+	bongo_monitor_panel.offset_bottom = 165.0
+	bongo_monitor_panel.color = Color(0.015, 0.03, 0.026, 0.92)
+	add_child(bongo_monitor_panel)
+
+	bongo_monitor_title = Label.new()
+	bongo_monitor_title.name = "BongoMonitorTitle"
+	bongo_monitor_title.position = Vector2(22.0, 18.0)
+	bongo_monitor_title.size = Vector2(416.0, 32.0)
+	bongo_monitor_title.add_theme_font_size_override("font_size", 20)
+	bongo_monitor_title.text = "봉고 단말기"
+	bongo_monitor_panel.add_child(bongo_monitor_title)
+
+	bongo_monitor_body = Label.new()
+	bongo_monitor_body.name = "BongoMonitorBody"
+	bongo_monitor_body.position = Vector2(22.0, 62.0)
+	bongo_monitor_body.size = Vector2(416.0, 238.0)
+	bongo_monitor_body.add_theme_font_size_override("font_size", 18)
+	bongo_monitor_body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	bongo_monitor_panel.add_child(bongo_monitor_body)
+
+func set_bongo_monitor_visible(is_visible: bool) -> void:
+	if bongo_monitor_panel != null:
+		bongo_monitor_panel.visible = is_visible
+
+func update_bongo_monitor(title: String, body: String, is_visible: bool) -> void:
+	if bongo_monitor_panel == null:
+		return
+	bongo_monitor_title.text = title
+	bongo_monitor_body.text = body
+	bongo_monitor_panel.visible = is_visible
 
 func set_player_down(is_down: bool) -> void:
 	if restart_button != null:

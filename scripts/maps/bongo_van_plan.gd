@@ -33,7 +33,7 @@ const COLOR_MONITOR_SCREEN := Color(0.02, 0.17, 0.13)
 const COLOR_MONITOR_GLOW := Color(0.42, 0.95, 0.72)
 
 const QUOTA_MONITOR_NAME = "BongoQuotaMonitor"
-const QUOTA_MONITOR_TEXT = "최종 ₩0 / 목표\n미정산 ₩0"
+const QUOTA_MONITOR_TEXT = "단말기\nE"
 const QUOTA_MONITOR_POSITION := Vector3(0.0, 1.62, 276.0)
 const QUOTA_MONITOR_BACKING_SIZE := Vector3(1.42, 0.88, 0.12)
 const QUOTA_MONITOR_SCREEN_SIZE := Vector3(1.12, 0.58, 0.08)

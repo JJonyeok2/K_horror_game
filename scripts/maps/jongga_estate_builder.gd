@@ -14,6 +14,7 @@ const BongoDepartureButtonScript := preload("res://scripts/interactions/bongo_de
 const BongoMapSelectorScript := preload("res://scripts/interactions/bongo_map_selector.gd")
 const BongoSettlementMapSelectorScript := preload("res://scripts/interactions/bongo_settlement_map_selector.gd")
 const BongoHubRearDoorLockScript := preload("res://scripts/interactions/bongo_hub_rear_door_lock.gd")
+const BongoQuotaMonitorScript := preload("res://scripts/interactions/bongo_quota_monitor.gd")
 const PerformanceSettingsScript := preload("res://scripts/game/performance_settings.gd")
 
 const SPAWN_POINT := BongoVanPlanScript.PLAYER_START_POSITION
@@ -618,19 +619,26 @@ func _create_bongo_hub_rear_door_blocker() -> void:
 	blocker.set_script(BongoHubRearDoorLockScript)
 
 func _create_bongo_quota_monitor() -> void:
-	var monitor := Node3D.new()
+	var monitor := StaticBody3D.new()
 	monitor.name = BongoVanPlanScript.QUOTA_MONITOR_NAME
+	monitor.set_script(BongoQuotaMonitorScript)
 	add_child(monitor)
 	monitor.global_position = BongoVanPlanScript.QUOTA_MONITOR_POSITION
 
 	_add_visual_box(monitor, "BongoQuotaMonitorBacking", Vector3.ZERO, BongoVanPlanScript.QUOTA_MONITOR_BACKING_SIZE, BongoVanPlanScript.COLOR_MONITOR_BACKING, "metal")
 	_add_visual_box(monitor, "BongoQuotaMonitorScreen", Vector3(0.0, 0.0, -0.07), BongoVanPlanScript.QUOTA_MONITOR_SCREEN_SIZE, BongoVanPlanScript.COLOR_MONITOR_SCREEN)
+	var collision := CollisionShape3D.new()
+	collision.name = "CollisionShape3D"
+	var shape := BoxShape3D.new()
+	shape.size = BongoVanPlanScript.QUOTA_MONITOR_BACKING_SIZE
+	collision.shape = shape
+	monitor.add_child(collision)
 
 	var label := Label3D.new()
 	label.name = "BongoQuotaMonitorText"
 	label.text = BongoVanPlanScript.QUOTA_MONITOR_TEXT
 	label.position = Vector3(0.0, -0.06, -0.13)
-	label.pixel_size = 0.018
+	label.pixel_size = 0.009
 	label.modulate = BongoVanPlanScript.COLOR_MONITOR_GLOW
 	label.outline_modulate = Color(0.0, 0.0, 0.0)
 	label.outline_size = 8
