@@ -1,10 +1,14 @@
 extends SceneTree
 
 const MainScene := preload("res://scenes/Main.tscn")
+const PerformanceSettingsScript := preload("res://scripts/game/performance_settings.gd")
 
 var _failed := false
+var _previous_low_spec: Variant
 
 func _initialize() -> void:
+	_previous_low_spec = ProjectSettings.get_setting(PerformanceSettingsScript.LOW_SPEC_SETTING, true)
+	ProjectSettings.set_setting(PerformanceSettingsScript.LOW_SPEC_SETTING, false)
 	var main: Node = MainScene.instantiate()
 	root.add_child(main)
 	for _i in range(90):
@@ -16,6 +20,7 @@ func _initialize() -> void:
 	_assert_surface_has_pbr_material(main, "MainHouseFrontWallLeft", "main house plaster")
 	_assert_surface_has_pbr_material(main, "CourtyardRubble01", "courtyard rubble stone")
 
+	ProjectSettings.set_setting(PerformanceSettingsScript.LOW_SPEC_SETTING, _previous_low_spec)
 	if _failed:
 		quit(1)
 		return

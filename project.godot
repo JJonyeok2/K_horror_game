@@ -40,3 +40,7 @@ sprint={
 "deadzone": 0.5,
 "events": [Object(InputEventKey,"physical_keycode":4194325)]
 }
+
+[k_horror]
+
+low_spec_mode=true

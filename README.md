@@ -21,12 +21,24 @@ git switch k-horror-mvp2
 
 The project uses repository-relative `res://` paths only. The external PBR materials are checked in under `assets/external/ambientcg/materials`, so no Windows-only paths or local downloads are required on macOS.
 
+## Performance Mode
+
+The playable branch defaults to a test-oriented low-spec mode:
+
+- External PBR textures are not loaded during normal play.
+- Fog is disabled.
+- Only the near-start runtime lights are kept.
+- Flat Godot materials are used so iteration is smoother on macOS.
+
+The high-quality PBR path still exists for asset validation. To test it, set `k_horror/low_spec_mode=false` in `project.godot` or override the ProjectSettings value before loading `Main.tscn`.
+
 ## Test
 
 If the Godot executable is available as `godot`, run:
 
 ```bash
 godot --headless --path . --script res://tests/run_tests.gd
+godot --headless --path . --script res://tests/scene/test_low_spec_mode.gd
 godot --headless --path . --script res://tests/scene/test_external_materials.gd
 godot --headless --path . --script res://tests/scene/test_playable_scene.gd
 ```

@@ -12,11 +12,13 @@ func _initialize() -> void:
 		await physics_frame
 
 	_assert_forest_approach(main)
+	_assert_forest_canopy_does_not_cover_center_path(main)
 	_assert_long_approach_distance(main)
 	_assert_gate_bypass_blocked(main)
 	_assert_courtyard_density(main)
 	_assert_courtyard_compression(main)
 	_assert_roofed_buildings(main)
+	_assert_courtyard_building_silhouettes(main)
 	_assert_interaction_density(main)
 	if _failed:
 		quit(1)
@@ -98,8 +100,33 @@ func _assert_roofed_buildings(main: Node) -> void:
 		"ServantQuartersRoof",
 		"CollapsedKitchenRoof",
 		"SideShrinePavilionRoof",
+		"FrontSarangchaeRoof",
+		"FrontStorehouseAnnexRoof",
 	]
 	for label in required_roofs:
+		_assert_node_with_collision(main, label)
+
+func _assert_forest_canopy_does_not_cover_center_path(main: Node) -> void:
+	for node in main.find_children("DeepForestCanopy*", "StaticBody3D", true, false):
+		var size := _box_shape_size(node)
+		var body := node as Node3D
+		if body == null:
+			continue
+		var covers_center: bool = abs(body.global_position.x) < 3.2 and size.x > 6.0
+		if covers_center:
+			_fail("%s covers the center approach like a ceiling" % node.name)
+			return
+
+func _assert_courtyard_building_silhouettes(main: Node) -> void:
+	var required := [
+		"SarangchaeSilhouette",
+		"SarangchaeSilhouetteRoof",
+		"HaengrangchaeSilhouette",
+		"HaengrangchaeSilhouetteRoof",
+		"SmallBarnSilhouette",
+		"SmallBarnSilhouetteRoof",
+	]
+	for label in required:
 		_assert_node_with_collision(main, label)
 
 func _assert_interaction_density(main: Node) -> void:

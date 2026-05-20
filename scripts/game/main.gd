@@ -9,6 +9,7 @@ const ResentmentTracker := preload("res://scripts/core/resentment_tracker.gd")
 const ThreatDirector := preload("res://scripts/core/threat_director.gd")
 const HUDScript := preload("res://scripts/ui/hud.gd")
 const StartupSequence := preload("res://scripts/game/startup_sequence.gd")
+const PerformanceSettingsScript := preload("res://scripts/game/performance_settings.gd")
 
 var player: Node
 var quota := QuotaTracker.new(800)
@@ -40,6 +41,7 @@ func _ready() -> void:
 	print("K Horror Retrieval Prototype booted")
 
 func _configure_world() -> void:
+	var low_spec_mode := PerformanceSettingsScript.is_low_spec_mode()
 	RenderingServer.set_default_clear_color(Color(0.012, 0.015, 0.018))
 	var world_environment := WorldEnvironment.new()
 	world_environment.name = "NightFogEnvironment"
@@ -48,8 +50,8 @@ func _configure_world() -> void:
 	environment.background_color = Color(0.012, 0.015, 0.018)
 	environment.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
 	environment.ambient_light_color = Color(0.05, 0.062, 0.07)
-	environment.ambient_light_energy = 0.22
-	environment.fog_enabled = true
+	environment.ambient_light_energy = 0.32 if low_spec_mode else 0.22
+	environment.fog_enabled = not low_spec_mode
 	environment.fog_light_color = Color(0.11, 0.14, 0.15)
 	environment.fog_light_energy = 0.35
 	environment.fog_density = 0.018
@@ -57,14 +59,19 @@ func _configure_world() -> void:
 	add_child(world_environment)
 
 func _create_scene_lighting() -> void:
+	var low_spec_mode := PerformanceSettingsScript.is_low_spec_mode()
 	var light: DirectionalLight3D = DirectionalLight3D.new()
 	light.name = "ColdMoonLight"
 	light.rotation_degrees = Vector3(-58, -32, 0)
 	light.light_color = Color(0.72, 0.82, 1.0)
-	light.light_energy = 0.95
+	light.light_energy = 0.65 if low_spec_mode else 0.95
+	light.shadow_enabled = false
 	add_child(light)
-	_add_lantern_light("VanInteriorLamp", Vector3(0.0, 2.45, 13.0), Color(1.0, 0.62, 0.34), 1.8, 5.5)
-	_add_lantern_light("GateWarningLamp", Vector3(-6.7, 2.1, -8.5), Color(1.0, 0.42, 0.25), 2.2, 7.0)
+	_add_lantern_light("VanInteriorLamp", Vector3(0.0, 2.45, 13.0), Color(1.0, 0.62, 0.34), 1.1 if low_spec_mode else 1.8, 5.0)
+	_add_lantern_light("GateWarningLamp", Vector3(-6.7, 2.1, -8.5), Color(1.0, 0.42, 0.25), 1.3 if low_spec_mode else 2.2, 6.0)
+	if low_spec_mode:
+		print("LOW_SPEC_MODE: PBR textures and fog disabled")
+		return
 	_add_lantern_light("CourtyardWellLamp", Vector3(-15.0, 1.7, -41.0), Color(0.7, 0.95, 0.8), 1.2, 8.0)
 	_add_lantern_light("ShrineRedLamp", Vector3(0.0, 2.2, -141.0), Color(1.0, 0.12, 0.08), 2.8, 9.0)
 
@@ -74,6 +81,7 @@ func _add_lantern_light(label: String, position: Vector3, color: Color, energy: 
 	lamp.light_color = color
 	lamp.light_energy = energy
 	lamp.omni_range = light_range
+	lamp.shadow_enabled = false
 	add_child(lamp)
 	lamp.global_position = position
 
