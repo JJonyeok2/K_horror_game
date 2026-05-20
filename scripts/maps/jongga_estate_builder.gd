@@ -112,6 +112,7 @@ func _create_planned_walls() -> void:
 			size = raised_size
 		if label == "ApproachWallLeft":
 			_create_box("ApproachWallLeftNorth", Vector3(position.x, position.y, 16.0), Vector3(size.x, size.y, 18.0), _fallback_color(material_key), material_key)
+			_create_box("ApproachWallLeftMiddleSeal", Vector3(position.x, position.y, 1.0), Vector3(size.x, size.y, 12.0), _fallback_color(material_key), material_key)
 			_create_box("ApproachWallLeftSouth", Vector3(position.x, position.y, -7.0), Vector3(size.x, size.y, 4.0), _fallback_color(material_key), material_key)
 			continue
 		if label == "OuterEstateGateLeftWall":

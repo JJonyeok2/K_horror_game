@@ -14,6 +14,7 @@ func _initialize() -> void:
 	_assert_forest_approach(main)
 	_assert_forest_canopy_does_not_cover_center_path(main)
 	_assert_long_approach_distance(main)
+	_assert_approach_side_wall_gap_closed(main)
 	_assert_gate_bypass_blocked(main)
 	_assert_single_gate_readability(main)
 	_assert_courtyard_density(main)
@@ -64,6 +65,22 @@ func _assert_long_approach_distance(main: Node) -> void:
 	var distance: float = abs(player_start.z - gate.global_position.z)
 	if distance < 270.0:
 		_fail("Bongo-to-gate approach is too short for a one-minute walk: %s" % distance)
+
+func _assert_approach_side_wall_gap_closed(main: Node) -> void:
+	var seal := main.find_child("ApproachWallLeftMiddleSeal", true, false) as Node3D
+	if seal == null:
+		_fail("Approach left wall has an open gap before the main gate")
+		return
+	_assert_node_with_collision(main, "ApproachWallLeftMiddleSeal")
+	var size := _box_shape_size(seal)
+	var min_z := seal.global_position.z - size.z * 0.5
+	var max_z := seal.global_position.z + size.z * 0.5
+	if min_z > -5.0 or max_z < 7.0:
+		_fail("Approach wall seal does not cover the pre-gate gap: %s..%s" % [min_z, max_z])
+		return
+	if seal.global_position.x > -4.5:
+		_fail("Approach wall seal should stay on the left wall, not block the center route")
+		return
 
 func _assert_gate_bypass_blocked(main: Node) -> void:
 	var required := [
