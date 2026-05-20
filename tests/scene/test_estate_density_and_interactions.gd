@@ -19,8 +19,10 @@ func _initialize() -> void:
 	_assert_courtyard_density(main)
 	_assert_courtyard_compression(main)
 	_assert_courtyard_route_is_obscured(main)
+	_assert_return_route_is_not_straight(main)
 	_assert_roofed_buildings(main)
 	_assert_courtyard_building_silhouettes(main)
+	_assert_korean_ghost_haunts(main)
 	_assert_taller_walls_and_posts(main)
 	_assert_interaction_density(main)
 	if _failed:
@@ -77,6 +79,9 @@ func _assert_single_gate_readability(main: Node) -> void:
 		"SidePassageBoardedGate",
 		"SidePassageBrushScreenA",
 		"SidePassageBrushScreenB",
+		"OuterGateTalismanA",
+		"OuterGateTalismanB",
+		"OuterGateGeumjulRope",
 	]
 	for label in required:
 		_assert_node_with_collision(main, label)
@@ -126,6 +131,24 @@ func _assert_courtyard_route_is_obscured(main: Node) -> void:
 		if size.y < 3.0:
 			_fail("%s is too low to break the visible straight courtyard route" % label)
 
+func _assert_return_route_is_not_straight(main: Node) -> void:
+	var required := [
+		"ReturnRouteBaffleLeft01",
+		"ReturnRouteBaffleRight01",
+		"ReturnRouteBaffleLeft02",
+		"ReturnRouteHillRamp01",
+		"ReturnRouteHillRamp02",
+		"ReturnRouteHillRamp03",
+	]
+	for label in required:
+		_assert_node_with_collision(main, label)
+	var left := main.find_child("ReturnRouteBaffleLeft01", true, false) as Node3D
+	var right := main.find_child("ReturnRouteBaffleRight01", true, false) as Node3D
+	if left == null or right == null:
+		return
+	if left.global_position.x >= 0.0 or right.global_position.x <= 0.0:
+		_fail("Return route baffles should alternate left/right to break the straight path")
+
 func _assert_roofed_buildings(main: Node) -> void:
 	var required_roofs := [
 		"MainHouseRoof",
@@ -162,6 +185,27 @@ func _assert_courtyard_building_silhouettes(main: Node) -> void:
 	]
 	for label in required:
 		_assert_node_with_collision(main, label)
+
+func _assert_korean_ghost_haunts(main: Node) -> void:
+	var required := [
+		"GhostHauntSangbok",
+		"GhostHauntDalgyalGwisin",
+		"GhostHauntDokkaebi",
+		"GhostHauntEoduksini",
+		"GhostHauntWellSpirit",
+	]
+	for label in required:
+		var node := main.find_child(label, true, false) as Node3D
+		if node == null:
+			_fail("Missing Korean ghost haunt marker: %s" % label)
+			return
+		if node.get_child_count() <= 0:
+			_fail("%s has no visible haunt marker children" % label)
+			return
+	var gate := main.find_child("OuterEstateGate", true, false) as Node3D
+	var dokkaebi := main.find_child("GhostHauntDokkaebi", true, false) as Node3D
+	if gate != null and dokkaebi != null and dokkaebi.global_position.z <= gate.global_position.z:
+		_fail("Dokkaebi haunt should sit outside the main gate")
 
 func _assert_taller_walls_and_posts(main: Node) -> void:
 	var minimum_heights := {

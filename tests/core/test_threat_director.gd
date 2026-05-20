@@ -8,6 +8,7 @@ func run() -> Array[String]:
 	test_stage_to_threat_state(t)
 	test_audio_cues_by_stage(t)
 	test_damage_and_pursuit_profile_by_stage(t)
+	test_korean_ghost_roster(t)
 	return t.failures
 
 func test_stage_to_threat_state(t: TestAssertions) -> void:
@@ -74,3 +75,21 @@ func test_damage_and_pursuit_profile_by_stage(t: TestAssertions) -> void:
 	t.assert_equal(director.attack_interval_seconds(6), director.attack_interval_seconds(5), "interval clamps above stage 5")
 	t.assert_equal(director.pursuit_speed(6), director.pursuit_speed(5), "speed clamps above stage 5")
 	t.assert_equal(director.trap_trigger_resentment(6), director.trap_trigger_resentment(5), "trap resentment clamps above stage 5")
+
+func test_korean_ghost_roster(t: TestAssertions) -> void:
+	var director := ThreatDirector.new()
+	var roster: Array = director.ghost_roster()
+	t.assert_true(roster.size() >= 5, "threat roster has at least five Korean ghost/yokai types")
+	var ids: Array[String] = []
+	for data in roster:
+		t.assert_true(data.has("id"), "ghost roster entry has id")
+		t.assert_true(data.has("display_name"), "ghost roster entry has display name")
+		ids.append(str(data["id"]))
+	t.assert_true(ids.has("sangbok_ghost"), "roster includes sangbok ghost")
+	t.assert_true(ids.has("dalgyal_gwisin"), "roster includes dalgyal gwisin")
+	t.assert_true(ids.has("dokkaebi"), "roster includes dokkaebi")
+	t.assert_true(ids.has("eoduksini"), "roster includes eoduksini")
+	t.assert_true(ids.has("well_spirit"), "roster includes well spirit")
+	t.assert_equal(director.ghost_type_for_stage(3), "", "stage 3 does not pick the wall-phasing hunter")
+	t.assert_equal(director.ghost_type_for_stage(4), "sangbok_ghost", "stage 4 activates sangbok ghost")
+	t.assert_equal(director.ghost_type_for_stage(5), "dalgyal_gwisin", "stage 5 swaps to stronger ghost type")

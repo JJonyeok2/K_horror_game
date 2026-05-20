@@ -59,6 +59,9 @@ func _assert_stage_four_threat_pursues_and_attacks(main: Node, player: Node3D) -
 	if not bool(threat.get_meta("can_phase_through_walls", false)):
 		_fail("High-stage ThreatApparition should explicitly be wall-phasing")
 		return
+	if str(threat.get_meta("ghost_type", "")) == "":
+		_fail("High-stage ThreatApparition should expose its ghost type")
+		return
 	var before_distance := threat.global_position.distance_to(player.global_position)
 	for _i in range(90):
 		await physics_frame

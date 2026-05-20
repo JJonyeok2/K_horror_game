@@ -6,6 +6,13 @@ const ATTACK_RANGE_BY_STAGE := [0.0, 0.0, 0.0, 0.0, 2.0, 2.4]
 const ATTACK_INTERVAL_SECONDS_BY_STAGE := [0.0, 0.0, 0.0, 0.0, 2.0, 2.0]
 const PURSUIT_SPEED_BY_STAGE := [0.0, 0.0, 0.0, 0.0, 3.4, 4.0]
 const TRAP_TRIGGER_RESENTMENT_BY_STAGE := [0, 0, 1, 1, 2, 3]
+const GHOST_ROSTER := [
+	{"id": "sangbok_ghost", "display_name": "상복귀", "role": "wall_phasing_hunter"},
+	{"id": "dalgyal_gwisin", "display_name": "달걀귀", "role": "late_hunter"},
+	{"id": "dokkaebi", "display_name": "도깨비", "role": "gate_trickster"},
+	{"id": "eoduksini", "display_name": "어둑시니", "role": "darkness_pressure"},
+	{"id": "well_spirit", "display_name": "우물귀", "role": "courtyard_ambush"},
+]
 
 func _clamped_stage(stage: int) -> int:
 	return clamp(stage, 0, 5)
@@ -47,6 +54,17 @@ func can_damage(stage: int) -> bool:
 
 func can_phase_through_walls(stage: int) -> bool:
 	return _clamped_stage(stage) >= 4
+
+func ghost_roster() -> Array:
+	return GHOST_ROSTER.duplicate(true)
+
+func ghost_type_for_stage(stage: int) -> String:
+	match _clamped_stage(stage):
+		4:
+			return "sangbok_ghost"
+		5:
+			return "dalgyal_gwisin"
+	return ""
 
 func damage_per_hit(stage: int) -> int:
 	return DAMAGE_PER_HIT_BY_STAGE[_clamped_stage(stage)]

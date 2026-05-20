@@ -171,6 +171,7 @@ func _ensure_threat_manifestation(stage: int) -> Node3D:
 		threat.set_meta("entity_type", "ghost")
 		threat.set_meta("is_threat_entity", true)
 		threat.set_meta("can_phase_through_walls", _threat_can_phase_through_walls(stage))
+		threat.set_meta("ghost_type", _threat_ghost_type(stage))
 	threat.visible = true
 	return threat
 
@@ -243,6 +244,12 @@ func _threat_can_phase_through_walls(stage: int) -> bool:
 	if typeof(value) == TYPE_BOOL:
 		return bool(value)
 	return stage >= 4
+
+func _threat_ghost_type(stage: int) -> String:
+	var value: Variant = _call_threat_director("ghost_type_for_stage", stage)
+	if typeof(value) == TYPE_STRING:
+		return str(value)
+	return "sangbok_ghost" if stage >= 4 else ""
 
 func _threat_attack_range(stage: int) -> float:
 	return _threat_profile_float(

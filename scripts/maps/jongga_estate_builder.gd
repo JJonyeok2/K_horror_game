@@ -62,6 +62,7 @@ func build(main: Node) -> void:
 	_create_route_guidance_walls()
 	_create_main_house_building()
 	_create_approach_forest()
+	_create_korean_ghost_haunts()
 	_create_courtyard_density_props()
 	_create_secondary_roofed_buildings()
 	_create_bongo_van()
@@ -179,6 +180,39 @@ func _create_approach_forest() -> void:
 	_create_box("HiddenPathScreeningBrushA", Vector3(-15.7, 0.95, -24.0), Vector3(5.0, 1.7, 7.0), _fallback_color("wet_moss"), "mud")
 	_create_box("HiddenPathScreeningBrushB", Vector3(-14.6, 1.15, -31.0), Vector3(4.5, 2.0, 5.5), _fallback_color("wet_moss"), "mud")
 	_create_box("HiddenPathSightlineFenceA", Vector3(-12.7, 1.1, -27.5), Vector3(0.45, 2.2, 9.5), _fallback_color("aged_wood"), "aged_wood")
+	_create_return_route_obstacles()
+
+func _create_return_route_obstacles() -> void:
+	_create_box("ReturnRouteBaffleLeft01", Vector3(-1.9, 0.74, 218.0), Vector3(5.0, 1.2, 0.55), _fallback_color("wet_moss"), "mud")
+	_create_box("ReturnRouteBaffleRight01", Vector3(1.9, 0.74, 171.0), Vector3(5.0, 1.2, 0.55), _fallback_color("wet_moss"), "mud")
+	_create_box("ReturnRouteBaffleLeft02", Vector3(-1.85, 0.74, 116.0), Vector3(5.1, 1.2, 0.55), _fallback_color("wet_moss"), "mud")
+
+	var ramp_a := _create_box("ReturnRouteHillRamp01", Vector3(0.0, 0.16, 234.0), Vector3(7.6, 0.22, 17.0), _fallback_color("mud"), "mud")
+	ramp_a.rotation_degrees.x = -3.5
+	var ramp_b := _create_box("ReturnRouteHillRamp02", Vector3(0.0, 0.18, 151.0), Vector3(7.6, 0.24, 18.0), _fallback_color("mud"), "mud")
+	ramp_b.rotation_degrees.x = 4.0
+	var ramp_c := _create_box("ReturnRouteHillRamp03", Vector3(0.0, 0.17, 61.0), Vector3(7.6, 0.22, 16.0), _fallback_color("mud"), "mud")
+	ramp_c.rotation_degrees.x = -3.0
+
+func _create_korean_ghost_haunts() -> void:
+	_create_ghost_haunt("GhostHauntDokkaebi", Vector3(-5.7, 0.0, 11.5), Color(0.28, 0.08, 0.05), true)
+	_create_ghost_haunt("GhostHauntSangbok", Vector3(-8.8, 0.0, -78.0), Color(0.08, 0.075, 0.07), false)
+	_create_ghost_haunt("GhostHauntDalgyalGwisin", Vector3(8.8, 0.0, -118.0), Color(0.78, 0.76, 0.66), false)
+	_create_ghost_haunt("GhostHauntEoduksini", Vector3(-16.0, 0.0, -104.0), Color(0.025, 0.025, 0.035), false)
+	_create_ghost_haunt("GhostHauntWellSpirit", Vector3(-15.0, 0.0, -42.5), Color(0.08, 0.15, 0.15), false)
+
+func _create_ghost_haunt(label: String, position: Vector3, body_color: Color, add_horns: bool) -> void:
+	var root := Node3D.new()
+	root.name = label
+	add_child(root)
+	root.global_position = position
+
+	_add_visual_box(root, "%sBody" % label, Vector3(0.0, 1.0, 0.0), Vector3(0.55, 1.8, 0.22), body_color, "")
+	_add_visual_box(root, "%sFace" % label, Vector3(0.0, 1.75, -0.16), Vector3(0.42, 0.48, 0.05), Color(0.78, 0.76, 0.65), "")
+	if add_horns:
+		_add_visual_box(root, "%sHornLeft" % label, Vector3(-0.22, 2.12, -0.02), Vector3(0.14, 0.34, 0.12), Color(0.72, 0.62, 0.36), "")
+		_add_visual_box(root, "%sHornRight" % label, Vector3(0.22, 2.12, -0.02), Vector3(0.14, 0.34, 0.12), Color(0.72, 0.62, 0.36), "")
+		_add_visual_box(root, "%sClub" % label, Vector3(0.52, 0.96, 0.0), Vector3(0.16, 1.2, 0.16), _fallback_color("dead_tree"), "dead_tree")
 
 func _create_jangseung(label: String, position: Vector3, _text_hint: String) -> void:
 	_create_cylinder(label, Vector3(position.x, 2.1, position.z), 0.26, 4.2, _fallback_color("dead_tree"), "dead_tree")
@@ -368,6 +402,9 @@ func _create_gate() -> void:
 	_create_tall_wall_box("GateBypassBlockRight", Vector3(5.05, 1.7, -12.0), Vector3(1.1, 3.4, 1.25), "old_plaster")
 	_create_tall_wall_box("GateSideSeamLeft", Vector3(-5.45, 1.15, -10.5), Vector3(0.55, 2.3, 3.0), "old_plaster")
 	_create_tall_wall_box("GateSideSeamRight", Vector3(5.45, 1.15, -10.5), Vector3(0.55, 2.3, 3.0), "old_plaster")
+	_create_box("OuterGateTalismanA", Vector3(-1.25, 2.55, -12.35), Vector3(0.38, 0.82, 0.05), Color(0.86, 0.74, 0.42), "paper")
+	_create_box("OuterGateTalismanB", Vector3(1.25, 2.55, -12.35), Vector3(0.38, 0.82, 0.05), Color(0.86, 0.74, 0.42), "paper")
+	_create_box("OuterGateGeumjulRope", Vector3(0.0, 2.95, -12.38), Vector3(7.3, 0.08, 0.08), Color(0.74, 0.62, 0.32), "straw")
 
 func _create_side_passage_risk_trigger(main: Node) -> void:
 	var area := Area3D.new()
