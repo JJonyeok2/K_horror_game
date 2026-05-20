@@ -11,10 +11,9 @@ Open this folder in Unity Hub or with Unity Editor `6000.3.15f1`:
 Unity_Migration/KHorrorUnity
 ```
 
-Unity batchmode project creation was blocked on this machine because the Editor
-license has not been activated yet. After Unity Hub signs in and activates a
-Personal/Pro license, Unity will regenerate `Library/`, package lock files, and
-missing generated settings.
+Unity has been opened once on this machine with Unity Personal activated. Unity
+will regenerate ignored local folders such as `Library/`, `Logs/`, `Temp/`, and
+`UserSettings/` when the project opens on another machine.
 
 ## Source Layout
 
@@ -60,3 +59,11 @@ Tools/K Horror Migration/Create Bootstrap Scene
 This generates `Assets/Scenes/KHorror_Main.unity` with the core roots, player,
 lighting rig, bongo terminal proxy, estate proxy, extraction zone, artifact,
 and settlement station wired to the migrated state machine.
+
+## Command Line Tests
+
+Run EditMode tests without `-quit`; Unity exits automatically after the test run:
+
+```powershell
+& "$env:LOCALAPPDATA\Unity\Editors\6000.3.15f1\Editor\Unity.exe" -runTests -batchmode -projectPath . -testPlatform EditMode -testResults .\TestResults.xml
+```

@@ -41,7 +41,7 @@ KHorrorUnity
 - Added a Unity editor bootstrap tool:
   - `Tools/K Horror Migration/Create Bootstrap Scene`
 
-## Unity License Blocker
+## Unity License And First Import
 
 An initial Unity batchmode project creation attempt reached the installed
 Editor, but the Editor exited before creating `Assets`, `Packages`, and
@@ -55,9 +55,25 @@ No valid Unity Editor license found. Please activate your license.
 Application will terminate with return code 198
 ```
 
-This is an environment/licensing blocker, not a C# migration blocker. The
-manual Unity project scaffold is in place so that after Unity Hub activation,
-the project can be opened directly.
+This was an environment/licensing blocker, not a C# migration blocker. On a
+later retry Unity Personal resolved correctly, packages restored, scripts
+compiled, and EditMode tests ran successfully.
+
+Important command-line detail: do not pass `-quit` with `-runTests`. Unity exits
+automatically after the test run. Passing both can stop after initial import
+without writing a test result file.
+
+Verified command:
+
+```powershell
+& "$env:LOCALAPPDATA\Unity\Editors\6000.3.15f1\Editor\Unity.exe" -runTests -batchmode -projectPath Unity_Migration\KHorrorUnity -testPlatform EditMode -testResults Unity_Migration\unity-test-results-noquit.xml
+```
+
+Result:
+
+```text
+EditMode tests: 5 total, 5 passed, 0 failed
+```
 
 ## Local Asset Sync
 
