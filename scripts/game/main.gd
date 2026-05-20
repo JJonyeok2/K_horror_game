@@ -30,6 +30,7 @@ var _side_passage_triggered: bool = false
 var _threat_attack_elapsed: float = 0.0
 var _player_down: bool = false
 var player_down: bool = false
+var bongo_departed: bool = false
 var pending_recovered_value: int = 0
 var pending_cargo_items: Array[ArtifactDefinition] = []
 var _stored_cargo_visual_index: int = 0
@@ -150,7 +151,7 @@ func _on_resentment_changed(value: int, stage: int, reason: String) -> void:
 	_update_threat_manifestation(stage)
 
 func _update_threat_manifestation(stage: int) -> void:
-	if stage < 2:
+	if not _threat_can_damage(stage):
 		return
 	_ensure_threat_manifestation(stage)
 
@@ -169,6 +170,7 @@ func _ensure_threat_manifestation(stage: int) -> Node3D:
 		threat.add_to_group("threats")
 		threat.set_meta("entity_type", "ghost")
 		threat.set_meta("is_threat_entity", true)
+		threat.set_meta("can_phase_through_walls", _threat_can_phase_through_walls(stage))
 	threat.visible = true
 	return threat
 
@@ -176,7 +178,7 @@ func _update_threat_health_loop(delta: float) -> void:
 	if _player_down or player == null:
 		return
 	var stage := resentment.stage()
-	if stage < 2:
+	if not _threat_can_damage(stage):
 		_threat_attack_elapsed = 0.0
 		return
 	var player_node: Node3D = player as Node3D
@@ -229,6 +231,18 @@ func _threat_damage(stage: int) -> float:
 		["damage_per_hit", "damage_for_stage", "attack_damage_for_stage", "damage_per_attack_for_stage", "threat_damage_for_stage"],
 		FALLBACK_THREAT_DAMAGE
 	)
+
+func _threat_can_damage(stage: int) -> bool:
+	var value: Variant = _call_threat_director("can_damage", stage)
+	if typeof(value) == TYPE_BOOL:
+		return bool(value)
+	return _threat_damage(stage) > 0.0
+
+func _threat_can_phase_through_walls(stage: int) -> bool:
+	var value: Variant = _call_threat_director("can_phase_through_walls", stage)
+	if typeof(value) == TYPE_BOOL:
+		return bool(value)
+	return stage >= 4
 
 func _threat_attack_range(stage: int) -> float:
 	return _threat_profile_float(
@@ -294,6 +308,9 @@ func _update_bongo_quota_monitor() -> void:
 	var label := find_child("BongoQuotaMonitorText", true, false) as Label3D
 	if label == null:
 		return
+	if bongo_departed:
+		label.text = "복귀 출발\n최종 ₩%d / ₩%d" % [quota.recovered_value, quota.required_value]
+		return
 	label.text = "최종 ₩%d / ₩%d\n미정산 ₩%d" % [quota.recovered_value, quota.required_value, pending_recovered_value]
 
 func _create_threat_visual(root: Node3D) -> void:
@@ -352,6 +369,17 @@ func settle_stored_cargo() -> void:
 	_clear_pending_cargo_visuals()
 	_update_bongo_quota_monitor()
 	print("정산:%d / 할당량:%d" % [quota.recovered_value, quota.required_value])
+
+func depart_bongo() -> bool:
+	if pending_recovered_value > 0:
+		print("미정산 물품이 있어 출발할 수 없습니다.")
+		return false
+	bongo_departed = true
+	if player != null:
+		player.set("movement_enabled", false)
+	_update_bongo_quota_monitor()
+	print("BONGO_DEPARTURE: 봉고차가 회수 지점을 떠납니다.")
+	return true
 
 func _create_stored_cargo_visual(item: ArtifactDefinition) -> void:
 	_stored_cargo_visual_index += 1

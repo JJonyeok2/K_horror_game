@@ -101,15 +101,18 @@ func _assert_folklore_route_props(main: Node) -> void:
 
 func _assert_threat_manifestation(main: Node) -> void:
 	var resentment: Variant = main.get("resentment")
-	resentment.call("add_resentment", 5, "test escalation")
+	resentment.call("add_resentment", 8, "test escalation")
 	for _i in range(4):
 		await process_frame
 	var threat := main.find_child("ThreatApparition", true, false) as Node3D
 	if threat == null:
-		_fail("Threat apparition did not spawn when resentment escalated")
+		_fail("Threat apparition did not spawn when resentment reached high stage")
 		return
 	if not threat.visible:
 		_fail("Threat apparition exists but is not visible")
+		return
+	if not bool(threat.get_meta("can_phase_through_walls", false)):
+		_fail("High-stage threat should be marked as wall-phasing")
 		return
 
 func _fail(message: String) -> void:

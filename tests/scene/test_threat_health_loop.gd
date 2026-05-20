@@ -18,11 +18,11 @@ func _initialize() -> void:
 	player.set("movement_enabled", true)
 	player.set("velocity", Vector3.ZERO)
 
-	await _assert_stage_below_two_cannot_damage(main, player)
+	await _assert_stage_three_cannot_spawn_attacking_ghost(main, player)
 	if _failed:
 		quit(1)
 		return
-	await _assert_stage_two_threat_pursues_and_attacks(main, player)
+	await _assert_stage_four_threat_pursues_and_attacks(main, player)
 	if _failed:
 		quit(1)
 		return
@@ -34,28 +34,30 @@ func _initialize() -> void:
 	print("THREAT_HEALTH_LOOP: spawn pursue fixed cadence damage player_down")
 	quit(0)
 
-func _assert_stage_below_two_cannot_damage(main: Node, player: Node3D) -> void:
+func _assert_stage_three_cannot_spawn_attacking_ghost(main: Node, player: Node3D) -> void:
 	var starting_health := float(player.get("health"))
-	var fake_threat := Node3D.new()
-	fake_threat.name = "ThreatApparition"
-	main.add_child(fake_threat)
-	fake_threat.global_position = player.global_position + Vector3(0.0, 1.15, -0.8)
+	var relic := ArtifactDefinition.new("warning relic", 10, 1.0, 5, [], 1)
+	main.call("_on_artifact_picked_up", relic)
 	for _i in range(260):
 		await physics_frame
 	if float(player.get("health")) != starting_health:
-		_fail("Threat damaged player before resentment stage 2")
+		_fail("Threat damaged player before high resentment stage")
 		return
-	fake_threat.queue_free()
-	await physics_frame
+	if main.find_child("ThreatApparition", true, false) != null:
+		_fail("Wall-phasing ThreatApparition should not spawn before stage 4")
+		return
 
-func _assert_stage_two_threat_pursues_and_attacks(main: Node, player: Node3D) -> void:
+func _assert_stage_four_threat_pursues_and_attacks(main: Node, player: Node3D) -> void:
 	var relic := ArtifactDefinition.new("cursed relic", 10, 1.0, 3, [], 1)
 	main.call("_on_artifact_picked_up", relic)
 	for _i in range(2):
 		await physics_frame
 	var threat := main.find_child("ThreatApparition", true, false) as Node3D
 	if threat == null:
-		_fail("ThreatApparition did not spawn at resentment stage 2")
+		_fail("ThreatApparition did not spawn at resentment stage 4")
+		return
+	if not bool(threat.get_meta("can_phase_through_walls", false)):
+		_fail("High-stage ThreatApparition should explicitly be wall-phasing")
 		return
 	var before_distance := threat.global_position.distance_to(player.global_position)
 	for _i in range(90):

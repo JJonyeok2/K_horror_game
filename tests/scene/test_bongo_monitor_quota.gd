@@ -67,6 +67,15 @@ func _assert_bongo_deposit_waits_for_manual_settlement(main: Node) -> void:
 	if quota_text.find("미정산") == -1 or quota_text.find("70") == -1:
 		_fail("BongoQuotaMonitor did not show pending value after deposit: %s" % quota_text)
 		return
+	var departure_button := main.find_child("BongoDepartureButton", true, false)
+	if departure_button == null or not departure_button.has_method("interact"):
+		_fail("Missing interactive BongoDepartureButton")
+		return
+	departure_button.interact(player)
+	await process_frame
+	if bool(main.get("bongo_departed")):
+		_fail("Bongo should not depart while pending cargo is unsettled")
+		return
 	var settlement := main.find_child("BongoSettlementStation", true, false)
 	if settlement == null or not settlement.has_method("interact"):
 		_fail("Missing interactive BongoSettlementStation")
@@ -82,6 +91,15 @@ func _assert_bongo_deposit_waits_for_manual_settlement(main: Node) -> void:
 	quota_text = _quota_monitor_text(monitor)
 	if quota_text.find("최종") == -1 or quota_text.find("70") == -1:
 		_fail("BongoQuotaMonitor did not show finalized quota after settlement: %s" % quota_text)
+		return
+	departure_button.interact(player)
+	await process_frame
+	if not bool(main.get("bongo_departed")):
+		_fail("BongoDepartureButton did not mark the run as departed after settlement")
+		return
+	quota_text = _quota_monitor_text(monitor)
+	if quota_text.find("출발") == -1 and quota_text.find("복귀") == -1:
+		_fail("BongoQuotaMonitor did not show departure state: %s" % quota_text)
 		return
 
 func _quota_monitor_text(root: Node) -> String:
