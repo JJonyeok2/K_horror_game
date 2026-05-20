@@ -60,6 +60,7 @@ var _texture_cache: Dictionary = {}
 
 func build(main: Node) -> void:
 	_create_continuous_ground_and_route_stitches()
+	_create_estate_navigation_region()
 	_create_planned_floors()
 	_create_planned_walls()
 	_create_gate()
@@ -208,7 +209,28 @@ func _create_korean_ghost_haunts() -> void:
 	_create_ghost_haunt("GhostHauntSangbok", Vector3(-8.8, 0.0, -78.0), Color(0.08, 0.075, 0.07), false)
 	_create_ghost_haunt("GhostHauntDalgyalGwisin", Vector3(8.8, 0.0, -118.0), Color(0.78, 0.76, 0.66), false)
 	_create_ghost_haunt("GhostHauntEoduksini", Vector3(-16.0, 0.0, -104.0), Color(0.025, 0.025, 0.035), false)
+	_create_ghost_haunt("GhostHauntChanggwi", Vector3(5.8, 0.0, -102.0), Color(0.11, 0.085, 0.07), false)
+	_create_ghost_haunt("GhostHauntJangsanbeom", Vector3(2.5, 0.0, -131.0), Color(0.76, 0.74, 0.68), false)
 	_create_ghost_haunt("GhostHauntWellSpirit", Vector3(-15.0, 0.0, -42.5), Color(0.08, 0.15, 0.15), false)
+
+func _create_estate_navigation_region() -> void:
+	var region := NavigationRegion3D.new()
+	region.name = "EstateNavigationRegion"
+	add_child(region)
+	var nav_mesh := NavigationMesh.new()
+	nav_mesh.agent_radius = 0.35
+	nav_mesh.agent_height = 1.8
+	nav_mesh.agent_max_climb = 0.45
+	nav_mesh.agent_max_slope = 48.0
+	var vertices := PackedVector3Array([
+		Vector3(-38.0, 0.02, 278.0),
+		Vector3(38.0, 0.02, 278.0),
+		Vector3(38.0, 0.02, -150.0),
+		Vector3(-38.0, 0.02, -150.0),
+	])
+	nav_mesh.set_vertices(vertices)
+	nav_mesh.add_polygon(PackedInt32Array([0, 1, 2, 3]))
+	region.navigation_mesh = nav_mesh
 
 func _create_ghost_haunt(label: String, position: Vector3, body_color: Color, add_horns: bool) -> void:
 	var root := Node3D.new()
@@ -1009,6 +1031,8 @@ func _spawn_artifact(main: Node, display_name: String, value: int, weight: float
 	artifact.resentment_gain = resentment_gain
 	artifact.tags = tags
 	artifact.hand_slots = hand_slots
+	if artifact.has_method("configure_visuals"):
+		artifact.configure_visuals()
 	artifact.global_position = position
 	if main.has_method("register_artifact"):
 		main.register_artifact(artifact)

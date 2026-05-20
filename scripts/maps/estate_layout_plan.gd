@@ -247,12 +247,12 @@ const LANDMARKS := [
 
 const ARTIFACT_SPAWNS := [
 	{
-		"id": "brass_spoon_courtyard",
-		"display_name": "놋수저",
-		"value": 90,
-		"weight": 0.8,
+		"id": "old_brass_bowl_courtyard",
+		"display_name": "낡은 놋그릇",
+		"value": 140,
+		"weight": 1.2,
 		"resentment": 1,
-		"tags": ["ancestor_item", "courtyard", "small"],
+		"tags": ["brass_bowl", "ancestor_item", "courtyard", "small"],
 		"hand_slots": 1,
 		"positions": [Vector3(-13.5, 0.55, -44.0), Vector3(16.0, 0.55, -47.0)]
 	},
@@ -267,12 +267,12 @@ const ARTIFACT_SPAWNS := [
 		"positions": [Vector3(-6.0, 0.65, -87.0), Vector3(5.5, 0.65, -91.0)]
 	},
 	{
-		"id": "norigae_porch",
-		"display_name": "낡은 노리개",
-		"value": 180,
-		"weight": 0.4,
+		"id": "wooden_goose_porch",
+		"display_name": "나무 기러기",
+		"value": 230,
+		"weight": 0.7,
 		"resentment": 2,
-		"tags": ["personal_item", "porch", "small"],
+		"tags": ["wood_goose", "wedding_item", "porch", "small"],
 		"hand_slots": 1,
 		"positions": [Vector3(12.0, 0.95, -75.0), Vector3(-11.5, 0.95, -75.0)]
 	},
@@ -307,12 +307,12 @@ const ARTIFACT_SPAWNS := [
 		"positions": [Vector3(37.0, 0.65, -108.5)]
 	},
 	{
-		"id": "storehouse_lockbox",
-		"display_name": "뒤주 열쇠함",
-		"value": 460,
-		"weight": 2.6,
+		"id": "large_white_pottery",
+		"display_name": "큰 백자 항아리",
+		"value": 540,
+		"weight": 5.4,
 		"resentment": 4,
-		"tags": ["storehouse", "heavy", "loop_reward"],
+		"tags": ["large_pottery", "storehouse", "heavy", "loop_reward"],
 		"hand_slots": 2,
 		"positions": [Vector3(-27.5, 0.75, -101.0), Vector3(-30.0, 0.75, -92.0)]
 	},
@@ -327,12 +327,12 @@ const ARTIFACT_SPAWNS := [
 		"positions": [Vector3(0.0, 1.25, -141.0)]
 	},
 	{
-		"id": "altar_bell",
-		"display_name": "제단 방울",
+		"id": "ritual_jegi",
+		"display_name": "제기",
 		"value": 620,
-		"weight": 0.9,
+		"weight": 1.0,
 		"resentment": 5,
-		"tags": ["제단", "shrine_item", "noise"],
+		"tags": ["jegi", "제단", "shrine_item", "ritual"],
 		"hand_slots": 1,
 		"positions": [Vector3(-2.5, 1.25, -140.8), Vector3(2.5, 1.25, -140.8)]
 	}

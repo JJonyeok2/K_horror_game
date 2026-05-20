@@ -8,6 +8,7 @@ const ArtifactDefinition = preload("res://scripts/core/artifact_definition.gd")
 const QuotaTracker := preload("res://scripts/core/quota_tracker.gd")
 const ResentmentTracker := preload("res://scripts/core/resentment_tracker.gd")
 const ThreatDirector := preload("res://scripts/core/threat_director.gd")
+const KoreanMonsterAI := preload("res://scripts/ai/korean_monster_ai.gd")
 const HUDScript := preload("res://scripts/ui/hud.gd")
 const StartupSequence := preload("res://scripts/game/startup_sequence.gd")
 const PerformanceSettingsScript := preload("res://scripts/game/performance_settings.gd")
@@ -193,9 +194,10 @@ func _ensure_threat_manifestation(stage: int) -> Node3D:
 	var should_reposition := false
 	if threat == null:
 		threat = Node3D.new()
+		threat.set_script(KoreanMonsterAI)
 		threat.name = _threat_node_name_for_stage(stage)
 		add_child(threat)
-		_create_threat_visual(threat)
+		_ensure_threat_navigation_agent(threat)
 		threat.add_to_group("threats")
 		should_reposition = true
 	else:
@@ -206,6 +208,7 @@ func _ensure_threat_manifestation(stage: int) -> Node3D:
 		_threat_pattern_elapsed_by_stage[stage] = 0.0
 	_apply_threat_metadata(threat, stage, ghost_type)
 	_apply_threat_visual_profile(threat, ghost_type)
+	_configure_threat_ai(threat, ghost_type)
 	threat.visible = true
 	return threat
 
@@ -232,7 +235,7 @@ func _update_threat_health_loop(delta: float) -> void:
 		var distance_to_player := threat.global_position.distance_to(target_position)
 		var attack_range := _threat_attack_range(threat_stage)
 		_threat_pattern_elapsed_by_stage[threat_stage] = float(_threat_pattern_elapsed_by_stage.get(threat_stage, 0.0)) + delta
-		if distance_to_player > max(attack_range * 0.45, 0.2):
+		if distance_to_player > attack_range:
 			_move_threat_toward_target(threat, target_position, threat_stage, distance_to_player, delta)
 			distance_to_player = threat.global_position.distance_to(target_position)
 		if distance_to_player <= attack_range:
@@ -257,6 +260,27 @@ func _move_threat_toward_target(threat: Node3D, target_position: Vector3, stage:
 		var lunge_window := fmod(float(_threat_pattern_elapsed_by_stage.get(stage, 0.0)), 1.8)
 		if lunge_window >= 1.05:
 			speed *= 1.65
+	elif pattern == "flashlight_growth_shadow":
+		if _threat_hit_by_flashlight(threat):
+			speed *= 1.35
+	elif pattern == "voice_lure_crawl":
+		move_target = target_position + Vector3(0.0, 0.0, -1.6)
+	if threat.has_method("movement_speed_for_context"):
+		var looking_at_threat := _player_looks_at_threat(threat)
+		var flashlight_hit := _threat_hit_by_flashlight(threat)
+		speed = float(threat.call("movement_speed_for_context", looking_at_threat, flashlight_hit))
+		if flashlight_hit and threat.has_method("apply_flashlight_pressure"):
+			threat.call("apply_flashlight_pressure", delta)
+	var navigation_agent := threat.get_node_or_null("NavigationAgent3D") as NavigationAgent3D
+	if navigation_agent != null:
+		navigation_agent.target_position = move_target
+		if not navigation_agent.is_navigation_finished():
+			var next_path_position := navigation_agent.get_next_path_position()
+			next_path_position.y = target_position.y
+			if next_path_position.distance_to(threat.global_position) > 0.05:
+				move_target = next_path_position
+			else:
+				move_target = target_position
 	threat.global_position = threat.global_position.move_toward(move_target, speed * delta)
 
 func _hide_threat_manifestation() -> void:
@@ -277,25 +301,124 @@ func _apply_threat_metadata(threat: Node3D, stage: int, ghost_type: String) -> v
 	threat.set_meta("entity_type", "ghost")
 	threat.set_meta("is_threat_entity", true)
 	threat.set_meta("can_phase_through_walls", _threat_can_phase_through_walls(stage))
+	threat.set_meta("threat_slot", stage)
+	threat.set_meta("resentment_stage", _threat_resentment_stage_for_slot(stage))
 	threat.set_meta("ghost_type", ghost_type)
 	threat.set_meta("threat_zone", _threat_zone_for_stage(stage))
 	threat.set_meta("attack_pattern", _threat_attack_pattern(stage))
 
 func _apply_threat_visual_profile(threat: Node3D, ghost_type: String) -> void:
-	var face := threat.get_node_or_null("ThreatPaleFace") as MeshInstance3D
+	if str(threat.get_meta("visual_profile", "")) == ghost_type:
+		return
+	_clear_threat_visual(threat)
+	var visual_root := Node3D.new()
+	visual_root.name = "ThreatVisualRoot"
+	threat.add_child(visual_root)
 	match ghost_type:
 		"dokkaebi":
 			threat.scale = Vector3(1.05, 0.82, 1.05)
-			if face != null:
-				face.scale = Vector3(0.82, 0.72, 1.0)
+			_add_threat_box(visual_root, "ThreatBody", Vector3(0.0, 0.8, 0.0), Vector3(0.65, 1.25, 0.42), Color(0.22, 0.055, 0.035))
+			_add_threat_box(visual_root, "ThreatPaleFace", Vector3(0.0, 1.38, -0.24), Vector3(0.44, 0.36, 0.05), Color(0.78, 0.68, 0.48))
+			_add_threat_box(visual_root, "ThreatHornLeft", Vector3(-0.24, 1.68, -0.05), Vector3(0.13, 0.34, 0.12), Color(0.68, 0.58, 0.28), Vector3(0.0, 0.0, -12.0))
+			_add_threat_box(visual_root, "ThreatHornRight", Vector3(0.24, 1.68, -0.05), Vector3(0.13, 0.34, 0.12), Color(0.68, 0.58, 0.28), Vector3(0.0, 0.0, 12.0))
+		"sangbok_ghost":
+			threat.scale = Vector3.ONE
+			_add_threat_box(visual_root, "ThreatBody", Vector3(0.0, 1.0, 0.0), Vector3(0.46, 1.85, 0.22), Color(0.055, 0.052, 0.05, 0.9))
+			_add_threat_box(visual_root, "ThreatPaleFace", Vector3(0.0, 1.78, -0.15), Vector3(0.38, 0.5, 0.05), Color(0.78, 0.77, 0.7, 0.78))
 		"dalgyal_gwisin":
 			threat.scale = Vector3(0.92, 1.12, 0.92)
-			if face != null:
-				face.scale = Vector3(1.28, 1.06, 1.0)
+			_add_threat_box(visual_root, "ThreatBody", Vector3(0.0, 0.82, 0.0), Vector3(0.34, 1.6, 0.24), Color(0.16, 0.15, 0.13, 0.92))
+			_add_threat_box(visual_root, "ThreatPaleFace", Vector3(0.0, 1.72, -0.14), Vector3(0.62, 0.72, 0.05), Color(0.86, 0.84, 0.72, 0.86))
+			_add_threat_box(visual_root, "ThreatTwistedArmLeft", Vector3(-0.43, 0.82, -0.03), Vector3(0.12, 1.25, 0.12), Color(0.13, 0.12, 0.1), Vector3(0.0, 0.0, 24.0))
+			_add_threat_box(visual_root, "ThreatTwistedArmRight", Vector3(0.43, 0.82, -0.03), Vector3(0.12, 1.25, 0.12), Color(0.13, 0.12, 0.1), Vector3(0.0, 0.0, -24.0))
+		"eoduksini":
+			threat.scale = Vector3(0.58, 0.58, 0.58)
+			_add_threat_box(visual_root, "ThreatBody", Vector3(0.0, 0.35, 0.0), Vector3(0.8, 0.5, 0.72), Color(0.012, 0.012, 0.016, 0.95))
+			_add_threat_box(visual_root, "ThreatPaleFace", Vector3(0.0, 0.62, -0.22), Vector3(0.26, 0.12, 0.05), Color(0.06, 0.06, 0.075, 0.8))
+			_add_threat_box(visual_root, "ThreatShadowSpine", Vector3(0.0, 0.88, 0.03), Vector3(0.18, 0.8, 0.16), Color(0.018, 0.018, 0.025, 0.88), Vector3(0.0, 0.0, -16.0))
+		"changgwi":
+			threat.scale = Vector3(0.9, 1.0, 0.9)
+			_add_threat_box(visual_root, "ThreatBody", Vector3(0.0, 0.95, 0.0), Vector3(0.36, 1.8, 0.26), Color(0.12, 0.082, 0.06, 0.9))
+			_add_threat_box(visual_root, "ThreatPaleFace", Vector3(0.0, 1.68, -0.16), Vector3(0.42, 0.42, 0.05), Color(0.5, 0.42, 0.32, 0.72))
+			_add_threat_box(visual_root, "ThreatBentLegLeft", Vector3(-0.2, 0.12, 0.0), Vector3(0.12, 0.72, 0.12), Color(0.09, 0.055, 0.04), Vector3(0.0, 0.0, 28.0))
+			_add_threat_box(visual_root, "ThreatBentLegRight", Vector3(0.2, 0.1, 0.0), Vector3(0.12, 0.72, 0.12), Color(0.09, 0.055, 0.04), Vector3(0.0, 0.0, -31.0))
+		"jangsanbeom":
+			threat.scale = Vector3(1.0, 0.68, 1.15)
+			_add_threat_box(visual_root, "ThreatBody", Vector3(0.0, 0.48, 0.0), Vector3(1.2, 0.46, 1.65), Color(0.72, 0.72, 0.66, 0.88))
+			_add_threat_box(visual_root, "ThreatPaleFace", Vector3(0.0, 0.62, -0.86), Vector3(0.52, 0.3, 0.05), Color(0.88, 0.86, 0.78, 0.82))
+			_add_threat_box(visual_root, "ThreatHairTrail", Vector3(0.0, 0.54, 0.36), Vector3(1.35, 0.22, 1.3), Color(0.82, 0.8, 0.72, 0.58))
 		_:
 			threat.scale = Vector3.ONE
-			if face != null:
-				face.scale = Vector3.ONE
+			_add_threat_box(visual_root, "ThreatBody", Vector3(0.0, 1.0, 0.0), Vector3(0.46, 1.7, 0.24), Color(0.08, 0.075, 0.07, 0.88))
+			_add_threat_box(visual_root, "ThreatPaleFace", Vector3(0.0, 1.7, -0.16), Vector3(0.42, 0.5, 0.05), Color(0.82, 0.82, 0.74, 0.72))
+	_add_threat_light(threat, ghost_type)
+	threat.set_meta("visual_profile", ghost_type)
+	threat.set_meta("model_style", "low_poly_ps1")
+
+func _ensure_threat_navigation_agent(threat: Node3D) -> void:
+	if threat.get_node_or_null("NavigationAgent3D") != null:
+		return
+	var agent := NavigationAgent3D.new()
+	agent.name = "NavigationAgent3D"
+	agent.path_desired_distance = 0.45
+	agent.target_desired_distance = 0.75
+	agent.avoidance_enabled = false
+	threat.add_child(agent)
+
+func _configure_threat_ai(threat: Node3D, ghost_type: String) -> void:
+	if not threat.has_method("configure"):
+		return
+	var player_node := player as Node3D
+	var flashlight := player_node.get_node_or_null("Camera3D/Flashlight") as SpotLight3D if player_node != null else null
+	threat.call("configure", ghost_type, player_node, flashlight)
+
+func _clear_threat_visual(threat: Node3D) -> void:
+	for child in threat.get_children():
+		if child.name == "ThreatVisualRoot" or child is MeshInstance3D or child is OmniLight3D:
+			child.queue_free()
+
+func _add_threat_box(root: Node3D, label: String, local_position: Vector3, size: Vector3, color: Color, rotation_degrees_value: Vector3 = Vector3.ZERO) -> void:
+	var mesh_instance := MeshInstance3D.new()
+	mesh_instance.name = label
+	mesh_instance.position = local_position
+	mesh_instance.rotation_degrees = rotation_degrees_value
+	var mesh := BoxMesh.new()
+	mesh.size = size
+	mesh.material = _threat_material(color)
+	mesh_instance.mesh = mesh
+	root.add_child(mesh_instance)
+
+func _add_threat_light(threat: Node3D, ghost_type: String) -> void:
+	var marker_light := OmniLight3D.new()
+	marker_light.name = "ThreatColdGlow"
+	match ghost_type:
+		"eoduksini":
+			marker_light.light_color = Color(0.12, 0.14, 0.2)
+			marker_light.light_energy = 0.2
+			marker_light.omni_range = 3.5
+		"jangsanbeom":
+			marker_light.light_color = Color(0.78, 0.74, 0.62)
+			marker_light.light_energy = 0.45
+			marker_light.omni_range = 4.0
+		_:
+			marker_light.light_color = Color(0.52, 0.7, 0.75)
+			marker_light.light_energy = 0.55
+			marker_light.omni_range = 4.5
+	marker_light.shadow_enabled = false
+	threat.add_child(marker_light)
+
+func _threat_material(color: Color) -> StandardMaterial3D:
+	var material := StandardMaterial3D.new()
+	material.albedo_color = color
+	material.roughness = 0.95
+	material.cull_mode = BaseMaterial3D.CULL_DISABLED
+	material.vertex_color_use_as_albedo = false
+	material.emission_enabled = true
+	material.emission = Color(color.r * 0.08, color.g * 0.08, color.b * 0.08)
+	material.emission_energy_multiplier = 0.12
+	if color.a < 1.0:
+		material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	return material
 
 func _threat_spawn_position(stage: int) -> Vector3:
 	var player_node := player as Node3D
@@ -392,10 +515,19 @@ func _threat_can_phase_through_walls(stage: int) -> bool:
 	return stage >= 4
 
 func _threat_ghost_type(stage: int) -> String:
+	var slot_value: Variant = _call_threat_director("ghost_type_for_threat_slot", stage)
+	if typeof(slot_value) == TYPE_STRING and str(slot_value) != "":
+		return str(slot_value)
 	var value: Variant = _call_threat_director("ghost_type_for_stage", stage)
 	if typeof(value) == TYPE_STRING:
 		return str(value)
 	return "sangbok_ghost" if stage >= 4 else ""
+
+func _threat_resentment_stage_for_slot(stage: int) -> int:
+	var value: Variant = _call_threat_director("resentment_stage_for_threat_slot", stage)
+	if _is_number(value):
+		return int(value)
+	return clamp(stage, 0, 5)
 
 func _threat_active_stages(stage: int) -> Array[int]:
 	var value: Variant = _call_threat_director("active_threat_stages_for_stage", stage)
@@ -412,6 +544,9 @@ func _threat_active_stages(stage: int) -> Array[int]:
 	return result
 
 func _threat_zone_for_stage(stage: int) -> String:
+	var slot_value: Variant = _call_threat_director("threat_zone_for_threat_slot", stage)
+	if typeof(slot_value) == TYPE_STRING and str(slot_value) != "":
+		return str(slot_value)
 	var value: Variant = _call_threat_director("threat_zone_for_stage", stage)
 	if typeof(value) == TYPE_STRING:
 		return str(value)
@@ -420,6 +555,9 @@ func _threat_zone_for_stage(stage: int) -> String:
 	return "inner_building_only" if stage >= 4 else ""
 
 func _threat_attack_pattern(stage: int) -> String:
+	var slot_value: Variant = _call_threat_director("attack_pattern_for_threat_slot", stage)
+	if typeof(slot_value) == TYPE_STRING and str(slot_value) != "":
+		return str(slot_value)
 	var value: Variant = _call_threat_director("attack_pattern_for_stage", stage)
 	if typeof(value) == TYPE_STRING:
 		return str(value)
@@ -441,6 +579,38 @@ func _threat_zone_allows_player(stage: int) -> bool:
 			return player_z <= INNER_BUILDING_THREAT_Z
 		_:
 			return true
+
+func _player_looks_at_threat(threat: Node3D) -> bool:
+	var player_node := player as Node3D
+	if player_node == null:
+		return false
+	var camera := player_node.get_node_or_null("Camera3D") as Camera3D
+	if camera == null:
+		return false
+	var to_threat := threat.global_position - camera.global_position
+	to_threat.y = 0.0
+	if to_threat.length() <= 0.01:
+		return true
+	var forward := -camera.global_transform.basis.z
+	forward.y = 0.0
+	if forward.length() <= 0.01:
+		return false
+	return forward.normalized().dot(to_threat.normalized()) > 0.18
+
+func _threat_hit_by_flashlight(threat: Node3D) -> bool:
+	var player_node := player as Node3D
+	if player_node == null:
+		return false
+	var flashlight := player_node.get_node_or_null("Camera3D/Flashlight") as SpotLight3D
+	if flashlight == null or not flashlight.visible:
+		return false
+	var to_threat := threat.global_position - flashlight.global_position
+	var distance := to_threat.length()
+	if distance <= 0.01 or distance > flashlight.spot_range:
+		return false
+	var forward := -flashlight.global_transform.basis.z.normalized()
+	var cone_cos := cos(deg_to_rad(flashlight.spot_angle * 0.5))
+	return forward.dot(to_threat.normalized()) >= cone_cos
 
 func _threat_attack_range(stage: int) -> float:
 	return _threat_profile_float(

@@ -16,6 +16,13 @@ shape = SubResource("CapsuleShape_player")
 [node name="Camera3D" type="Camera3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.55, 0)
 
+[node name="Flashlight" type="SpotLight3D" parent="Camera3D"]
+light_color = Color(0.78, 0.86, 0.92, 1)
+light_energy = 1.15
+shadow_enabled = false
+spot_range = 13.0
+spot_angle = 38.0
+
 [node name="HeldItemMounts" type="Node3D" parent="Camera3D"]
 
 [node name="LeftHandMount" type="Marker3D" parent="Camera3D/HeldItemMounts"]

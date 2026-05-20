@@ -89,16 +89,24 @@ func test_korean_ghost_roster(t: TestAssertions) -> void:
 	t.assert_true(ids.has("dalgyal_gwisin"), "roster includes dalgyal gwisin")
 	t.assert_true(ids.has("dokkaebi"), "roster includes dokkaebi")
 	t.assert_true(ids.has("eoduksini"), "roster includes eoduksini")
-	t.assert_true(ids.has("well_spirit"), "roster includes well spirit")
+	t.assert_true(ids.has("changgwi"), "roster includes changgwi")
+	t.assert_true(ids.has("jangsanbeom"), "roster includes jangsanbeom")
 	t.assert_equal(director.ghost_type_for_stage(3), "dokkaebi", "stage 3 activates dokkaebi outside the gate")
 	t.assert_equal(director.ghost_type_for_stage(4), "sangbok_ghost", "stage 4 activates sangbok ghost")
 	t.assert_equal(director.ghost_type_for_stage(5), "dalgyal_gwisin", "stage 5 swaps to stronger ghost type")
 	t.assert_equal(director.active_ghost_types_for_stage(3), ["dokkaebi"], "stage 3 has one active threat")
 	t.assert_equal(director.active_ghost_types_for_stage(4), ["dokkaebi", "sangbok_ghost"], "stage 4 keeps stage 3 and adds sangbok")
-	t.assert_equal(director.active_ghost_types_for_stage(5), ["dokkaebi", "sangbok_ghost", "dalgyal_gwisin"], "stage 5 keeps prior threats and adds dalgyal")
+	t.assert_equal(
+		director.active_ghost_types_for_stage(5),
+		["dokkaebi", "sangbok_ghost", "dalgyal_gwisin", "eoduksini", "changgwi", "jangsanbeom"],
+		"stage 5 keeps prior threats and adds late Korean monsters"
+	)
 	t.assert_equal(director.threat_zone_for_stage(3), "outside_gate_forest", "dokkaebi is limited to forest and outside gate")
 	t.assert_equal(director.threat_zone_for_stage(4), "inner_building_only", "stage 4 ghost is limited to inner buildings")
 	t.assert_equal(director.threat_zone_for_stage(5), "inner_building_only", "stage 5 ghost is limited to inner buildings")
 	t.assert_equal(director.attack_pattern_for_stage(3), "dokkaebi_forest_trickster", "dokkaebi uses a trickster pattern")
 	t.assert_equal(director.attack_pattern_for_stage(4), "sangbok_steady_pursuit", "sangbok ghost uses steady pursuit")
 	t.assert_equal(director.attack_pattern_for_stage(5), "dalgyal_blind_lunge", "dalgyal gwisin uses a lunge pattern")
+	t.assert_equal(director.attack_pattern_for_ghost_type("eoduksini"), "flashlight_growth_shadow", "eoduksini grows from flashlight pressure")
+	t.assert_equal(director.attack_pattern_for_ghost_type("changgwi"), "corridor_lure_pursuit", "changgwi uses lure pursuit")
+	t.assert_equal(director.attack_pattern_for_ghost_type("jangsanbeom"), "voice_lure_crawl", "jangsanbeom uses voice lure crawl")

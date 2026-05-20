@@ -7,10 +7,12 @@ const ATTACK_INTERVAL_SECONDS_BY_STAGE := [0.0, 0.0, 0.0, 2.8, 2.0, 1.35]
 const PURSUIT_SPEED_BY_STAGE := [0.0, 0.0, 0.0, 2.1, 3.4, 4.6]
 const TRAP_TRIGGER_RESENTMENT_BY_STAGE := [0, 0, 1, 1, 2, 3]
 const GHOST_ROSTER := [
-	{"id": "dokkaebi", "display_name": "도깨비", "role": "gate_trickster", "stage": 3, "zone": "outside_gate_forest", "attack_pattern": "dokkaebi_forest_trickster"},
-	{"id": "sangbok_ghost", "display_name": "상복귀", "role": "wall_phasing_hunter", "stage": 4, "zone": "inner_building_only", "attack_pattern": "sangbok_steady_pursuit"},
-	{"id": "dalgyal_gwisin", "display_name": "달걀귀", "role": "late_hunter", "stage": 5, "zone": "inner_building_only", "attack_pattern": "dalgyal_blind_lunge"},
-	{"id": "eoduksini", "display_name": "어둑시니", "role": "darkness_pressure"},
+	{"slot": 3, "id": "dokkaebi", "display_name": "도깨비", "role": "gate_trickster", "stage": 3, "zone": "outside_gate_forest", "attack_pattern": "dokkaebi_forest_trickster"},
+	{"slot": 4, "id": "sangbok_ghost", "display_name": "상복귀", "role": "wall_phasing_hunter", "stage": 4, "zone": "inner_building_only", "attack_pattern": "sangbok_steady_pursuit"},
+	{"slot": 5, "id": "dalgyal_gwisin", "display_name": "달걀귀신", "role": "look_away_strangler", "stage": 5, "zone": "inner_building_only", "attack_pattern": "dalgyal_blind_lunge"},
+	{"slot": 6, "id": "eoduksini", "display_name": "어둑시니", "role": "flashlight_growth_shadow", "stage": 5, "zone": "inner_building_only", "attack_pattern": "flashlight_growth_shadow"},
+	{"slot": 7, "id": "changgwi", "display_name": "창귀", "role": "corridor_lure", "stage": 5, "zone": "inner_building_only", "attack_pattern": "corridor_lure_pursuit"},
+	{"slot": 8, "id": "jangsanbeom", "display_name": "장산범", "role": "voice_lure_crawler", "stage": 5, "zone": "inner_building_only", "attack_pattern": "voice_lure_crawl"},
 	{"id": "well_spirit", "display_name": "우물귀", "role": "courtyard_ambush"},
 ]
 
@@ -70,18 +72,44 @@ func ghost_type_for_stage(stage: int) -> String:
 
 func active_ghost_types_for_stage(stage: int) -> Array[String]:
 	var result: Array[String] = []
-	for threat_stage in range(3, _clamped_stage(stage) + 1):
-		var ghost_type := ghost_type_for_stage(threat_stage)
-		if ghost_type != "":
-			result.append(ghost_type)
+	var current_stage := _clamped_stage(stage)
+	for profile in GHOST_ROSTER:
+		if not profile.has("stage") or int(profile["stage"]) > current_stage:
+			continue
+		result.append(str(profile["id"]))
 	return result
 
 func active_threat_stages_for_stage(stage: int) -> Array[int]:
 	var result: Array[int] = []
-	for threat_stage in range(3, _clamped_stage(stage) + 1):
-		if ghost_type_for_stage(threat_stage) != "":
-			result.append(threat_stage)
+	var current_stage := _clamped_stage(stage)
+	for profile in GHOST_ROSTER:
+		if not profile.has("stage") or not profile.has("slot"):
+			continue
+		if int(profile["stage"]) <= current_stage:
+			result.append(int(profile["slot"]))
 	return result
+
+func ghost_type_for_threat_slot(slot: int) -> String:
+	var profile := _profile_for_slot(slot)
+	return str(profile.get("id", ""))
+
+func resentment_stage_for_threat_slot(slot: int) -> int:
+	var profile := _profile_for_slot(slot)
+	if profile.has("stage"):
+		return int(profile["stage"])
+	return _clamped_stage(slot)
+
+func attack_pattern_for_ghost_type(ghost_type: String) -> String:
+	var profile := _profile_for_ghost_type(ghost_type)
+	return str(profile.get("attack_pattern", ""))
+
+func attack_pattern_for_threat_slot(slot: int) -> String:
+	var profile := _profile_for_slot(slot)
+	return str(profile.get("attack_pattern", attack_pattern_for_stage(slot)))
+
+func threat_zone_for_threat_slot(slot: int) -> String:
+	var profile := _profile_for_slot(slot)
+	return str(profile.get("zone", threat_zone_for_stage(slot)))
 
 func threat_zone_for_stage(stage: int) -> String:
 	match _clamped_stage(stage):
@@ -100,6 +128,18 @@ func attack_pattern_for_stage(stage: int) -> String:
 		5:
 			return "dalgyal_blind_lunge"
 	return ""
+
+func _profile_for_slot(slot: int) -> Dictionary:
+	for profile in GHOST_ROSTER:
+		if profile.has("slot") and int(profile["slot"]) == slot:
+			return profile
+	return {}
+
+func _profile_for_ghost_type(ghost_type: String) -> Dictionary:
+	for profile in GHOST_ROSTER:
+		if str(profile.get("id", "")) == ghost_type:
+			return profile
+	return {}
 
 func damage_per_hit(stage: int) -> int:
 	return DAMAGE_PER_HIT_BY_STAGE[_clamped_stage(stage)]

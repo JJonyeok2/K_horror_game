@@ -132,6 +132,8 @@ func drop_current_artifact() -> bool:
 	artifact.resentment_gain = item.resentment_gain
 	artifact.tags = item.tags.duplicate()
 	artifact.hand_slots = item.hand_slots
+	if artifact.has_method("configure_visuals"):
+		artifact.configure_visuals()
 	var forward: Vector3 = -camera.global_transform.basis.z.normalized()
 	var drop_position: Vector3 = global_position + forward * 1.45
 	drop_position.y = max(global_position.y - 0.55, 0.45)
