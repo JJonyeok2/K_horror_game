@@ -125,6 +125,10 @@ func _assert_health_hud(main: Node, player: Node3D) -> void:
 	if health_fill.size.x < 200.0:
 		_fail("Health gauge should render full width at startup: %s" % health_fill.size.x)
 		return
+	var status_label := hud.get("label") as Label
+	if status_label != null and status_label.text.find("회수금액") != -1:
+		_fail("Recovered quota should not be shown on the player HUD")
+		return
 
 func _is_number(value: Variant) -> bool:
 	return typeof(value) == TYPE_FLOAT or typeof(value) == TYPE_INT
@@ -205,11 +209,23 @@ func _assert_extraction_zone_inside_van(main: Node, player: Node3D) -> void:
 	for _i in range(6):
 		await physics_frame
 	var quota: Variant = main.get("quota")
-	if int(quota.get("recovered_value")) != 70:
-		_fail("Van extraction zone did not add held value to quota")
+	if int(quota.get("recovered_value")) != 0:
+		_fail("Van extraction zone should not immediately finalize held value")
+		return
+	if int(main.get("pending_recovered_value")) != 70:
+		_fail("Van extraction zone did not store held value as pending cargo")
 		return
 	if int(inventory.call("total_value")) != 0:
 		_fail("Van extraction zone did not clear inventory")
+		return
+	var settlement := main.find_child("BongoSettlementStation", true, false)
+	if settlement == null or not settlement.has_method("interact"):
+		_fail("Van has no interactive settlement station")
+		return
+	settlement.interact(player)
+	await process_frame
+	if int(quota.get("recovered_value")) != 70:
+		_fail("Settlement station did not finalize pending cargo value")
 		return
 
 func _assert_inventory_drop_cycle(main: Node, player: Node3D) -> void:

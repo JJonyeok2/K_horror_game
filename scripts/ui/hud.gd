@@ -50,9 +50,7 @@ func update_status(
 	is_sprinting: bool = false
 ) -> void:
 	var sprint_label := "달리기" if is_sprinting else "스태미너"
-	label.text = "회수금액 %d/%d\n무게 %.1f/%.1f\n원한 단계 %d\n체력 %.0f%%\n%s %.0f%%\n%s\n%s" % [
-		quota_value,
-		quota_required,
+	label.text = "무게 %.1f/%.1f\n원한 단계 %d\n체력 %.0f%%\n%s %.0f%%\n%s\n%s" % [
 		weight,
 		max_weight,
 		resentment_stage,

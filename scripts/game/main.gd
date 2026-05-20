@@ -3,6 +3,7 @@ extends Node3D
 const PlayerScene := preload("res://scenes/player/Player.tscn")
 const AudioDirectorScript := preload("res://scripts/audio/audio_director.gd")
 const JonggaEstateBuilder := preload("res://scripts/maps/jongga_estate_builder.gd")
+const BongoVanPlanScript := preload("res://scripts/maps/bongo_van_plan.gd")
 const ArtifactDefinition = preload("res://scripts/core/artifact_definition.gd")
 const QuotaTracker := preload("res://scripts/core/quota_tracker.gd")
 const ResentmentTracker := preload("res://scripts/core/resentment_tracker.gd")
@@ -29,6 +30,9 @@ var _side_passage_triggered: bool = false
 var _threat_attack_elapsed: float = 0.0
 var _player_down: bool = false
 var player_down: bool = false
+var pending_recovered_value: int = 0
+var pending_cargo_items: Array[ArtifactDefinition] = []
+var _stored_cargo_visual_index: int = 0
 
 func _ready() -> void:
 	audio_director = AudioDirectorScript.new()
@@ -290,7 +294,7 @@ func _update_bongo_quota_monitor() -> void:
 	var label := find_child("BongoQuotaMonitorText", true, false) as Label3D
 	if label == null:
 		return
-	label.text = "회수 현황\n₩%d / ₩%d" % [quota.recovered_value, quota.required_value]
+	label.text = "최종 ₩%d / ₩%d\n미정산 ₩%d" % [quota.recovered_value, quota.required_value, pending_recovered_value]
 
 func _create_threat_visual(root: Node3D) -> void:
 	var body := MeshInstance3D.new()
@@ -323,15 +327,62 @@ func _create_threat_visual(root: Node3D) -> void:
 	root.add_child(marker_light)
 
 func extract_player_inventory() -> void:
-	var value: int = player.inventory.total_value()
-	if value <= 0:
+	if player.inventory.items.is_empty():
 		return
+	var deposited_items: Array = player.inventory.items.duplicate()
+	var value: int = player.inventory.total_value()
+	for item: ArtifactDefinition in deposited_items:
+		pending_cargo_items.append(item)
+		_create_stored_cargo_visual(item)
+	pending_recovered_value += value
 	player.inventory.clear()
 	if player.has_method("refresh_held_item_views"):
 		player.refresh_held_item_views()
-	quota.add_recovered_value(value)
+	_update_bongo_quota_monitor()
+	print("보관:%d 미정산:%d / 할당량:%d" % [value, pending_recovered_value, quota.required_value])
+
+func settle_stored_cargo() -> void:
+	if pending_recovered_value <= 0:
+		print("정산할 물품이 없습니다.")
+		return
+	var settled_value := pending_recovered_value
+	quota.add_recovered_value(settled_value)
+	pending_recovered_value = 0
+	pending_cargo_items.clear()
+	_clear_pending_cargo_visuals()
 	_update_bongo_quota_monitor()
 	print("정산:%d / 할당량:%d" % [quota.recovered_value, quota.required_value])
+
+func _create_stored_cargo_visual(item: ArtifactDefinition) -> void:
+	_stored_cargo_visual_index += 1
+	var body := StaticBody3D.new()
+	body.name = "StoredCargoItem%02d" % _stored_cargo_visual_index
+	body.add_to_group("pending_cargo_visuals")
+	body.set_meta("display_name", item.display_name)
+	body.set_meta("value", item.value)
+	add_child(body)
+	var row := float((_stored_cargo_visual_index - 1) / 3)
+	var column := float((_stored_cargo_visual_index - 1) % 3)
+	body.global_position = BongoVanPlanScript.STORED_CARGO_START_POSITION + Vector3(column * 0.55, row * 0.22, row * 0.36)
+	var mesh_instance := MeshInstance3D.new()
+	var box_mesh := BoxMesh.new()
+	box_mesh.size = Vector3(0.46, 0.28, 0.34) if item.hand_slots < 2 else Vector3(0.72, 0.36, 0.44)
+	var material := StandardMaterial3D.new()
+	material.albedo_color = Color(0.58, 0.46, 0.28)
+	material.roughness = 0.85
+	box_mesh.material = material
+	mesh_instance.mesh = box_mesh
+	body.add_child(mesh_instance)
+	var collision := CollisionShape3D.new()
+	collision.name = "CollisionShape3D"
+	var shape := BoxShape3D.new()
+	shape.size = box_mesh.size
+	collision.shape = shape
+	body.add_child(collision)
+
+func _clear_pending_cargo_visuals() -> void:
+	for node in get_tree().get_nodes_in_group("pending_cargo_visuals"):
+		node.queue_free()
 
 func _on_risky_side_passage_entered(body: Node) -> void:
 	if _side_passage_triggered or body != player:

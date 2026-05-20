@@ -9,7 +9,7 @@ func _ready() -> void:
 	body_entered.connect(_on_body_entered)
 
 func interaction_label() -> String:
-	return "복귀/정산하기"
+	return "봉고차에 물품 싣기"
 
 func interact(actor: Node) -> void:
 	if actor != null and actor.get_parent() != null and actor.get_parent().has_method("extract_player_inventory"):

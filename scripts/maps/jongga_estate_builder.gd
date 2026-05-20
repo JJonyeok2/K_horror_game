@@ -9,6 +9,7 @@ const EstateLayoutPlanScript := preload("res://scripts/maps/estate_layout_plan.g
 const BongoVanPlanScript := preload("res://scripts/maps/bongo_van_plan.gd")
 const VisualPaletteScript := preload("res://scripts/maps/visual_palette.gd")
 const StatefulInteractableScript := preload("res://scripts/interactions/stateful_interactable.gd")
+const BongoSettlementStationScript := preload("res://scripts/interactions/bongo_settlement_station.gd")
 const PerformanceSettingsScript := preload("res://scripts/game/performance_settings.gd")
 
 const SPAWN_POINT := BongoVanPlanScript.PLAYER_START_POSITION
@@ -504,6 +505,7 @@ func _create_bongo_van() -> void:
 		else:
 			_add_visual_box_world(label, position, size, color, material_key, rotation)
 	_create_bongo_quota_monitor()
+	_create_bongo_settlement_station()
 
 func _create_bongo_quota_monitor() -> void:
 	var monitor := Node3D.new()
@@ -525,6 +527,17 @@ func _create_bongo_quota_monitor() -> void:
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	monitor.add_child(label)
+
+func _create_bongo_settlement_station() -> void:
+	var station := _create_box(
+		BongoVanPlanScript.SETTLEMENT_STATION_NAME,
+		BongoVanPlanScript.SETTLEMENT_STATION_POSITION,
+		BongoVanPlanScript.SETTLEMENT_STATION_SIZE,
+		BongoVanPlanScript.COLOR_MONITOR_BACKING,
+		"metal"
+	)
+	station.set_script(BongoSettlementStationScript)
+	_add_visual_box_world("BongoSettlementStationScreen", BongoVanPlanScript.SETTLEMENT_STATION_POSITION + Vector3(0.0, 0.18, -0.27), Vector3(0.55, 0.28, 0.04), BongoVanPlanScript.COLOR_MONITOR_SCREEN)
 
 func _create_extraction_zone() -> void:
 	var extraction := ExtractionScene.instantiate()

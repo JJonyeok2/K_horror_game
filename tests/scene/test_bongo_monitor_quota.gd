@@ -12,7 +12,7 @@ func _initialize() -> void:
 		await physics_frame
 
 	_assert_bongo_quota_monitor(main)
-	await _assert_bongo_quota_monitor_updates_after_extraction(main)
+	await _assert_bongo_deposit_waits_for_manual_settlement(main)
 	if _failed:
 		quit(1)
 		return
@@ -37,11 +37,11 @@ func _assert_bongo_quota_monitor(main: Node) -> void:
 	if quota_text == "":
 		_fail("BongoQuotaMonitor has no Label3D or TextMesh text")
 		return
-	if quota_text.find("회수") == -1 and quota_text.to_lower().find("quota") == -1:
-		_fail("BongoQuotaMonitor text does not mention recovered quota: %s" % quota_text)
+	if quota_text.find("최종") == -1 or quota_text.find("미정산") == -1:
+		_fail("BongoQuotaMonitor text does not show final and pending values: %s" % quota_text)
 		return
 
-func _assert_bongo_quota_monitor_updates_after_extraction(main: Node) -> void:
+func _assert_bongo_deposit_waits_for_manual_settlement(main: Node) -> void:
 	var player := main.get("player") as Node3D
 	var zone := main.find_child("VanInteriorReturnZone", true, false) as Area3D
 	if player == null or zone == null:
@@ -52,10 +52,36 @@ func _assert_bongo_quota_monitor_updates_after_extraction(main: Node) -> void:
 	player.set("velocity", Vector3.ZERO)
 	main.call("extract_player_inventory")
 	await process_frame
+	var quota: Variant = main.get("quota")
+	if int(quota.get("recovered_value")) != 0:
+		_fail("Depositing in the van should not immediately finalize quota")
+		return
+	if int(main.get("pending_recovered_value")) != 70:
+		_fail("Depositing in the van should create pending cargo value")
+		return
+	if main.find_child("StoredCargoItem01", true, false) == null:
+		_fail("Deposited item should remain visible in the van before settlement")
+		return
 	var monitor := main.find_child("BongoQuotaMonitor", true, false)
 	var quota_text := _quota_monitor_text(monitor)
-	if quota_text.find("70") == -1:
-		_fail("BongoQuotaMonitor did not update after extraction: %s" % quota_text)
+	if quota_text.find("미정산") == -1 or quota_text.find("70") == -1:
+		_fail("BongoQuotaMonitor did not show pending value after deposit: %s" % quota_text)
+		return
+	var settlement := main.find_child("BongoSettlementStation", true, false)
+	if settlement == null or not settlement.has_method("interact"):
+		_fail("Missing interactive BongoSettlementStation")
+		return
+	settlement.interact(player)
+	await process_frame
+	if int(quota.get("recovered_value")) != 70:
+		_fail("Manual settlement did not finalize quota")
+		return
+	if int(main.get("pending_recovered_value")) != 0:
+		_fail("Pending cargo value was not cleared after settlement")
+		return
+	quota_text = _quota_monitor_text(monitor)
+	if quota_text.find("최종") == -1 or quota_text.find("70") == -1:
+		_fail("BongoQuotaMonitor did not show finalized quota after settlement: %s" % quota_text)
 		return
 
 func _quota_monitor_text(root: Node) -> String:
