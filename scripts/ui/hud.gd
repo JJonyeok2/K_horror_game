@@ -7,6 +7,14 @@ var health_fill: ColorRect
 var stamina_back: ColorRect
 var stamina_fill: ColorRect
 
+const GAUGE_WIDTH: float = 220.0
+const GAUGE_HEIGHT: float = 14.0
+const GAUGE_FILL_WIDTH: float = 216.0
+const GAUGE_FILL_HEIGHT: float = 10.0
+const GAUGE_RIGHT_MARGIN: float = 28.0
+const HEALTH_GAUGE_TOP: float = 150.0
+const STAMINA_GAUGE_TOP: float = 170.0
+
 func _ready() -> void:
 	label = Label.new()
 	label.position = Vector2(20, 20)
@@ -14,28 +22,36 @@ func _ready() -> void:
 	add_child(label)
 	health_back = ColorRect.new()
 	health_back.name = "HealthGaugeBack"
-	health_back.position = Vector2(20, 150)
-	health_back.size = Vector2(220, 14)
+	_place_right_gauge(health_back, HEALTH_GAUGE_TOP)
 	health_back.color = Color(0.045, 0.025, 0.025, 0.84)
 	add_child(health_back)
 	health_fill = ColorRect.new()
 	health_fill.name = "HealthGaugeFill"
-	health_fill.position = health_back.position + Vector2(2, 2)
-	health_fill.size = Vector2(216, 10)
+	health_fill.position = Vector2(2, 2)
+	health_fill.size = Vector2(GAUGE_FILL_WIDTH, GAUGE_FILL_HEIGHT)
 	health_fill.color = Color(0.72, 0.12, 0.1, 0.96)
-	add_child(health_fill)
+	health_back.add_child(health_fill)
 	stamina_back = ColorRect.new()
 	stamina_back.name = "StaminaGaugeBack"
-	stamina_back.position = Vector2(20, 170)
-	stamina_back.size = Vector2(220, 14)
+	_place_right_gauge(stamina_back, STAMINA_GAUGE_TOP)
 	stamina_back.color = Color(0.04, 0.045, 0.04, 0.82)
 	add_child(stamina_back)
 	stamina_fill = ColorRect.new()
 	stamina_fill.name = "StaminaGaugeFill"
-	stamina_fill.position = stamina_back.position + Vector2(2, 2)
-	stamina_fill.size = Vector2(216, 10)
+	stamina_fill.position = Vector2(2, 2)
+	stamina_fill.size = Vector2(GAUGE_FILL_WIDTH, GAUGE_FILL_HEIGHT)
 	stamina_fill.color = Color(0.54, 0.78, 0.42, 0.95)
-	add_child(stamina_fill)
+	stamina_back.add_child(stamina_fill)
+
+func _place_right_gauge(gauge: ColorRect, top: float) -> void:
+	gauge.anchor_left = 1.0
+	gauge.anchor_right = 1.0
+	gauge.anchor_top = 0.0
+	gauge.anchor_bottom = 0.0
+	gauge.offset_left = -(GAUGE_WIDTH + GAUGE_RIGHT_MARGIN)
+	gauge.offset_right = -GAUGE_RIGHT_MARGIN
+	gauge.offset_top = top
+	gauge.offset_bottom = top + GAUGE_HEIGHT
 
 func update_status(
 	quota_value: int,
@@ -60,7 +76,7 @@ func update_status(
 		hand_status,
 		interaction_label
 	]
-	health_fill.size.x = 216.0 * clamp(health_ratio, 0.0, 1.0)
+	health_fill.size.x = GAUGE_FILL_WIDTH * clamp(health_ratio, 0.0, 1.0)
 	health_fill.color = Color(0.94, 0.35, 0.18, 0.96) if health_ratio < 0.3 else Color(0.72, 0.12, 0.1, 0.96)
-	stamina_fill.size.x = 216.0 * clamp(stamina_ratio, 0.0, 1.0)
+	stamina_fill.size.x = GAUGE_FILL_WIDTH * clamp(stamina_ratio, 0.0, 1.0)
 	stamina_fill.color = Color(0.78, 0.55, 0.35, 0.95) if stamina_ratio < 0.25 else Color(0.54, 0.78, 0.42, 0.95)

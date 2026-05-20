@@ -167,11 +167,25 @@ func _assert_health_hud(main: Node, player: Node3D) -> void:
 		return
 	var health_back := hud.find_child("HealthGaugeBack", true, false) as ColorRect
 	var health_fill := hud.find_child("HealthGaugeFill", true, false) as ColorRect
-	if health_back == null or health_fill == null:
-		_fail("HUD is missing health gauge nodes")
+	var stamina_back := hud.find_child("StaminaGaugeBack", true, false) as ColorRect
+	var stamina_fill := hud.find_child("StaminaGaugeFill", true, false) as ColorRect
+	if health_back == null or health_fill == null or stamina_back == null or stamina_fill == null:
+		_fail("HUD is missing health/stamina gauge nodes")
 		return
 	if health_fill.size.x < 200.0:
 		_fail("Health gauge should render full width at startup: %s" % health_fill.size.x)
+		return
+	if health_back.anchor_left < 0.99 or health_back.anchor_right < 0.99:
+		_fail("Health gauge should be anchored to the right side of the screen")
+		return
+	if health_back.offset_right > -16.0:
+		_fail("Health gauge should keep a right screen margin: offset_right=%s" % health_back.offset_right)
+		return
+	if stamina_back.anchor_left != health_back.anchor_left or stamina_back.anchor_right != health_back.anchor_right:
+		_fail("Stamina gauge should align with health gauge on the right side")
+		return
+	if stamina_back.offset_left != health_back.offset_left or stamina_back.offset_right != health_back.offset_right:
+		_fail("Stamina gauge should use the same right-side offsets as health gauge")
 		return
 	var status_label := hud.get("label") as Label
 	if status_label != null and status_label.text.find("회수금액") != -1:
