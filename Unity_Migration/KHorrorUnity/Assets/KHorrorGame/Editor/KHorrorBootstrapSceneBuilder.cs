@@ -153,9 +153,11 @@ namespace KHorrorGame.Editor
             rig.ApplyProfile();
 
             CreatePostProcessVolume(parent);
-            CreatePointLight("GateWetLamp_Left", parent, new Vector3(-3.7f, 3.05f, 52.9f), new Color(1f, 0.55f, 0.28f), 1.2f, 7.5f);
-            CreatePointLight("GateWetLamp_Right", parent, new Vector3(3.7f, 3.05f, 52.9f), new Color(1f, 0.55f, 0.28f), 1.0f, 6.5f);
-            CreatePointLight("ShrineCandleGlow", parent, new Vector3(-8f, 1.35f, 100f), new Color(1f, 0.42f, 0.22f), 1.45f, 5.5f);
+            CreatePointLight("ApproachPathLowFill", parent, new Vector3(0f, 2.8f, 36f), new Color(0.38f, 0.48f, 0.58f), 1.15f, 34f);
+            CreatePointLight("CourtyardMoonBounce", parent, new Vector3(0f, 4.2f, 69f), new Color(0.46f, 0.52f, 0.58f), 0.9f, 30f);
+            CreatePointLight("GateWetLamp_Left", parent, new Vector3(-3.7f, 3.05f, 52.9f), new Color(1f, 0.58f, 0.34f), 1.9f, 10f);
+            CreatePointLight("GateWetLamp_Right", parent, new Vector3(3.7f, 3.05f, 52.9f), new Color(1f, 0.58f, 0.34f), 1.65f, 9f);
+            CreatePointLight("ShrineCandleGlow", parent, new Vector3(-8f, 1.35f, 100f), new Color(1f, 0.46f, 0.25f), 2.1f, 7f);
         }
 
         private static void CreateBongoHub(Transform parent, GameLoopController gameLoop)
@@ -766,20 +768,20 @@ namespace KHorrorGame.Editor
         {
             var serialized = new SerializedObject(profile);
             SetSerializedBool(serialized, "fogEnabled", true);
-            SetSerializedFloat(serialized, "fogDensity", 0.065f);
-            SetSerializedColor(serialized, "fogColor", new Color(0.012f, 0.017f, 0.015f, 1f));
-            SetSerializedColor(serialized, "ambientColor", new Color(0.006f, 0.008f, 0.007f, 1f));
-            SetSerializedFloat(serialized, "reflectionIntensity", 0.035f);
-            SetSerializedColor(serialized, "moonColor", new Color(0.36f, 0.47f, 0.62f, 1f));
-            SetSerializedFloat(serialized, "moonIntensity", 0.08f);
+            SetSerializedFloat(serialized, "fogDensity", 0.032f);
+            SetSerializedColor(serialized, "fogColor", new Color(0.033f, 0.04f, 0.038f, 1f));
+            SetSerializedColor(serialized, "ambientColor", new Color(0.032f, 0.035f, 0.031f, 1f));
+            SetSerializedFloat(serialized, "reflectionIntensity", 0.09f);
+            SetSerializedColor(serialized, "moonColor", new Color(0.50f, 0.60f, 0.72f, 1f));
+            SetSerializedFloat(serialized, "moonIntensity", 0.24f);
             SetSerializedVector3(serialized, "moonEulerAngles", new Vector3(54f, -41f, 0f));
-            SetSerializedColor(serialized, "flashlightColor", new Color(0.92f, 0.88f, 0.70f, 1f));
-            SetSerializedFloat(serialized, "flashlightIntensity", 7.25f);
-            SetSerializedFloat(serialized, "flashlightRange", 18f);
-            SetSerializedFloat(serialized, "flashlightSpotAngle", 38f);
-            SetSerializedFloat(serialized, "exposureCompensation", -1.55f);
-            SetSerializedFloat(serialized, "vignetteIntensity", 0.37f);
-            SetSerializedFloat(serialized, "saturation", -26f);
+            SetSerializedColor(serialized, "flashlightColor", new Color(1.0f, 0.94f, 0.76f, 1f));
+            SetSerializedFloat(serialized, "flashlightIntensity", 10.5f);
+            SetSerializedFloat(serialized, "flashlightRange", 26f);
+            SetSerializedFloat(serialized, "flashlightSpotAngle", 48f);
+            SetSerializedFloat(serialized, "exposureCompensation", -0.35f);
+            SetSerializedFloat(serialized, "vignetteIntensity", 0.22f);
+            SetSerializedFloat(serialized, "saturation", -14f);
             serialized.ApplyModifiedPropertiesWithoutUndo();
             EditorUtility.SetDirty(profile);
         }
@@ -806,34 +808,54 @@ namespace KHorrorGame.Editor
 
         private static void ConfigurePostProcessProfile(VolumeProfile profile)
         {
+            var profilePath = AssetDatabase.GetAssetPath(profile);
+            foreach (var asset in AssetDatabase.LoadAllAssetsAtPath(profilePath))
+            {
+                if (asset != profile && asset is VolumeComponent)
+                {
+                    Object.DestroyImmediate(asset, true);
+                }
+            }
+
             profile.components.Clear();
 
-            var color = profile.Add<ColorAdjustments>(true);
-            color.postExposure.Override(-1.1f);
-            color.contrast.Override(24f);
-            color.saturation.Override(-24f);
-            color.colorFilter.Override(new Color(0.82f, 0.94f, 0.86f, 1f));
+            var color = AddVolumeComponent<ColorAdjustments>(profile);
+            color.postExposure.Override(-0.15f);
+            color.contrast.Override(12f);
+            color.saturation.Override(-14f);
+            color.colorFilter.Override(new Color(0.94f, 0.98f, 0.90f, 1f));
 
-            var whiteBalance = profile.Add<WhiteBalance>(true);
-            whiteBalance.temperature.Override(-18f);
-            whiteBalance.tint.Override(-8f);
+            var whiteBalance = AddVolumeComponent<WhiteBalance>(profile);
+            whiteBalance.temperature.Override(-8f);
+            whiteBalance.tint.Override(-4f);
 
-            var vignette = profile.Add<Vignette>(true);
-            vignette.intensity.Override(0.42f);
-            vignette.smoothness.Override(0.58f);
+            var vignette = AddVolumeComponent<Vignette>(profile);
+            vignette.intensity.Override(0.24f);
+            vignette.smoothness.Override(0.45f);
             vignette.color.Override(new Color(0f, 0.006f, 0.003f, 1f));
 
-            var bloom = profile.Add<Bloom>(true);
-            bloom.threshold.Override(1.15f);
-            bloom.intensity.Override(0.18f);
+            var bloom = AddVolumeComponent<Bloom>(profile);
+            bloom.threshold.Override(1.05f);
+            bloom.intensity.Override(0.28f);
             bloom.scatter.Override(0.55f);
 
-            var filmGrain = profile.Add<FilmGrain>(true);
+            var filmGrain = AddVolumeComponent<FilmGrain>(profile);
             filmGrain.type.Override(FilmGrainLookup.Thin1);
-            filmGrain.intensity.Override(0.22f);
+            filmGrain.intensity.Override(0.13f);
             filmGrain.response.Override(0.68f);
 
             EditorUtility.SetDirty(profile);
+            AssetDatabase.SaveAssets();
+        }
+
+        private static T AddVolumeComponent<T>(VolumeProfile profile)
+            where T : VolumeComponent
+        {
+            var component = profile.Add<T>(true);
+            component.hideFlags = HideFlags.HideInInspector | HideFlags.HideInHierarchy;
+            AssetDatabase.AddObjectToAsset(component, profile);
+            EditorUtility.SetDirty(component);
+            return component;
         }
 
         private static void EnsureRenderPipeline()
