@@ -185,10 +185,14 @@ namespace KHorrorGame.Editor
             CreateCube("ApproachRoad_GrassLeft", parent, new Vector3(-5.5f, 0.02f, 34f), new Vector3(4f, 0.16f, 36f), Materials.Grass);
             CreateCube("ApproachRoad_GrassRight", parent, new Vector3(5.5f, 0.02f, 34f), new Vector3(4f, 0.16f, 36f), Materials.Grass);
             CreateCube("OuterGateThresholdStone", parent, new Vector3(0f, 0.08f, 53f), new Vector3(8f, 0.24f, 1.2f), Materials.Stone);
+            CreateCube("OuterGateContinuousUnderfloor", parent, new Vector3(0f, -0.08f, 54.45f), new Vector3(9.2f, 0.42f, 4.6f), Materials.Stone);
+            CreateCube("OuterGatePackedEarthBridge", parent, new Vector3(0f, 0f, 55.05f), new Vector3(8.3f, 0.2f, 4.4f), Materials.Courtyard);
+            var gateInsideSpawn = CreateMarker("EstateGateInsideSpawn", new Vector3(0f, 1f, 59.8f), Quaternion.identity, parent);
+            var gateOutsideSpawn = CreateMarker("EstateGateOutsideSpawn", new Vector3(0f, 1f, 51.25f), Quaternion.Euler(0f, 180f, 0f), parent);
 
             CreateDistantSilhouette(parent);
             CreateForest(parent);
-            CreateOuterGate(parent);
+            CreateOuterGate(parent, gateInsideSpawn, gateOutsideSpawn);
             CreateCourtyard(parent);
             CreateMainHouse(parent);
             CreateShrineLoop(parent);
@@ -259,28 +263,49 @@ namespace KHorrorGame.Editor
                 }
             }
 
-            CreateJangseung(parent, new Vector3(-4.8f, 0f, 48f), "Jangseung_Left");
-            CreateJangseung(parent, new Vector3(4.8f, 0f, 48.4f), "Jangseung_Right");
+            for (var i = 0; i < 5; i++)
+            {
+                var z = 24f + i * 4.8f;
+                var leftX = -3.75f - (i % 2) * 0.45f;
+                var rightX = 3.9f + ((i + 1) % 2) * 0.38f;
+                CreateJangseung(parent, new Vector3(leftX, 0f, z), "ApproachJangseung_Left_" + i);
+                CreateJangseung(parent, new Vector3(rightX, 0f, z + 1.8f), "ApproachJangseung_Right_" + i);
+            }
+
+            CreateJangseung(parent, new Vector3(-4.8f, 0f, 48f), "GateJangseung_Left");
+            CreateJangseung(parent, new Vector3(4.8f, 0f, 48.4f), "GateJangseung_Right");
             CreateSotdae(parent, new Vector3(-3.2f, 0f, 50.5f), "Sotdae_Left");
             CreateSotdae(parent, new Vector3(3.2f, 0f, 50.7f), "Sotdae_Right");
         }
 
-        private static void CreateOuterGate(Transform parent)
+        private static void CreateOuterGate(Transform parent, Transform gateInsideSpawn, Transform gateOutsideSpawn)
         {
-            CreateCube("OuterGateLeftPost", parent, new Vector3(-3.7f, 2.1f, 54f), new Vector3(0.75f, 4.2f, 0.75f), Materials.DarkWood);
-            CreateCube("OuterGateRightPost", parent, new Vector3(3.7f, 2.1f, 54f), new Vector3(0.75f, 4.2f, 0.75f), Materials.DarkWood);
-            CreateCube("OuterGateLintel", parent, new Vector3(0f, 4.15f, 54f), new Vector3(8.2f, 0.65f, 0.8f), Materials.DarkWood);
-            CreateCube("OuterGateRoof_LeftSlope", parent, new Vector3(-2.2f, 4.8f, 54f), new Vector3(5.2f, 0.32f, 2.1f), Materials.Roof, Quaternion.Euler(0f, 0f, 9f));
-            CreateCube("OuterGateRoof_RightSlope", parent, new Vector3(2.2f, 4.8f, 54f), new Vector3(5.2f, 0.32f, 2.1f), Materials.Roof, Quaternion.Euler(0f, 0f, -9f));
-            CreateCube("OuterGateRoofRidge", parent, new Vector3(0f, 5.25f, 54f), new Vector3(0.35f, 0.28f, 2.35f), Materials.RoofRidge);
-            CreateRoofTileRibs(parent, new Vector3(0f, 5.0f, 54f), 8.2f, 2.25f, "OuterGateTileRib");
-            CreateCube("LeftSwingGatePanel", parent, new Vector3(-1.95f, 1.75f, 54.15f), new Vector3(3.2f, 3f, 0.25f), Materials.GatePanel);
-            CreateCube("RightSwingGatePanel", parent, new Vector3(1.95f, 1.75f, 54.15f), new Vector3(3.2f, 3f, 0.25f), Materials.GatePanel);
-            CreateCube("GatePanelLeftVerticalBatten", parent, new Vector3(-1.95f, 1.75f, 53.95f), new Vector3(0.18f, 3.15f, 0.18f), Materials.DarkWood);
-            CreateCube("GatePanelRightVerticalBatten", parent, new Vector3(1.95f, 1.75f, 53.95f), new Vector3(0.18f, 3.15f, 0.18f), Materials.DarkWood);
-            CreateCube("GateIronLockPlate", parent, new Vector3(0f, 1.55f, 53.78f), new Vector3(0.8f, 0.48f, 0.08f), Materials.RustedMetal);
-            CreatePaperCharm(parent, new Vector3(-0.52f, 2.7f, 53.72f), "GateCharm_Left");
-            CreatePaperCharm(parent, new Vector3(0.55f, 2.55f, 53.72f), "GateCharm_Right");
+            var gatePortal = new GameObject("OuterGateTraversalPortal");
+            gatePortal.transform.SetParent(parent);
+            var portal = gatePortal.AddComponent<EstateGatePortal>();
+            SetObject(portal, "insideSpawn", gateInsideSpawn);
+            SetObject(portal, "outsideSpawn", gateOutsideSpawn);
+            SetFloat(portal, "gatePlaneZ", 54f);
+            SetString(portal, "enterLabel", "대문 안으로 들어가기 [E]");
+            SetString(portal, "exitLabel", "대문 밖으로 나가기 [E]");
+
+            CreateCube("OuterGateLeftPost", gatePortal.transform, new Vector3(-3.7f, 2.1f, 54f), new Vector3(0.75f, 4.2f, 0.75f), Materials.DarkWood);
+            CreateCube("OuterGateRightPost", gatePortal.transform, new Vector3(3.7f, 2.1f, 54f), new Vector3(0.75f, 4.2f, 0.75f), Materials.DarkWood);
+            CreateCube("OuterGateLintel", gatePortal.transform, new Vector3(0f, 4.15f, 54f), new Vector3(8.2f, 0.65f, 0.8f), Materials.DarkWood);
+            CreateCube("OuterGateRoof_LeftSlope", gatePortal.transform, new Vector3(-2.2f, 4.8f, 54f), new Vector3(5.2f, 0.32f, 2.1f), Materials.Roof, Quaternion.Euler(0f, 0f, 9f));
+            CreateCube("OuterGateRoof_RightSlope", gatePortal.transform, new Vector3(2.2f, 4.8f, 54f), new Vector3(5.2f, 0.32f, 2.1f), Materials.Roof, Quaternion.Euler(0f, 0f, -9f));
+            CreateCube("OuterGateRoofRidge", gatePortal.transform, new Vector3(0f, 5.25f, 54f), new Vector3(0.35f, 0.28f, 2.35f), Materials.RoofRidge);
+            CreateRoofTileRibs(gatePortal.transform, new Vector3(0f, 5.0f, 54f), 8.2f, 2.25f, "OuterGateTileRib");
+            CreateCube("LeftSwingGatePanel", gatePortal.transform, new Vector3(-1.95f, 1.75f, 54.15f), new Vector3(3.2f, 3f, 0.25f), Materials.GatePanel);
+            CreateCube("RightSwingGatePanel", gatePortal.transform, new Vector3(1.95f, 1.75f, 54.15f), new Vector3(3.2f, 3f, 0.25f), Materials.GatePanel);
+            CreateCube("OuterGateCenterSeamBlocker", gatePortal.transform, new Vector3(0f, 1.75f, 53.98f), new Vector3(0.82f, 3.05f, 0.18f), Materials.GatePanel);
+            CreateCube("OuterGateBottomKickPlate", gatePortal.transform, new Vector3(0f, 0.5f, 53.9f), new Vector3(7.15f, 0.78f, 0.18f), Materials.DarkWood);
+            CreateCube("OuterGateBlackoutBacking", gatePortal.transform, new Vector3(0f, 1.8f, 54.42f), new Vector3(7.25f, 3.25f, 0.16f), Materials.Night);
+            CreateCube("GatePanelLeftVerticalBatten", gatePortal.transform, new Vector3(-1.95f, 1.75f, 53.95f), new Vector3(0.18f, 3.15f, 0.18f), Materials.DarkWood);
+            CreateCube("GatePanelRightVerticalBatten", gatePortal.transform, new Vector3(1.95f, 1.75f, 53.95f), new Vector3(0.18f, 3.15f, 0.18f), Materials.DarkWood);
+            CreateCube("GateIronLockPlate", gatePortal.transform, new Vector3(0f, 1.55f, 53.78f), new Vector3(0.8f, 0.48f, 0.08f), Materials.RustedMetal);
+            CreatePaperCharm(gatePortal.transform, new Vector3(-0.52f, 2.7f, 53.72f), "GateCharm_Left");
+            CreatePaperCharm(gatePortal.transform, new Vector3(0.55f, 2.55f, 53.72f), "GateCharm_Right");
             CreateCube("OuterWallLeft", parent, new Vector3(-10.5f, 1.7f, 58f), new Vector3(12f, 3.4f, 0.35f), Materials.StoneWall);
             CreateCube("OuterWallRight", parent, new Vector3(10.5f, 1.7f, 58f), new Vector3(12f, 3.4f, 0.35f), Materials.StoneWall);
             CreateWallCapStones(parent, -10.5f, 58f, 12f, "LeftWallCap");
@@ -959,6 +984,13 @@ namespace KHorrorGame.Editor
         {
             var serialized = new SerializedObject(target);
             serialized.FindProperty(propertyName).floatValue = value;
+            serialized.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        private static void SetString(Object target, string propertyName, string value)
+        {
+            var serialized = new SerializedObject(target);
+            serialized.FindProperty(propertyName).stringValue = value;
             serialized.ApplyModifiedPropertiesWithoutUndo();
         }
 
