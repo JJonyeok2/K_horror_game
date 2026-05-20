@@ -70,8 +70,8 @@ func _create_continuous_ground_and_route_stitches() -> void:
 	_create_floor("EstateContinuousGround", Vector3(0.0, -0.04, 62.0), Vector3(82.0, 0.12, 426.0), _fallback_color("packed_earth"), "packed_earth")
 	_create_floor("LongForestApproachRoad", Vector3(0.0, 0.025, 130.0), Vector3(8.5, 0.18, 288.0), _fallback_color("mud"), "mud")
 	var stitches := [
-		{"name": "GateToCourtyardFloorStitch", "position": Vector3(0.0, 0.025, -16.0), "size": Vector3(17.0, 0.16, 3.0), "material_key": "stone"},
-		{"name": "CourtyardToBuildingFloorStitch", "position": Vector3(0.0, 0.025, -64.0), "size": Vector3(36.0, 0.16, 4.0), "material_key": "stone"},
+		{"name": "GateToCourtyardFloorStitch", "position": Vector3(0.0, 0.025, -16.0), "size": Vector3(12.0, 0.16, 2.4), "material_key": "packed_earth"},
+		{"name": "CourtyardToBuildingFloorStitch", "position": Vector3(0.0, 0.025, -64.0), "size": Vector3(18.0, 0.16, 3.0), "material_key": "mud"},
 		{"name": "MainHouseToBackKitchenFloorStitch", "position": Vector3(-4.0, 0.025, -99.0), "size": Vector3(28.0, 0.16, 4.0), "material_key": "packed_earth"},
 		{"name": "BackKitchenToShrineFloorStitch", "position": Vector3(0.0, 0.025, -110.5), "size": Vector3(22.0, 0.16, 8.0), "material_key": "dark_stone"},
 		{"name": "BackyardToOuthouseFloorStitch", "position": Vector3(31.5, 0.025, -107.0), "size": Vector3(12.0, 0.16, 14.0), "material_key": "mud"},
@@ -99,6 +99,10 @@ func _create_planned_walls() -> void:
 		var position: Vector3 = wall_data["position"]
 		var size: Vector3 = wall_data["size"]
 		var material_key := str(wall_data["material_key"])
+		if material_key == "old_plaster" or material_key == "shrine_red":
+			var raised_size := _heightened_size(size, 4.2)
+			position = _keep_bottom_position(position, size, raised_size)
+			size = raised_size
 		if label == "ApproachWallLeft":
 			_create_box("ApproachWallLeftNorth", Vector3(position.x, position.y, 16.0), Vector3(size.x, size.y, 18.0), _fallback_color(material_key), material_key)
 			_create_box("ApproachWallLeftSouth", Vector3(position.x, position.y, -7.0), Vector3(size.x, size.y, 4.0), _fallback_color(material_key), material_key)
@@ -110,25 +114,36 @@ func _create_planned_walls() -> void:
 		_create_box(label, position, size, _fallback_color(material_key), material_key)
 
 func _create_route_guidance_walls() -> void:
-	_create_box("CourtyardFrontLeftGuideWall", Vector3(-17.5, 1.35, -16.7), Vector3(21.0, 2.7, 0.55), _fallback_color("old_plaster"), "old_plaster")
-	_create_box("CourtyardFrontRightGuideWall", Vector3(17.5, 1.35, -16.7), Vector3(21.0, 2.7, 0.55), _fallback_color("old_plaster"), "old_plaster")
-	_create_box("CourtyardLeftInnerReturnWall", Vector3(-24.8, 1.25, -29.0), Vector3(0.55, 2.5, 16.0), _fallback_color("old_plaster"), "old_plaster")
-	_create_box("CourtyardRightInnerReturnWall", Vector3(24.8, 1.25, -31.0), Vector3(0.55, 2.5, 20.0), _fallback_color("old_plaster"), "old_plaster")
-	_create_box("CourtyardBuildingApproachLeft", Vector3(-12.5, 1.2, -64.0), Vector3(8.0, 2.4, 0.45), _fallback_color("old_plaster"), "old_plaster")
-	_create_box("CourtyardBuildingApproachRight", Vector3(12.5, 1.2, -64.0), Vector3(8.0, 2.4, 0.45), _fallback_color("old_plaster"), "old_plaster")
+	_create_tall_wall_box("CourtyardFrontLeftGuideWall", Vector3(-17.5, 1.35, -16.7), Vector3(21.0, 2.7, 0.55), "old_plaster")
+	_create_tall_wall_box("CourtyardFrontRightGuideWall", Vector3(17.5, 1.35, -16.7), Vector3(21.0, 2.7, 0.55), "old_plaster")
+	_create_tall_wall_box("CourtyardLeftInnerReturnWall", Vector3(-24.8, 1.25, -29.0), Vector3(0.55, 2.5, 16.0), "old_plaster")
+	_create_tall_wall_box("CourtyardRightInnerReturnWall", Vector3(24.8, 1.25, -31.0), Vector3(0.55, 2.5, 20.0), "old_plaster")
+	_create_tall_wall_box("CourtyardBuildingApproachLeft", Vector3(-12.5, 1.2, -64.0), Vector3(8.0, 2.4, 0.45), "old_plaster")
+	_create_tall_wall_box("CourtyardBuildingApproachRight", Vector3(12.5, 1.2, -64.0), Vector3(8.0, 2.4, 0.45), "old_plaster")
 
-	_create_box("BackKitchenLeftWall", Vector3(-20.4, 1.25, -108.0), Vector3(0.6, 2.5, 21.0), _fallback_color("old_plaster"), "old_plaster")
-	_create_box("BackKitchenRightWall", Vector3(4.4, 1.25, -108.0), Vector3(0.6, 2.5, 21.0), _fallback_color("old_plaster"), "old_plaster")
-	_create_box("BackKitchenRearGateLeft", Vector3(-14.0, 1.25, -119.2), Vector3(10.5, 2.5, 0.55), _fallback_color("old_plaster"), "old_plaster")
-	_create_box("BackKitchenRearGateRight", Vector3(1.5, 1.25, -119.2), Vector3(5.7, 2.5, 0.55), _fallback_color("old_plaster"), "old_plaster")
+	_create_tall_wall_box("SingleGateLeftReturnWall", Vector3(-7.2, 1.7, -11.2), Vector3(2.4, 3.4, 1.1), "old_plaster")
+	_create_tall_wall_box("SingleGateRightReturnWall", Vector3(7.2, 1.7, -11.2), Vector3(2.4, 3.4, 1.1), "old_plaster")
+	_create_box("SidePassageBoardedGate", Vector3(-8.7, 1.85, -10.8), Vector3(3.3, 3.7, 0.55), _fallback_color("aged_wood"), "aged_wood")
+	_create_box("SidePassageBrushScreenA", Vector3(-9.4, 1.35, -5.4), Vector3(3.8, 2.7, 5.2), _fallback_color("wet_moss"), "mud")
+	_create_box("SidePassageBrushScreenB", Vector3(-12.0, 1.45, -14.8), Vector3(3.8, 2.9, 4.4), _fallback_color("wet_moss"), "mud")
 
-	_create_box("BackyardLoopBaffleA", Vector3(25.0, 1.0, -89.0), Vector3(12.0, 2.0, 0.45), _fallback_color("old_plaster"), "old_plaster")
-	_create_box("BackyardLoopBaffleB", Vector3(27.0, 1.0, -105.5), Vector3(12.0, 2.0, 0.45), _fallback_color("old_plaster"), "old_plaster")
-	_create_box("StorehouseLoopBaffleA", Vector3(-26.0, 1.0, -82.5), Vector3(11.0, 2.0, 0.45), _fallback_color("old_plaster"), "old_plaster")
-	_create_box("StorehouseLoopBaffleB", Vector3(-24.0, 1.0, -97.5), Vector3(11.0, 2.0, 0.45), _fallback_color("old_plaster"), "old_plaster")
+	_create_tall_wall_box("CourtyardSightlineScreenA", Vector3(-8.5, 1.65, -37.5), Vector3(17.0, 3.3, 0.55), "old_plaster")
+	_create_tall_wall_box("CourtyardSightlineScreenB", Vector3(8.5, 1.65, -49.0), Vector3(17.0, 3.3, 0.55), "old_plaster")
+	_create_tall_wall_box("CourtyardPathBaffleA", Vector3(-2.8, 1.6, -32.5), Vector3(0.55, 3.2, 12.0), "old_plaster")
+	_create_tall_wall_box("CourtyardPathBaffleB", Vector3(4.2, 1.6, -57.0), Vector3(0.55, 3.2, 13.0), "old_plaster")
 
-	_create_box("ShrineApproachLeftWall", Vector3(-9.5, 1.25, -119.0), Vector3(0.65, 2.5, 24.0), _fallback_color("shrine_red"), "shrine_red")
-	_create_box("ShrineApproachRightWall", Vector3(9.5, 1.25, -119.0), Vector3(0.65, 2.5, 24.0), _fallback_color("shrine_red"), "shrine_red")
+	_create_tall_wall_box("BackKitchenLeftWall", Vector3(-20.4, 1.25, -108.0), Vector3(0.6, 2.5, 21.0), "old_plaster")
+	_create_tall_wall_box("BackKitchenRightWall", Vector3(4.4, 1.25, -108.0), Vector3(0.6, 2.5, 21.0), "old_plaster")
+	_create_tall_wall_box("BackKitchenRearGateLeft", Vector3(-14.0, 1.25, -119.2), Vector3(10.5, 2.5, 0.55), "old_plaster")
+	_create_tall_wall_box("BackKitchenRearGateRight", Vector3(1.5, 1.25, -119.2), Vector3(5.7, 2.5, 0.55), "old_plaster")
+
+	_create_tall_wall_box("BackyardLoopBaffleA", Vector3(25.0, 1.0, -89.0), Vector3(12.0, 2.0, 0.45), "old_plaster")
+	_create_tall_wall_box("BackyardLoopBaffleB", Vector3(27.0, 1.0, -105.5), Vector3(12.0, 2.0, 0.45), "old_plaster")
+	_create_tall_wall_box("StorehouseLoopBaffleA", Vector3(-26.0, 1.0, -82.5), Vector3(11.0, 2.0, 0.45), "old_plaster")
+	_create_tall_wall_box("StorehouseLoopBaffleB", Vector3(-24.0, 1.0, -97.5), Vector3(11.0, 2.0, 0.45), "old_plaster")
+
+	_create_tall_wall_box("ShrineApproachLeftWall", Vector3(-9.5, 1.25, -119.0), Vector3(0.65, 2.5, 24.0), "shrine_red")
+	_create_tall_wall_box("ShrineApproachRightWall", Vector3(9.5, 1.25, -119.0), Vector3(0.65, 2.5, 24.0), "shrine_red")
 
 func _create_approach_forest() -> void:
 	for i in range(17):
@@ -214,17 +229,17 @@ func _create_courtyard_density_props() -> void:
 	_create_interactable_box("CourtyardToolChest", Vector3(-14.5, 0.45, -57.0), Vector3(1.25, 0.55, 0.85), _fallback_color("black_wood"), "black_wood", "공구함 열기", "공구함 닫기", Vector3(0.0, 0.08, 0.0), Vector3(-12.0, 0.0, 0.0))
 
 func _create_main_house_building() -> void:
-	_create_box("MainHouseFrontWallLeft", Vector3(-10.6, 1.7, -73.4), Vector3(11.8, 3.4, 0.55), _fallback_color("old_plaster"), "old_plaster")
-	_create_box("MainHouseFrontWallRight", Vector3(10.6, 1.7, -73.4), Vector3(11.8, 3.4, 0.55), _fallback_color("old_plaster"), "old_plaster")
+	_create_tall_wall_box("MainHouseFrontWallLeft", Vector3(-10.6, 1.7, -73.4), Vector3(11.8, 3.4, 0.55), "old_plaster")
+	_create_tall_wall_box("MainHouseFrontWallRight", Vector3(10.6, 1.7, -73.4), Vector3(11.8, 3.4, 0.55), "old_plaster")
 	_create_box("MainHouseDoorThreshold", Vector3(0.0, 0.22, -73.15), Vector3(7.2, 0.22, 1.2), _fallback_color("aged_wood"), "aged_wood")
-	_create_box("MainHouseLeftOuterWall", Vector3(-16.4, 1.65, -88.0), Vector3(0.65, 3.3, 18.0), _fallback_color("old_plaster"), "old_plaster")
-	_create_box("MainHouseRightOuterWall", Vector3(16.4, 1.65, -88.0), Vector3(0.65, 3.3, 18.0), _fallback_color("old_plaster"), "old_plaster")
+	_create_tall_wall_box("MainHouseLeftOuterWall", Vector3(-16.4, 1.65, -88.0), Vector3(0.65, 3.3, 18.0), "old_plaster")
+	_create_tall_wall_box("MainHouseRightOuterWall", Vector3(16.4, 1.65, -88.0), Vector3(0.65, 3.3, 18.0), "old_plaster")
 	_create_box("MainHouseCenterPartition", Vector3(-7.4, 1.35, -86.0), Vector3(8.8, 2.7, 0.4), _fallback_color("aged_wood"), "aged_wood")
 	_create_box("MainHouseCenterPartitionRight", Vector3(7.4, 1.35, -86.0), Vector3(8.8, 2.7, 0.4), _fallback_color("aged_wood"), "aged_wood")
 	_create_box("MainHouseRearPartitionLeft", Vector3(-8.2, 1.35, -94.0), Vector3(8.8, 2.7, 0.4), _fallback_color("aged_wood"), "aged_wood")
 	_create_box("MainHouseRearPartitionRight", Vector3(8.2, 1.35, -94.0), Vector3(8.8, 2.7, 0.4), _fallback_color("aged_wood"), "aged_wood")
-	_create_box("MainHouseRoof", Vector3(0.0, 4.05, -86.0), Vector3(37.5, 0.45, 29.5), _fallback_color("roof_tile"), "roof_tile")
-	_create_box("MainHouseRoofFrontLip", Vector3(0.0, 3.7, -72.0), Vector3(39.0, 0.35, 1.4), _fallback_color("roof_tile"), "roof_tile")
+	_create_box("MainHouseRoof", Vector3(0.0, 4.9, -86.0), Vector3(37.5, 0.45, 29.5), _fallback_color("roof_tile"), "roof_tile")
+	_create_box("MainHouseRoofFrontLip", Vector3(0.0, 4.55, -72.0), Vector3(39.0, 0.35, 1.4), _fallback_color("roof_tile"), "roof_tile")
 	_add_visual_box_world("MainHousePaperDoorA", Vector3(-12.4, 1.45, -73.72), Vector3(1.4, 2.15, 0.05), _fallback_color("paper"), "paper")
 	_add_visual_box_world("MainHousePaperDoorB", Vector3(8.2, 1.45, -73.72), Vector3(1.4, 2.15, 0.05), _fallback_color("paper"), "paper")
 	_add_visual_box_world("MainHousePaperDoorC", Vector3(12.4, 1.45, -73.72), Vector3(1.4, 2.15, 0.05), _fallback_color("paper"), "paper")
@@ -335,22 +350,22 @@ func _create_gate() -> void:
 	right_hinge.position = Vector3(3.6, 0.0, 0.0)
 	gate.add_child(right_hinge)
 
-	var left_panel := _create_child_body(left_hinge, "LeftSwingGatePanel", Vector3(1.75, 1.65, 0.0), Vector3(3.5, 3.3, 0.45), _fallback_color("aged_wood"), "aged_wood")
-	var right_panel := _create_child_body(right_hinge, "RightSwingGatePanel", Vector3(-1.75, 1.65, 0.0), Vector3(3.5, 3.3, 0.45), _fallback_color("aged_wood"), "aged_wood")
+	var left_panel := _create_child_body(left_hinge, "LeftSwingGatePanel", Vector3(1.75, 1.95, 0.0), Vector3(3.5, 3.9, 0.45), _fallback_color("aged_wood"), "aged_wood")
+	var right_panel := _create_child_body(right_hinge, "RightSwingGatePanel", Vector3(-1.75, 1.95, 0.0), Vector3(3.5, 3.9, 0.45), _fallback_color("aged_wood"), "aged_wood")
 	left_panel.set_script(GateLeafScript)
 	right_panel.set_script(GateLeafScript)
 	left_panel.gate = gate
 	right_panel.gate = gate
 	gate.setup(left_hinge, right_hinge)
 
-	_create_child_body(gate, "GateLintel", Vector3(0.0, 3.55, 0.0), Vector3(8.2, 0.45, 0.85), _fallback_color("black_wood"), "black_wood")
-	_create_child_body(gate, "GateLeftPost", Vector3(-4.25, 1.85, 0.0), Vector3(0.62, 3.7, 0.85), _fallback_color("black_wood"), "black_wood")
-	_create_child_body(gate, "GateRightPost", Vector3(4.25, 1.85, 0.0), Vector3(0.62, 3.7, 0.85), _fallback_color("black_wood"), "black_wood")
-	_add_visual_box(gate, "GateRoofLine", Vector3(0.0, 4.0, -0.08), Vector3(9.2, 0.32, 1.2), _fallback_color("roof_tile"), "roof_tile")
-	_create_box("GateBypassBlockLeft", Vector3(-5.05, 1.7, -12.0), Vector3(1.1, 3.4, 1.25), _fallback_color("old_plaster"), "old_plaster")
-	_create_box("GateBypassBlockRight", Vector3(5.05, 1.7, -12.0), Vector3(1.1, 3.4, 1.25), _fallback_color("old_plaster"), "old_plaster")
-	_create_box("GateSideSeamLeft", Vector3(-5.45, 1.15, -10.5), Vector3(0.55, 2.3, 3.0), _fallback_color("old_plaster"), "old_plaster")
-	_create_box("GateSideSeamRight", Vector3(5.45, 1.15, -10.5), Vector3(0.55, 2.3, 3.0), _fallback_color("old_plaster"), "old_plaster")
+	_create_child_body(gate, "GateLintel", Vector3(0.0, 4.45, 0.0), Vector3(8.5, 0.5, 0.9), _fallback_color("black_wood"), "black_wood")
+	_create_child_body(gate, "GateLeftPost", Vector3(-4.25, 2.35, 0.0), Vector3(0.68, 4.7, 0.92), _fallback_color("black_wood"), "black_wood")
+	_create_child_body(gate, "GateRightPost", Vector3(4.25, 2.35, 0.0), Vector3(0.68, 4.7, 0.92), _fallback_color("black_wood"), "black_wood")
+	_add_visual_box(gate, "GateRoofLine", Vector3(0.0, 4.95, -0.08), Vector3(9.6, 0.35, 1.25), _fallback_color("roof_tile"), "roof_tile")
+	_create_tall_wall_box("GateBypassBlockLeft", Vector3(-5.05, 1.7, -12.0), Vector3(1.1, 3.4, 1.25), "old_plaster")
+	_create_tall_wall_box("GateBypassBlockRight", Vector3(5.05, 1.7, -12.0), Vector3(1.1, 3.4, 1.25), "old_plaster")
+	_create_tall_wall_box("GateSideSeamLeft", Vector3(-5.45, 1.15, -10.5), Vector3(0.55, 2.3, 3.0), "old_plaster")
+	_create_tall_wall_box("GateSideSeamRight", Vector3(5.45, 1.15, -10.5), Vector3(0.55, 2.3, 3.0), "old_plaster")
 
 func _create_side_passage_risk_trigger(main: Node) -> void:
 	var area := Area3D.new()
@@ -526,6 +541,11 @@ func _spawn_planned_artifacts(main: Node) -> void:
 func _create_floor(label: String, position: Vector3, size: Vector3, color: Color, material_key: String = "") -> StaticBody3D:
 	return _create_box(label, position, size, color, material_key)
 
+func _create_tall_wall_box(label: String, position: Vector3, size: Vector3, material_key: String, min_height: float = 4.0) -> StaticBody3D:
+	var raised_size := _heightened_size(size, min_height)
+	var raised_position := _keep_bottom_position(position, size, raised_size)
+	return _create_box(label, raised_position, raised_size, _fallback_color(material_key), material_key)
+
 func _create_box(label: String, position: Vector3, size: Vector3, color: Color, material_key: String = "") -> StaticBody3D:
 	var body := StaticBody3D.new()
 	body.name = label
@@ -533,6 +553,13 @@ func _create_box(label: String, position: Vector3, size: Vector3, color: Color, 
 	body.global_position = position
 	_add_mesh_and_collision(body, size, color, material_key)
 	return body
+
+func _heightened_size(size: Vector3, min_height: float) -> Vector3:
+	return Vector3(size.x, max(size.y, min_height), size.z)
+
+func _keep_bottom_position(position: Vector3, original_size: Vector3, raised_size: Vector3) -> Vector3:
+	var bottom_y := position.y - original_size.y * 0.5
+	return Vector3(position.x, bottom_y + raised_size.y * 0.5, position.z)
 
 func _create_child_body(parent: Node3D, label: String, local_position: Vector3, size: Vector3, color: Color, material_key: String = "") -> StaticBody3D:
 	var body := StaticBody3D.new()

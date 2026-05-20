@@ -15,10 +15,13 @@ func _initialize() -> void:
 	_assert_forest_canopy_does_not_cover_center_path(main)
 	_assert_long_approach_distance(main)
 	_assert_gate_bypass_blocked(main)
+	_assert_single_gate_readability(main)
 	_assert_courtyard_density(main)
 	_assert_courtyard_compression(main)
+	_assert_courtyard_route_is_obscured(main)
 	_assert_roofed_buildings(main)
 	_assert_courtyard_building_silhouettes(main)
+	_assert_taller_walls_and_posts(main)
 	_assert_interaction_density(main)
 	if _failed:
 		quit(1)
@@ -67,6 +70,23 @@ func _assert_gate_bypass_blocked(main: Node) -> void:
 	for label in required:
 		_assert_node_with_collision(main, label)
 
+func _assert_single_gate_readability(main: Node) -> void:
+	var required := [
+		"SingleGateLeftReturnWall",
+		"SingleGateRightReturnWall",
+		"SidePassageBoardedGate",
+		"SidePassageBrushScreenA",
+		"SidePassageBrushScreenB",
+	]
+	for label in required:
+		_assert_node_with_collision(main, label)
+	var gate := main.find_child("OuterEstateGate", true, false) as Node3D
+	var board := main.find_child("SidePassageBoardedGate", true, false) as Node3D
+	if gate == null or board == null:
+		return
+	if board.global_position.z > gate.global_position.z + 2.5:
+		_fail("Side passage blocker is too far behind the gate to read as closed")
+
 func _assert_courtyard_density(main: Node) -> void:
 	var prefixes := [
 		"CourtyardClutterJar",
@@ -91,6 +111,20 @@ func _assert_courtyard_compression(main: Node) -> void:
 	]
 	for label in required:
 		_assert_node_with_collision(main, label)
+
+func _assert_courtyard_route_is_obscured(main: Node) -> void:
+	var required := [
+		"CourtyardSightlineScreenA",
+		"CourtyardSightlineScreenB",
+		"CourtyardPathBaffleA",
+		"CourtyardPathBaffleB",
+	]
+	for label in required:
+		_assert_node_with_collision(main, label)
+		var node := main.find_child(label, true, false)
+		var size := _box_shape_size(node)
+		if size.y < 3.0:
+			_fail("%s is too low to break the visible straight courtyard route" % label)
 
 func _assert_roofed_buildings(main: Node) -> void:
 	var required_roofs := [
@@ -128,6 +162,30 @@ func _assert_courtyard_building_silhouettes(main: Node) -> void:
 	]
 	for label in required:
 		_assert_node_with_collision(main, label)
+
+func _assert_taller_walls_and_posts(main: Node) -> void:
+	var minimum_heights := {
+		"GateLeftPost": 4.5,
+		"GateRightPost": 4.5,
+		"CourtyardOuterWallLeft": 4.0,
+		"CourtyardOuterWallRight": 4.0,
+		"MainHouseFrontWallLeft": 4.0,
+		"MainHouseFrontWallRight": 4.0,
+	}
+	for label: String in minimum_heights.keys():
+		var node := main.find_child(label, true, false)
+		if node == null:
+			_fail("Missing tall-wall candidate: %s" % label)
+			return
+		var size := _box_shape_size(node)
+		var min_height: float = minimum_heights[label]
+		if size.y < min_height:
+			_fail("%s is too low: %s" % [label, size.y])
+			return
+	var front_wall := main.find_child("MainHouseFrontWallLeft", true, false)
+	var material := _first_standard_material(front_wall)
+	if material != null and material.albedo_texture == null and material.albedo_color.r > 0.34:
+		_fail("Main house wall tone is too bright for the night map: %s" % material.albedo_color)
 
 func _assert_interaction_density(main: Node) -> void:
 	var required_interactables := [
@@ -192,6 +250,26 @@ func _cylinder_shape_height(node: Node) -> float:
 	if shape == null:
 		return 0.0
 	return shape.height
+
+func _first_standard_material(node: Node) -> StandardMaterial3D:
+	if node == null:
+		return null
+	var mesh_instance := _first_mesh_instance(node)
+	if mesh_instance == null:
+		return null
+	var primitive_mesh := mesh_instance.mesh as PrimitiveMesh
+	if primitive_mesh == null:
+		return null
+	return primitive_mesh.material as StandardMaterial3D
+
+func _first_mesh_instance(node: Node) -> MeshInstance3D:
+	for child in node.get_children():
+		if child is MeshInstance3D:
+			return child as MeshInstance3D
+		var nested := _first_mesh_instance(child)
+		if nested != null:
+			return nested
+	return null
 
 func _fail(message: String) -> void:
 	_failed = true

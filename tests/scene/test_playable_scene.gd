@@ -20,6 +20,7 @@ func _initialize() -> void:
 	if player.get("movement_enabled") != true:
 		_fail("Player movement was not enabled after startup sequence")
 		return
+	_assert_health_hud(main, player)
 
 	_assert_required_map_nodes(main)
 	_assert_van_camera_clearance(main, player)
@@ -92,6 +93,41 @@ func _assert_van_camera_clearance(main: Node, player: Node3D) -> void:
 	if abs(local_delta.x) > floor_size.x * 0.5 or abs(local_delta.z) > floor_size.z * 0.5:
 		_fail("Player does not start inside van interior footprint")
 		return
+
+func _assert_health_hud(main: Node, player: Node3D) -> void:
+	var max_health_value: Variant = player.get("max_health")
+	var health_value: Variant = player.get("health")
+	var health_ratio_value: Variant = player.get("health_ratio")
+	if not _is_number(max_health_value) or not _is_number(health_value) or not _is_number(health_ratio_value):
+		_fail("Player health fields are missing")
+		return
+	var max_health: float = max_health_value
+	var health: float = health_value
+	var health_ratio: float = health_ratio_value
+	if max_health < 100.0:
+		_fail("Player max health is missing or too low: %s" % max_health)
+		return
+	if health < max_health:
+		_fail("Player should start at full health: %s/%s" % [health, max_health])
+		return
+	if health_ratio < 0.99:
+		_fail("Player health ratio should start full: %s" % health_ratio)
+		return
+	var hud := main.get("hud") as CanvasLayer
+	if hud == null:
+		_fail("Main did not create HUD")
+		return
+	var health_back := hud.find_child("HealthGaugeBack", true, false) as ColorRect
+	var health_fill := hud.find_child("HealthGaugeFill", true, false) as ColorRect
+	if health_back == null or health_fill == null:
+		_fail("HUD is missing health gauge nodes")
+		return
+	if health_fill.size.x < 200.0:
+		_fail("Health gauge should render full width at startup: %s" % health_fill.size.x)
+		return
+
+func _is_number(value: Variant) -> bool:
+	return typeof(value) == TYPE_FLOAT or typeof(value) == TYPE_INT
 
 func _assert_van_exit_without_jump(player: Node3D) -> void:
 	player.global_position = BongoVanPlanScript.PLAYER_START_POSITION

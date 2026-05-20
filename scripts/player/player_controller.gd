@@ -13,10 +13,13 @@ const ArtifactScene := preload("res://scenes/props/Artifact.tscn")
 @export var gravity: float = 21.0
 @export var jump_velocity: float = 6.4
 @export var movement_enabled: bool = true
+@export var max_health: float = 100.0
 
 var inventory := Inventory.new(12.0)
 var stamina_seconds: float = 15.0
 var stamina_ratio: float = 1.0
+var health: float = 100.0
+var health_ratio: float = 1.0
 var is_sprinting: bool = false
 var camera: Camera3D
 var _held_mounts: Node3D
@@ -25,7 +28,9 @@ func _ready() -> void:
 	camera = $Camera3D
 	_held_mounts = $Camera3D/HeldItemMounts
 	stamina_seconds = max_stamina_seconds
+	health = max_health
 	_update_stamina_ratio()
+	_update_health_ratio()
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -71,6 +76,17 @@ func _physics_process(delta: float) -> void:
 
 func _update_stamina_ratio() -> void:
 	stamina_ratio = clamp(stamina_seconds / max_stamina_seconds, 0.0, 1.0)
+
+func apply_damage(amount: float) -> void:
+	health = clamp(health - max(amount, 0.0), 0.0, max_health)
+	_update_health_ratio()
+
+func heal(amount: float) -> void:
+	health = clamp(health + max(amount, 0.0), 0.0, max_health)
+	_update_health_ratio()
+
+func _update_health_ratio() -> void:
+	health_ratio = clamp(health / max_health, 0.0, 1.0)
 
 func try_collect_artifact(item: ArtifactDefinition) -> bool:
 	var accepted: bool = inventory.try_add(item)

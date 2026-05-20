@@ -228,7 +228,7 @@ const WALL_SEGMENTS := [
 
 const LANDMARKS := [
 	{"name": "OuterEstateGate", "kind": "gate", "position": Vector3(0.0, 0.0, -12.0), "size": Vector3(9.0, 4.2, 1.1), "material_key": "aged_wood", "tags": ["required_route", "interaction"]},
-	{"name": "GateWarningPost", "kind": "post", "position": Vector3(-6.7, 1.1, -8.5), "size": Vector3(0.45, 2.2, 0.45), "material_key": "shrine_red", "tags": ["warning"]},
+	{"name": "GateWarningPost", "kind": "post", "position": Vector3(-6.7, 1.6, -8.5), "size": Vector3(0.45, 3.2, 0.45), "material_key": "shrine_red", "tags": ["warning"]},
 	{"name": "SidePassageNoiseJar", "kind": "jar", "position": Vector3(-12.3, 0.5, -22.5), "size": Vector3(0.75, 1.0, 0.75), "material_key": "clay_pot", "tags": ["RiskySidePassage", "noise"]},
 	{"name": "CourtyardWell", "kind": "우물", "position": Vector3(-15.0, 0.65, -41.0), "size": Vector3(2.2, 1.3, 2.2), "material_key": "well_stone", "tags": ["LargeInnerCourtyard", "landmark"]},
 	{"name": "JangdokdaeClusterA", "kind": "장독대", "position": Vector3(18.0, 0.5, -45.0), "size": Vector3(5.0, 1.0, 3.0), "material_key": "clay_pot", "tags": ["LargeInnerCourtyard", "cover"]},

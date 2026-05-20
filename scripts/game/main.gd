@@ -70,6 +70,7 @@ func _create_scene_lighting() -> void:
 	_add_lantern_light("VanInteriorLamp", Vector3(0.0, 2.45, 13.0), Color(1.0, 0.62, 0.34), 1.1 if low_spec_mode else 1.8, 5.0)
 	_add_lantern_light("GateWarningLamp", Vector3(-6.7, 2.1, -8.5), Color(1.0, 0.42, 0.25), 1.3 if low_spec_mode else 2.2, 6.0)
 	if low_spec_mode:
+		_add_lantern_light("ShrineRedLamp", Vector3(0.0, 2.35, -141.0), Color(1.0, 0.12, 0.08), 1.35, 7.5)
 		print("LOW_SPEC_MODE: PBR textures and fog disabled")
 		return
 	_add_lantern_light("CourtyardWellLamp", Vector3(-15.0, 1.7, -41.0), Color(0.7, 0.95, 0.8), 1.2, 8.0)
@@ -99,6 +100,7 @@ func _process(delta: float) -> void:
 		resentment.stage(),
 		interaction_label,
 		player.inventory.hand_status(),
+		player.health_ratio,
 		player.stamina_ratio,
 		player.is_sprinting
 	)
