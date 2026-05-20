@@ -10,6 +10,10 @@ func _initialize() -> void:
 	root.add_child(main)
 	for _i in range(90):
 		await physics_frame
+	await _travel_to_estate(main)
+	if _failed:
+		quit(1)
+		return
 
 	var player := main.get("player") as Node3D
 	if player == null:
@@ -31,6 +35,16 @@ func _initialize() -> void:
 		return
 	print("KOREAN_MONSTER_AI: low-poly roster, navigation agents, and gimmicks verified")
 	quit(0)
+
+func _travel_to_estate(main: Node) -> void:
+	if main.has_method("travel_to_retrieval_map"):
+		main.call("travel_to_retrieval_map", "jongga_estate")
+	for _i in range(90):
+		if str(main.get("current_map_id")) == "jongga_estate":
+			await physics_frame
+			return
+		await physics_frame
+	_fail("Korean monster AI test could not travel to the estate map")
 
 func _assert_navigation_foundation(main: Node, player: Node3D) -> void:
 	if main.find_child("EstateNavigationRegion", true, false) == null:

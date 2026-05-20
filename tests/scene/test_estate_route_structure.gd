@@ -10,6 +10,10 @@ func _initialize() -> void:
 	root.add_child(main)
 	for _i in range(90):
 		await physics_frame
+	await _travel_to_estate(main)
+	if _failed:
+		quit(1)
+		return
 
 	_assert_route_floor_coverage(main)
 	if _failed:
@@ -21,6 +25,16 @@ func _initialize() -> void:
 		return
 	print("ESTATE_STRUCTURE_SMOKE: route floors, walls, and buildings present")
 	quit(0)
+
+func _travel_to_estate(main: Node) -> void:
+	if main.has_method("travel_to_retrieval_map"):
+		main.call("travel_to_retrieval_map", "jongga_estate")
+	for _i in range(90):
+		if str(main.get("current_map_id")) == "jongga_estate":
+			await physics_frame
+			return
+		await physics_frame
+	_fail("Estate route structure test could not travel to the estate map")
 
 func _assert_route_floor_coverage(main: Node) -> void:
 	var samples := {

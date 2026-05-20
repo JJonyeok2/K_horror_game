@@ -15,6 +15,7 @@ func _initialize() -> void:
 		await physics_frame
 
 	_assert_bongo_quota_monitor(main)
+	_assert_estate_world_hidden_in_bongo_hub(main)
 	await _assert_bongo_map_selector_starts_retrieval_map(main)
 	if _failed:
 		quit(1)
@@ -81,6 +82,7 @@ func _assert_bongo_map_selector_starts_retrieval_map(main: Node) -> void:
 	if player.global_position.distance_to(BongoVanPlanScript.PLAYER_START_POSITION) > 0.2:
 		_fail("Selected retrieval map should use the current bongo start point")
 		return
+	_assert_estate_world_visible_after_arrival(main)
 	if not bool(player.get("movement_enabled")):
 		_fail("Player should be able to move after selecting a retrieval map")
 		return
@@ -137,6 +139,7 @@ func _assert_bongo_deposit_waits_for_manual_settlement(main: Node) -> void:
 	if int(main.get("pending_recovered_value")) != 70:
 		_fail("Pending cargo should stay loaded after returning to the bongo hub")
 		return
+	_assert_estate_world_hidden_in_bongo_hub(main)
 
 	var settlement_selector := main.find_child("BongoSettlementMapSelector", true, false)
 	if settlement_selector == null or not settlement_selector.has_method("interact"):
@@ -228,6 +231,36 @@ func _assert_settlement_office_is_large_enough(main: Node, player: Node3D) -> vo
 		_fail("Settlement office spawn is outside the enlarged floor")
 		return
 
+func _assert_estate_world_hidden_in_bongo_hub(main: Node) -> void:
+	if str(main.get("current_map_id")) != "bongo_hub":
+		return
+	for label in ["LongForestApproachRoad", "OuterEstateGate", "LargeInnerCourtyard"]:
+		var node := main.find_child(label, true, false) as Node3D
+		if node == null:
+			_fail("Missing estate visibility test node: %s" % label)
+			return
+		if node.visible:
+			_fail("%s should be hidden while the player is only inside the bongo hub" % label)
+			return
+		if _has_enabled_collision(node):
+			_fail("%s collision should be disabled while hidden in the bongo hub" % label)
+			return
+
+func _assert_estate_world_visible_after_arrival(main: Node) -> void:
+	if str(main.get("current_map_id")) != "jongga_estate":
+		return
+	for label in ["LongForestApproachRoad", "OuterEstateGate", "LargeInnerCourtyard"]:
+		var node := main.find_child(label, true, false) as Node3D
+		if node == null:
+			_fail("Missing estate arrival visibility test node: %s" % label)
+			return
+		if not node.visible:
+			_fail("%s should become visible after the bongo arrives at the estate" % label)
+			return
+		if not _has_enabled_collision(node):
+			_fail("%s collision should be enabled after arriving at the estate" % label)
+			return
+
 func _quota_monitor_text(root: Node) -> String:
 	for child in root.get_children():
 		if child is Label3D:
@@ -257,6 +290,13 @@ func _box_shape_size(node: Node) -> Vector3:
 	if shape == null:
 		return Vector3.ZERO
 	return shape.size
+
+func _has_enabled_collision(node: Node) -> bool:
+	for child in node.find_children("*", "CollisionShape3D", true, false):
+		var collision := child as CollisionShape3D
+		if collision != null and not collision.disabled:
+			return true
+	return false
 
 func _fail(message: String) -> void:
 	_failed = true

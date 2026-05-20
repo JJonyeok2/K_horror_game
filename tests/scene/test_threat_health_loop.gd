@@ -10,6 +10,10 @@ func _initialize() -> void:
 	root.add_child(main)
 	for _i in range(12):
 		await physics_frame
+	await _travel_to_estate(main)
+	if _failed:
+		quit(1)
+		return
 
 	var player := main.get("player") as Node3D
 	if player == null:
@@ -37,6 +41,16 @@ func _initialize() -> void:
 
 	print("THREAT_HEALTH_LOOP: zone gated ghost patterns and player_down")
 	quit(0)
+
+func _travel_to_estate(main: Node) -> void:
+	if main.has_method("travel_to_retrieval_map"):
+		main.call("travel_to_retrieval_map", "jongga_estate")
+	for _i in range(90):
+		if str(main.get("current_map_id")) == "jongga_estate":
+			await physics_frame
+			return
+		await physics_frame
+	_fail("Threat health loop test could not travel to the estate map")
 
 func _assert_stage_three_dokkaebi_stays_outside_gate(main: Node, player: Node3D) -> void:
 	player.global_position = Vector3(0.0, 1.34, 120.0)

@@ -24,6 +24,11 @@ const MAP_JONGGA_ESTATE := "jongga_estate"
 const MAP_SETTLEMENT_OFFICE := "settlement_office"
 const MAP_BONGO_TRAVEL := "bongo_travel"
 const BONGO_TRAVEL_SECONDS: float = 0.55
+const WORLD_SCOPE_ESTATE := "estate"
+const WORLD_SCOPE_BONGO_BODY := "bongo_body"
+const WORLD_SCOPE_BONGO_HUB_ONLY := "bongo_hub_only"
+const WORLD_SCOPE_BONGO_DEPARTURE := "bongo_departure"
+const WORLD_SCOPE_SETTLEMENT := "settlement"
 
 var player: Node
 var quota := QuotaTracker.new(800)
@@ -51,6 +56,7 @@ var pending_recovered_value: int = 0
 var pending_cargo_items: Array[ArtifactDefinition] = []
 var _stored_cargo_visual_index: int = 0
 var _bongo_travel_elapsed: float = 0.0
+var _world_map_root: Node3D
 
 func _ready() -> void:
 	audio_director = AudioDirectorScript.new()
@@ -58,8 +64,10 @@ func _ready() -> void:
 	_configure_world()
 	_create_scene_lighting()
 	var map := JonggaEstateBuilder.new()
+	_world_map_root = map
 	add_child(map)
 	map.build(self)
+	_refresh_world_scope_visibility()
 	_update_bongo_hub_exit_state()
 	player = PlayerScene.instantiate()
 	add_child(player)
@@ -774,6 +782,7 @@ func _begin_bongo_travel(destination_id: String) -> void:
 	bongo_travel_destination_id = destination_id
 	current_map_id = MAP_BONGO_TRAVEL
 	_bongo_travel_elapsed = 0.0
+	_refresh_world_scope_visibility()
 	_update_bongo_hub_exit_state()
 	if player != null:
 		player.set("movement_enabled", false)
@@ -801,6 +810,7 @@ func _complete_bongo_travel() -> void:
 	current_map_id = destination_id
 	_count_map_travel()
 	_finish_startup_for_travel()
+	_refresh_world_scope_visibility()
 	_update_bongo_hub_exit_state()
 	_move_player_to(_player_position_for_map(destination_id))
 	_hide_threat_manifestation()
@@ -826,11 +836,69 @@ func _update_bongo_hub_exit_state() -> void:
 	var blocker := find_child(BongoVanPlanScript.HUB_REAR_DOOR_BLOCKER_NAME, true, false) as StaticBody3D
 	if blocker == null:
 		return
-	var closed := current_map_id != MAP_JONGGA_ESTATE
+	var bongo_body_active := current_map_id == MAP_BONGO_HUB or current_map_id == MAP_JONGGA_ESTATE or current_map_id == MAP_BONGO_TRAVEL
+	var closed := bongo_body_active and current_map_id != MAP_JONGGA_ESTATE
 	blocker.visible = closed
 	var collision := blocker.find_child("CollisionShape3D", true, false) as CollisionShape3D
 	if collision != null:
 		collision.disabled = not closed
+
+func _refresh_world_scope_visibility() -> void:
+	if _world_map_root == null:
+		return
+	for child in _world_map_root.get_children():
+		var scope := _world_scope_for_node(child)
+		if scope == "":
+			continue
+		_set_world_branch_active(child, _scope_allows_current_map(scope))
+
+func _world_scope_for_node(node: Node) -> String:
+	var label := str(node.name)
+	if label == BongoVanPlanScript.SETTLEMENT_STATION_NAME:
+		return WORLD_SCOPE_SETTLEMENT
+	if label.begins_with("SettlementOffice"):
+		return WORLD_SCOPE_SETTLEMENT
+	if label == BongoVanPlanScript.RETURN_ZONE_NAME:
+		return WORLD_SCOPE_ESTATE
+	if label.begins_with("BongoMapSelector") or label.begins_with("BongoSettlementMapSelector"):
+		return WORLD_SCOPE_BONGO_HUB_ONLY
+	if label.begins_with(BongoVanPlanScript.DEPARTURE_BUTTON_NAME):
+		return WORLD_SCOPE_BONGO_DEPARTURE
+	if label.begins_with("Bongo"):
+		return WORLD_SCOPE_BONGO_BODY
+	return WORLD_SCOPE_ESTATE
+
+func _scope_allows_current_map(scope: String) -> bool:
+	match scope:
+		WORLD_SCOPE_ESTATE:
+			return current_map_id == MAP_JONGGA_ESTATE
+		WORLD_SCOPE_BONGO_BODY:
+			return current_map_id == MAP_BONGO_HUB or current_map_id == MAP_JONGGA_ESTATE or current_map_id == MAP_BONGO_TRAVEL
+		WORLD_SCOPE_BONGO_HUB_ONLY:
+			return current_map_id == MAP_BONGO_HUB
+		WORLD_SCOPE_BONGO_DEPARTURE:
+			return current_map_id == MAP_BONGO_HUB or current_map_id == MAP_JONGGA_ESTATE
+		WORLD_SCOPE_SETTLEMENT:
+			return current_map_id == MAP_SETTLEMENT_OFFICE
+	return true
+
+func _set_world_branch_active(node: Node, active: bool) -> void:
+	var spatial := node as Node3D
+	if spatial != null:
+		spatial.visible = active
+	var area := node as Area3D
+	if area != null:
+		area.monitoring = active
+		area.monitorable = active
+	for child in node.find_children("*", "Area3D", true, false):
+		var nested_area := child as Area3D
+		if nested_area != null:
+			nested_area.monitoring = active
+			nested_area.monitorable = active
+	for child in node.find_children("*", "CollisionShape3D", true, false):
+		var collision := child as CollisionShape3D
+		if collision != null:
+			collision.disabled = not active
 
 func _count_map_travel() -> void:
 	map_travel_count += 1
