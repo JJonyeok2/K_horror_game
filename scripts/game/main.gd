@@ -733,9 +733,9 @@ func _is_number(value: Variant) -> bool:
 	return typeof(value) == TYPE_FLOAT or typeof(value) == TYPE_INT
 
 func _update_bongo_quota_monitor() -> void:
-	var label := find_child("BongoQuotaMonitorText", true, false) as Label3D
-	if label != null:
-		label.text = "이동\n..." if bongo_traveling else "단말기\nE"
+	var screen_text := find_child("BongoQuotaMonitorScreenText", true, false) as Label
+	if screen_text != null:
+		screen_text.text = _bongo_terminal_screen_text()
 	if hud != null and hud.has_method("update_bongo_monitor"):
 		hud.update_bongo_monitor("봉고 단말기", _bongo_monitor_body_text(), _bongo_monitor_open)
 
@@ -751,11 +751,63 @@ func close_bongo_monitor_panel() -> void:
 	_bongo_monitor_open = false
 	_update_bongo_quota_monitor()
 
+func operate_bongo_terminal() -> bool:
+	_bongo_monitor_open = true
+	_update_bongo_quota_monitor()
+	if bongo_traveling or current_map_id == MAP_BONGO_TRAVEL:
+		print("봉고차가 이미 이동 중입니다.")
+		return false
+	match current_map_id:
+		MAP_BONGO_HUB:
+			if pending_recovered_value > 0:
+				return travel_to_settlement_map()
+			return travel_to_retrieval_map(MAP_JONGGA_ESTATE)
+		MAP_JONGGA_ESTATE:
+			return return_to_bongo_hub()
+		MAP_SETTLEMENT_OFFICE:
+			if pending_recovered_value > 0:
+				return settle_stored_cargo()
+			return return_to_bongo_hub()
+	return false
+
+func _bongo_terminal_screen_text() -> String:
+	if bongo_traveling or current_map_id == MAP_BONGO_TRAVEL:
+		return "이동 중\n..."
+	match current_map_id:
+		MAP_BONGO_HUB:
+			if pending_recovered_value > 0:
+				return "[E]\n정산소 이동"
+			return "[E]\n종가 고택"
+		MAP_JONGGA_ESTATE:
+			return "[E]\n봉고 복귀"
+		MAP_SETTLEMENT_OFFICE:
+			if pending_recovered_value > 0:
+				return "[E]\n정산하기"
+			return "[E]\n봉고 복귀"
+	return "[E]\n단말기 조작"
+
+func _bongo_terminal_action_text() -> String:
+	if bongo_traveling or current_map_id == MAP_BONGO_TRAVEL:
+		return "이동 중"
+	match current_map_id:
+		MAP_BONGO_HUB:
+			if pending_recovered_value > 0:
+				return "정산소로 이동"
+			return "종가 고택으로 이동"
+		MAP_JONGGA_ESTATE:
+			return "봉고차 내부로 복귀"
+		MAP_SETTLEMENT_OFFICE:
+			if pending_recovered_value > 0:
+				return "미정산 화물 정산"
+			return "봉고차 허브로 복귀"
+	return "대기"
+
 func _bongo_monitor_body_text() -> String:
 	var cargo_line := "No pending cargo / 미정산 화물 없음"
 	if pending_recovered_value > 0:
 		cargo_line = "Pending cargo loaded / 미정산 화물 적재: %d" % pending_recovered_value
-	return "Final / 최종: %d / %d\nPending / 미정산: %d\nLocation / 위치: %s\n%s\n\n단말기를 다시 누르면 닫힙니다." % [
+	return "Action / 조작: %s\nFinal / 최종: %d / %d\nPending / 미정산: %d\nLocation / 위치: %s\n%s" % [
+		_bongo_terminal_action_text(),
 		quota.recovered_value,
 		quota.required_value,
 		pending_recovered_value,

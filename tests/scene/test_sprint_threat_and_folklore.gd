@@ -29,11 +29,11 @@ func _initialize() -> void:
 	quit(0)
 
 func _travel_to_jongga_estate(main: Node, player: Node3D) -> void:
-	var selector := main.find_child("BongoMapSelector", true, false)
-	if selector == null or not selector.has_method("interact"):
-		_fail("Missing BongoMapSelector before sprint test")
+	var terminal := main.find_child("BongoQuotaMonitor", true, false)
+	if terminal == null or not terminal.has_method("interact"):
+		_fail("Missing BongoQuotaMonitor before sprint test")
 		return
-	selector.interact(player)
+	terminal.interact(player)
 	for _i in range(90):
 		if str(main.get("current_map_id")) != "bongo_travel":
 			break

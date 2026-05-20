@@ -176,6 +176,7 @@ func _parse_interaction_prompt(prompt: String) -> Dictionary:
 		{"suffix": " 당기기", "action": "당기기"},
 		{"suffix": " 놓기", "action": "놓기"},
 		{"suffix": " 뒤지기", "action": "뒤지기"},
+		{"suffix": " 조작", "action": "조작"},
 		{"suffix": "으로 이동하기", "action": "이동"},
 		{"suffix": "로 이동하기", "action": "이동"},
 		{"suffix": " 복귀하기", "action": "복귀"}

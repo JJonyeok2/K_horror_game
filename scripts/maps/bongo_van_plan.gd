@@ -33,10 +33,10 @@ const COLOR_MONITOR_SCREEN := Color(0.02, 0.17, 0.13)
 const COLOR_MONITOR_GLOW := Color(0.42, 0.95, 0.72)
 
 const QUOTA_MONITOR_NAME = "BongoQuotaMonitor"
-const QUOTA_MONITOR_TEXT = "단말기\nE"
-const QUOTA_MONITOR_POSITION := Vector3(0.0, 1.62, 276.0)
-const QUOTA_MONITOR_BACKING_SIZE := Vector3(1.42, 0.88, 0.12)
-const QUOTA_MONITOR_SCREEN_SIZE := Vector3(1.12, 0.58, 0.08)
+const QUOTA_MONITOR_TEXT = "[E]\n단말기 조작"
+const QUOTA_MONITOR_POSITION := Vector3(0.0, 1.68, 276.0)
+const QUOTA_MONITOR_BACKING_SIZE := Vector3(2.72, 1.36, 0.14)
+const QUOTA_MONITOR_SCREEN_SIZE := Vector3(2.36, 1.04, 0.04)
 const MAP_SELECTOR_NAME = "BongoMapSelector"
 const MAP_SELECTOR_POSITION := Vector3(0.0, 1.05, 275.45)
 const MAP_SELECTOR_SIZE := Vector3(0.9, 0.46, 0.38)

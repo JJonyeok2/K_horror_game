@@ -604,9 +604,6 @@ func _create_bongo_van() -> void:
 			_add_visual_box_world(label, position, size, color, material_key, rotation)
 	_create_bongo_hub_rear_door_blocker()
 	_create_bongo_quota_monitor()
-	_create_bongo_map_selector()
-	_create_bongo_settlement_map_selector()
-	_create_bongo_departure_button()
 
 func _create_bongo_hub_rear_door_blocker() -> void:
 	var blocker := _create_box(
@@ -626,25 +623,63 @@ func _create_bongo_quota_monitor() -> void:
 	monitor.global_position = BongoVanPlanScript.QUOTA_MONITOR_POSITION
 
 	_add_visual_box(monitor, "BongoQuotaMonitorBacking", Vector3.ZERO, BongoVanPlanScript.QUOTA_MONITOR_BACKING_SIZE, BongoVanPlanScript.COLOR_MONITOR_BACKING, "metal")
-	_add_visual_box(monitor, "BongoQuotaMonitorScreen", Vector3(0.0, 0.0, -0.07), BongoVanPlanScript.QUOTA_MONITOR_SCREEN_SIZE, BongoVanPlanScript.COLOR_MONITOR_SCREEN)
+	_add_visual_box(monitor, "BongoQuotaMonitorScreenBacking", Vector3(0.0, 0.0, -0.085), BongoVanPlanScript.QUOTA_MONITOR_SCREEN_SIZE, BongoVanPlanScript.COLOR_MONITOR_SCREEN)
 	var collision := CollisionShape3D.new()
 	collision.name = "CollisionShape3D"
 	var shape := BoxShape3D.new()
 	shape.size = BongoVanPlanScript.QUOTA_MONITOR_BACKING_SIZE
 	collision.shape = shape
 	monitor.add_child(collision)
+	_create_bongo_terminal_screen(monitor)
 
-	var label := Label3D.new()
-	label.name = "BongoQuotaMonitorText"
-	label.text = BongoVanPlanScript.QUOTA_MONITOR_TEXT
-	label.position = Vector3(0.0, -0.06, -0.13)
-	label.pixel_size = 0.009
-	label.modulate = BongoVanPlanScript.COLOR_MONITOR_GLOW
-	label.outline_modulate = Color(0.0, 0.0, 0.0)
-	label.outline_size = 8
-	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	monitor.add_child(label)
+func _create_bongo_terminal_screen(monitor: Node3D) -> void:
+	var viewport := SubViewport.new()
+	viewport.name = "BongoQuotaMonitorViewport"
+	viewport.size = Vector2i(512, 256)
+	viewport.transparent_bg = false
+	viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	monitor.add_child(viewport)
+
+	var background := ColorRect.new()
+	background.name = "BongoQuotaMonitorScreenRoot"
+	background.set_anchors_preset(Control.PRESET_FULL_RECT)
+	background.color = BongoVanPlanScript.COLOR_MONITOR_SCREEN
+	viewport.add_child(background)
+
+	var text := Label.new()
+	text.name = "BongoQuotaMonitorScreenText"
+	text.text = BongoVanPlanScript.QUOTA_MONITOR_TEXT
+	text.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	text.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	text.set_anchors_preset(Control.PRESET_FULL_RECT)
+	text.offset_left = 28.0
+	text.offset_right = -28.0
+	text.offset_top = 20.0
+	text.offset_bottom = -20.0
+	text.add_theme_font_size_override("font_size", 54)
+	text.add_theme_color_override("font_color", BongoVanPlanScript.COLOR_MONITOR_GLOW)
+	text.add_theme_color_override("font_shadow_color", Color(0.0, 0.0, 0.0, 0.85))
+	text.add_theme_constant_override("shadow_offset_x", 3)
+	text.add_theme_constant_override("shadow_offset_y", 3)
+	background.add_child(text)
+
+	var screen := MeshInstance3D.new()
+	screen.name = "BongoQuotaMonitorScreenSurface"
+	screen.position = Vector3(0.0, 0.0, -0.118)
+	screen.rotation_degrees = Vector3(0.0, 180.0, 0.0)
+	var quad := QuadMesh.new()
+	quad.size = Vector2(BongoVanPlanScript.QUOTA_MONITOR_SCREEN_SIZE.x, BongoVanPlanScript.QUOTA_MONITOR_SCREEN_SIZE.y)
+	screen.mesh = quad
+	var material := StandardMaterial3D.new()
+	material.albedo_texture = viewport.get_texture()
+	material.emission_enabled = true
+	material.emission_texture = viewport.get_texture()
+	material.emission = BongoVanPlanScript.COLOR_MONITOR_GLOW
+	material.emission_energy_multiplier = 0.9
+	material.cull_mode = BaseMaterial3D.CULL_BACK
+	screen.material_override = material
+	monitor.add_child(screen)
 
 func _create_bongo_settlement_station() -> void:
 	var station := _create_box(

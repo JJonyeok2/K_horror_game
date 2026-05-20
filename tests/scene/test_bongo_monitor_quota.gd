@@ -42,45 +42,61 @@ func _assert_bongo_quota_monitor(main: Node) -> void:
 		_fail("BongoQuotaMonitor is outside van footprint: delta=%s floor_size=%s" % [local_delta, floor_size])
 		return
 	if not monitor.has_method("interact"):
-		_fail("BongoQuotaMonitor should open a HUD terminal through interaction")
+		_fail("BongoQuotaMonitor should own the bongo terminal interaction")
 		return
-	var quota_label := _quota_monitor_label(monitor)
-	if quota_label == null:
-		_fail("BongoQuotaMonitor has no compact Label3D prompt")
+	var backing_size := _box_shape_size(monitor)
+	if backing_size.x < 2.4 or backing_size.y < 1.2:
+		_fail("BongoQuotaMonitor should be a larger tablet, got %s" % backing_size)
 		return
-	if quota_label.pixel_size > 0.012:
-		_fail("BongoQuotaMonitor world text is too large for the van: %s" % quota_label.pixel_size)
+	var screen_text := monitor.find_child("BongoQuotaMonitorScreenText", true, false) as Label
+	if screen_text == null:
+		_fail("BongoQuotaMonitor should render text inside a tablet screen viewport")
 		return
-	if str(quota_label.text).length() > 16:
-		_fail("BongoQuotaMonitor should keep details out of world text: %s" % str(quota_label.text))
+	if str(screen_text.text).find("[E]") == -1:
+		_fail("Tablet screen should show an E interaction command: %s" % str(screen_text.text))
 		return
+	var screen_surface := monitor.find_child("BongoQuotaMonitorScreenSurface", true, false) as MeshInstance3D
+	if screen_surface == null:
+		_fail("BongoQuotaMonitor should have a textured screen surface")
+		return
+	if absf(absf(screen_surface.rotation_degrees.y) - 180.0) > 0.01:
+		_fail("Tablet screen surface should face the player instead of showing mirrored text: %s" % screen_surface.rotation_degrees)
+		return
+	for old_button in [
+		BongoVanPlanScript.MAP_SELECTOR_NAME,
+		BongoVanPlanScript.SETTLEMENT_MAP_SELECTOR_NAME,
+		BongoVanPlanScript.DEPARTURE_BUTTON_NAME,
+	]:
+		if main.find_child(old_button, true, false) != null:
+			_fail("%s should be removed; its function belongs to the tablet" % old_button)
+			return
 
 func _assert_bongo_map_selector_starts_retrieval_map(main: Node) -> void:
 	if str(main.get("current_map_id")) != "bongo_hub":
 		_fail("Game should start inside the bongo map-selection hub")
 		return
 	var player := main.get("player") as Node3D
-	var selector := main.find_child("BongoMapSelector", true, false)
-	if player == null or selector == null or not selector.has_method("interact"):
-		_fail("Missing player or interactive BongoMapSelector")
+	var terminal := main.find_child("BongoQuotaMonitor", true, false)
+	if player == null or terminal == null or not terminal.has_method("interact"):
+		_fail("Missing player or interactive BongoQuotaMonitor")
 		return
-	selector.interact(player)
+	terminal.interact(player)
 	await process_frame
 	if str(main.get("current_map_id")) != TRAVEL_MAP_ID:
-		_fail("Map selector should start a bongo travel animation before arrival")
+		_fail("Bongo terminal should start a bongo travel animation before arrival")
 		return
 	if str(main.get("bongo_travel_destination_id")) != "jongga_estate":
-		_fail("Map selector should set jongga estate as travel destination")
+		_fail("Bongo terminal should set jongga estate as travel destination")
 		return
 	if not bool(main.get("bongo_traveling")):
-		_fail("Map selector should mark bongo as traveling")
+		_fail("Bongo terminal should mark bongo as traveling")
 		return
 	if bool(player.get("movement_enabled")):
 		_fail("Player movement should pause during bongo travel animation")
 		return
 	await _wait_for_travel_complete(main)
 	if str(main.get("current_map_id")) != "jongga_estate":
-		_fail("Map selector should move the run to the selected retrieval map")
+		_fail("Bongo terminal should move the run to the selected retrieval map")
 		return
 	if int(main.get("map_travel_count")) != 1:
 		_fail("Map selector should count the retrieval-map travel")
@@ -122,24 +138,23 @@ func _assert_bongo_deposit_waits_for_manual_settlement(main: Node) -> void:
 		_fail("Deposited item should remain visible in the van before settlement")
 		return
 	var monitor := main.find_child("BongoQuotaMonitor", true, false)
-	monitor.interact(player)
+	main.call("open_bongo_monitor_panel")
 	await process_frame
 	var quota_text := _hud_monitor_text(main)
 	if quota_text.find("Pending") == -1 or quota_text.find("70") == -1:
 		_fail("HUD monitor panel did not show pending value after deposit: %s" % quota_text)
 		return
-	var departure_button := main.find_child("BongoDepartureButton", true, false)
-	if departure_button == null or not departure_button.has_method("interact"):
-		_fail("Missing interactive BongoDepartureButton")
+	if monitor == null or not monitor.has_method("interact"):
+		_fail("Missing interactive BongoQuotaMonitor for return")
 		return
-	departure_button.interact(player)
+	monitor.interact(player)
 	await process_frame
 	if str(main.get("current_map_id")) != TRAVEL_MAP_ID or str(main.get("bongo_travel_destination_id")) != "bongo_hub":
-		_fail("Return button should start travel back to the bongo hub")
+		_fail("Bongo terminal should start travel back to the bongo hub")
 		return
 	await _wait_for_travel_complete(main)
 	if str(main.get("current_map_id")) != "bongo_hub":
-		_fail("Return button should finish in the bongo interior hub")
+		_fail("Bongo terminal should finish in the bongo interior hub")
 		return
 	if int(main.get("map_travel_count")) != 2:
 		_fail("Returning to the bongo hub should count as the second map travel")
@@ -149,18 +164,17 @@ func _assert_bongo_deposit_waits_for_manual_settlement(main: Node) -> void:
 		return
 	_assert_estate_world_hidden_in_bongo_hub(main)
 
-	var settlement_selector := main.find_child("BongoSettlementMapSelector", true, false)
-	if settlement_selector == null or not settlement_selector.has_method("interact"):
-		_fail("Missing interactive BongoSettlementMapSelector")
+	if monitor == null or not monitor.has_method("interact"):
+		_fail("Missing interactive BongoQuotaMonitor for settlement travel")
 		return
-	settlement_selector.interact(player)
+	monitor.interact(player)
 	await process_frame
 	if str(main.get("current_map_id")) != TRAVEL_MAP_ID or str(main.get("bongo_travel_destination_id")) != "settlement_office":
-		_fail("Settlement map selector should start travel to the settlement map")
+		_fail("Bongo terminal should start travel to the settlement map")
 		return
 	await _wait_for_travel_complete(main)
 	if str(main.get("current_map_id")) != "settlement_office":
-		_fail("Settlement map selector should finish in the settlement map")
+		_fail("Bongo terminal should finish in the settlement map")
 		return
 	if int(main.get("map_travel_count")) != 3:
 		_fail("Settlement map travel should be the third map travel")
@@ -191,7 +205,7 @@ func _assert_bongo_deposit_waits_for_manual_settlement(main: Node) -> void:
 	if int(main.get("map_travel_count")) != 3:
 		_fail("Manual settlement should not add another map travel after arriving at the office")
 		return
-	monitor.interact(player)
+	main.call("open_bongo_monitor_panel")
 	await process_frame
 	quota_text = _hud_monitor_text(main)
 	if quota_text.find("Final") == -1 or quota_text.find("70") == -1:
@@ -283,15 +297,6 @@ func _quota_monitor_text(root: Node) -> String:
 		if nested != "":
 			return nested
 	return ""
-
-func _quota_monitor_label(root: Node) -> Label3D:
-	for child in root.get_children():
-		if child is Label3D:
-			return child as Label3D
-		var nested := _quota_monitor_label(child)
-		if nested != null:
-			return nested
-	return null
 
 func _hud_monitor_text(main: Node) -> String:
 	var hud := main.get("hud") as CanvasLayer
