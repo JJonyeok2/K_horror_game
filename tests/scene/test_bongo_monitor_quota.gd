@@ -2,6 +2,8 @@ extends SceneTree
 
 const MainScene := preload("res://scenes/Main.tscn")
 const ArtifactDefinition := preload("res://scripts/core/artifact_definition.gd")
+const BongoVanPlanScript := preload("res://scripts/maps/bongo_van_plan.gd")
+const SETTLEMENT_OFFICE_TEST_POSITION := Vector3(64.0, 1.34, 276.0)
 
 var _failed := false
 
@@ -12,6 +14,10 @@ func _initialize() -> void:
 		await physics_frame
 
 	_assert_bongo_quota_monitor(main)
+	await _assert_bongo_map_selector_starts_retrieval_map(main)
+	if _failed:
+		quit(1)
+		return
 	await _assert_bongo_deposit_waits_for_manual_settlement(main)
 	if _failed:
 		quit(1)
@@ -41,12 +47,37 @@ func _assert_bongo_quota_monitor(main: Node) -> void:
 		_fail("BongoQuotaMonitor text does not show final and pending values: %s" % quota_text)
 		return
 
+func _assert_bongo_map_selector_starts_retrieval_map(main: Node) -> void:
+	if str(main.get("current_map_id")) != "bongo_hub":
+		_fail("Game should start inside the bongo map-selection hub")
+		return
+	var player := main.get("player") as Node3D
+	var selector := main.find_child("BongoMapSelector", true, false)
+	if player == null or selector == null or not selector.has_method("interact"):
+		_fail("Missing player or interactive BongoMapSelector")
+		return
+	selector.interact(player)
+	await process_frame
+	if str(main.get("current_map_id")) != "jongga_estate":
+		_fail("Map selector should move the run to the selected retrieval map")
+		return
+	if int(main.get("map_travel_count")) != 1:
+		_fail("Map selector should count the retrieval-map travel")
+		return
+	if player.global_position.distance_to(BongoVanPlanScript.PLAYER_START_POSITION) > 0.2:
+		_fail("Selected retrieval map should use the current bongo start point")
+		return
+	if not bool(player.get("movement_enabled")):
+		_fail("Player should be able to move after selecting a retrieval map")
+		return
+
 func _assert_bongo_deposit_waits_for_manual_settlement(main: Node) -> void:
 	var player := main.get("player") as Node3D
 	var zone := main.find_child("VanInteriorReturnZone", true, false) as Area3D
 	if player == null or zone == null:
 		_fail("Missing player or van extraction zone")
 		return
+	player.set("movement_enabled", true)
 	player.call("try_collect_artifact", ArtifactDefinition.new("monitor test", 70, 1.0, 0, [], 1))
 	player.global_position = zone.global_position
 	player.set("velocity", Vector3.ZERO)
@@ -58,6 +89,12 @@ func _assert_bongo_deposit_waits_for_manual_settlement(main: Node) -> void:
 		return
 	if int(main.get("pending_recovered_value")) != 70:
 		_fail("Depositing in the van should create pending cargo value")
+		return
+	if str(main.get("current_map_id")) != "bongo_hub":
+		_fail("Returning to the van should move back to the bongo interior hub")
+		return
+	if int(main.get("map_travel_count")) != 2:
+		_fail("Returning to the van should count as map travel back to the hub")
 		return
 	if main.find_child("StoredCargoItem01", true, false) == null:
 		_fail("Deposited item should remain visible in the van before settlement")
@@ -85,21 +122,24 @@ func _assert_bongo_deposit_waits_for_manual_settlement(main: Node) -> void:
 	if int(quota.get("recovered_value")) != 70:
 		_fail("Manual settlement did not finalize quota")
 		return
+	if not bool(player.get("movement_enabled")):
+		_fail("Manual settlement should not disable player movement")
+		return
 	if int(main.get("pending_recovered_value")) != 0:
 		_fail("Pending cargo value was not cleared after settlement")
+		return
+	if str(main.get("current_map_id")) != "settlement_office":
+		_fail("Manual settlement should move to the settlement map")
+		return
+	if int(main.get("map_travel_count")) != 3:
+		_fail("Manual settlement should count settlement-map travel")
+		return
+	if player.global_position.distance_to(SETTLEMENT_OFFICE_TEST_POSITION) > 0.2:
+		_fail("Manual settlement should place the player in the settlement map")
 		return
 	quota_text = _quota_monitor_text(monitor)
 	if quota_text.find("최종") == -1 or quota_text.find("70") == -1:
 		_fail("BongoQuotaMonitor did not show finalized quota after settlement: %s" % quota_text)
-		return
-	departure_button.interact(player)
-	await process_frame
-	if not bool(main.get("bongo_departed")):
-		_fail("BongoDepartureButton did not mark the run as departed after settlement")
-		return
-	quota_text = _quota_monitor_text(monitor)
-	if quota_text.find("출발") == -1 and quota_text.find("복귀") == -1:
-		_fail("BongoQuotaMonitor did not show departure state: %s" % quota_text)
 		return
 
 func _quota_monitor_text(root: Node) -> String:

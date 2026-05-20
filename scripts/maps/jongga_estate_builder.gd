@@ -11,6 +11,7 @@ const VisualPaletteScript := preload("res://scripts/maps/visual_palette.gd")
 const StatefulInteractableScript := preload("res://scripts/interactions/stateful_interactable.gd")
 const BongoSettlementStationScript := preload("res://scripts/interactions/bongo_settlement_station.gd")
 const BongoDepartureButtonScript := preload("res://scripts/interactions/bongo_departure_button.gd")
+const BongoMapSelectorScript := preload("res://scripts/interactions/bongo_map_selector.gd")
 const PerformanceSettingsScript := preload("res://scripts/game/performance_settings.gd")
 
 const SPAWN_POINT := BongoVanPlanScript.PLAYER_START_POSITION
@@ -66,6 +67,7 @@ func build(main: Node) -> void:
 	_create_courtyard_density_props()
 	_create_secondary_roofed_buildings()
 	_create_bongo_van()
+	_create_settlement_office_map()
 	_spawn_planned_artifacts(main)
 	_create_extraction_zone()
 
@@ -572,6 +574,7 @@ func _create_bongo_van() -> void:
 			_add_visual_box_world(label, position, size, color, material_key, rotation)
 	_create_bongo_quota_monitor()
 	_create_bongo_settlement_station()
+	_create_bongo_map_selector()
 	_create_bongo_departure_button()
 
 func _create_bongo_quota_monitor() -> void:
@@ -606,6 +609,17 @@ func _create_bongo_settlement_station() -> void:
 	station.set_script(BongoSettlementStationScript)
 	_add_visual_box_world("BongoSettlementStationScreen", BongoVanPlanScript.SETTLEMENT_STATION_POSITION + Vector3(0.0, 0.18, -0.27), Vector3(0.55, 0.28, 0.04), BongoVanPlanScript.COLOR_MONITOR_SCREEN)
 
+func _create_bongo_map_selector() -> void:
+	var selector := _create_box(
+		BongoVanPlanScript.MAP_SELECTOR_NAME,
+		BongoVanPlanScript.MAP_SELECTOR_POSITION,
+		BongoVanPlanScript.MAP_SELECTOR_SIZE,
+		Color(0.05, 0.14, 0.18),
+		"metal"
+	)
+	selector.set_script(BongoMapSelectorScript)
+	_add_visual_box_world("BongoMapSelectorScreen", BongoVanPlanScript.MAP_SELECTOR_POSITION + Vector3(0.0, 0.04, -0.22), Vector3(0.64, 0.18, 0.04), Color(0.24, 0.8, 0.72), "glass")
+
 func _create_bongo_departure_button() -> void:
 	var button := _create_box(
 		BongoVanPlanScript.DEPARTURE_BUTTON_NAME,
@@ -616,6 +630,17 @@ func _create_bongo_departure_button() -> void:
 	)
 	button.set_script(BongoDepartureButtonScript)
 	_add_visual_box_world("BongoDepartureButtonLamp", BongoVanPlanScript.DEPARTURE_BUTTON_POSITION + Vector3(0.0, 0.04, -0.22), Vector3(0.32, 0.14, 0.04), Color(0.95, 0.08, 0.04), "shrine_red")
+
+func _create_settlement_office_map() -> void:
+	var origin: Vector3 = BongoVanPlanScript.SETTLEMENT_OFFICE_ORIGIN
+	_create_box("SettlementOfficeFloor", origin + Vector3(0.0, 0.0, 0.0), Vector3(12.0, 0.32, 10.0), _fallback_color("dark_stone"), "dark_stone")
+	_create_box("SettlementOfficeBackWall", origin + Vector3(0.0, 1.8, 4.8), Vector3(12.0, 3.6, 0.45), _fallback_color("old_plaster"), "old_plaster")
+	_create_box("SettlementOfficeLeftWall", origin + Vector3(-5.8, 1.8, 0.0), Vector3(0.45, 3.6, 10.0), _fallback_color("old_plaster"), "old_plaster")
+	_create_box("SettlementOfficeRightWall", origin + Vector3(5.8, 1.8, 0.0), Vector3(0.45, 3.6, 10.0), _fallback_color("old_plaster"), "old_plaster")
+	_create_box("SettlementOfficeCeiling", origin + Vector3(0.0, 3.65, 0.0), Vector3(12.2, 0.32, 10.2), _fallback_color("black_wood"), "black_wood")
+	_create_box("SettlementOfficeCounter", origin + Vector3(0.0, 0.75, -2.6), Vector3(5.0, 1.1, 0.9), _fallback_color("black_wood"), "black_wood")
+	_create_box("SettlementOfficeMonitor", origin + Vector3(0.0, 1.65, -3.05), Vector3(2.6, 1.1, 0.12), Color(0.02, 0.17, 0.13), "glass")
+	_create_box("SettlementOfficePaperStack", origin + Vector3(-1.7, 1.38, -2.72), Vector3(0.82, 0.18, 0.55), _fallback_color("paper"), "paper")
 
 func _create_extraction_zone() -> void:
 	var extraction := ExtractionScene.instantiate()

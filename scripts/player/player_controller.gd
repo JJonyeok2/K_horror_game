@@ -30,6 +30,7 @@ var _is_exhausted: bool = false
 func _ready() -> void:
 	camera = $Camera3D
 	_held_mounts = $Camera3D/HeldItemMounts
+	_ensure_four_inventory_mounts()
 	stamina_seconds = max_stamina_seconds
 	health = max_health
 	_update_stamina_ratio()
@@ -135,13 +136,37 @@ func refresh_held_item_views() -> void:
 			held_child.queue_free()
 	if inventory.items.is_empty():
 		return
-	if inventory.items.size() == 1 and inventory.items[0].hand_slots == 2:
-		_add_held_item_box($Camera3D/HeldItemMounts/BothHandsMount, inventory.items[0], true)
-		return
-	if inventory.items.size() >= 1:
-		_add_held_item_box($Camera3D/HeldItemMounts/LeftHandMount, inventory.items[0], false)
-	if inventory.items.size() >= 2:
-		_add_held_item_box($Camera3D/HeldItemMounts/RightHandMount, inventory.items[1], false)
+	var mounts := _inventory_slot_mounts()
+	var slot_index := 0
+	for item in inventory.items:
+		if slot_index >= mounts.size():
+			return
+		var is_large := item.hand_slots >= 2
+		_add_held_item_box(mounts[slot_index], item, is_large)
+		slot_index += max(item.hand_slots, 1)
+
+func _ensure_four_inventory_mounts() -> void:
+	_ensure_mount("LowerLeftHandMount", Vector3(-0.42, -0.43, -0.66), Vector3(0.0, deg_to_rad(-12.0), 0.0))
+	_ensure_mount("LowerRightHandMount", Vector3(0.42, -0.43, -0.66), Vector3(0.0, deg_to_rad(12.0), 0.0))
+
+func _ensure_mount(label: String, local_position: Vector3, local_rotation: Vector3) -> Node3D:
+	var existing := _held_mounts.get_node_or_null(label) as Node3D
+	if existing != null:
+		return existing
+	var marker := Marker3D.new()
+	marker.name = label
+	_held_mounts.add_child(marker)
+	marker.position = local_position
+	marker.rotation = local_rotation
+	return marker
+
+func _inventory_slot_mounts() -> Array[Node3D]:
+	return [
+		$Camera3D/HeldItemMounts/LeftHandMount,
+		$Camera3D/HeldItemMounts/RightHandMount,
+		$Camera3D/HeldItemMounts/LowerLeftHandMount,
+		$Camera3D/HeldItemMounts/LowerRightHandMount,
+	]
 
 func _add_held_item_box(mount: Node3D, item: ArtifactDefinition, is_large: bool) -> void:
 	var mesh_instance := MeshInstance3D.new()

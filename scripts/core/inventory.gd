@@ -5,7 +5,7 @@ const ArtifactDefinition = preload("res://scripts/core/artifact_definition.gd")
 
 var max_weight: float
 var items: Array[ArtifactDefinition] = []
-var max_hand_slots: int = 2
+var max_hand_slots: int = 4
 
 func _init(p_max_weight: float = 10.0) -> void:
 	max_weight = max(p_max_weight, 0.0)
@@ -53,10 +53,8 @@ func free_hand_slots() -> int:
 
 func hand_status() -> String:
 	if items.is_empty():
-		return "손: 비어 있음"
-	if items.size() == 1 and items[0].hand_slots == 2:
-		return "양손: %s" % items[0].display_name
+		return "소지품: 비어 있음"
 	var labels: Array[String] = []
 	for item in items:
 		labels.append(item.display_name)
-	return "손: %s" % " / ".join(labels)
+	return "소지품 %d/%d: %s" % [used_hand_slots(), max_hand_slots, " / ".join(labels)]

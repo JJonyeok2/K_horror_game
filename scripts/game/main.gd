@@ -18,6 +18,9 @@ const FALLBACK_THREAT_PURSUIT_SPEED: float = 2.85
 const THREAT_PLAYER_OFFSET := Vector3(0.0, 1.15, 0.0)
 const OUTER_GATE_Z: float = -12.0
 const INNER_BUILDING_THREAT_Z: float = -73.0
+const MAP_BONGO_HUB := "bongo_hub"
+const MAP_JONGGA_ESTATE := "jongga_estate"
+const MAP_SETTLEMENT_OFFICE := "settlement_office"
 
 var player: Node
 var quota := QuotaTracker.new(800)
@@ -34,6 +37,9 @@ var _threat_pattern_elapsed: float = 0.0
 var _player_down: bool = false
 var player_down: bool = false
 var bongo_departed: bool = false
+var current_map_id: String = MAP_BONGO_HUB
+var selected_retrieval_map_id: String = ""
+var map_travel_count: int = 0
 var pending_recovered_value: int = 0
 var pending_cargo_items: Array[ArtifactDefinition] = []
 var _stored_cargo_visual_index: int = 0
@@ -140,7 +146,10 @@ func _update_startup_sequence(delta: float) -> void:
 		if camera != null:
 			camera.position = Vector3(0, 1.55, 0)
 		print("BONGO_VAN_DOOR: 철컥, 낡은 봉고차 문이 열립니다.")
-		print("도착했습니다. 대문까지 걸어가세요.")
+		if current_map_id == MAP_BONGO_HUB:
+			print("봉고차 단말기에서 회수 지점을 선택하세요.")
+		else:
+			print("도착했습니다. 대문까지 걸어가세요.")
 
 func register_artifact(artifact: Node) -> void:
 	artifact.picked_up.connect(_on_artifact_picked_up)
@@ -413,9 +422,9 @@ func _update_bongo_quota_monitor() -> void:
 	if label == null:
 		return
 	if bongo_departed:
-		label.text = "복귀 출발\n최종 ₩%d / ₩%d" % [quota.recovered_value, quota.required_value]
+		label.text = "복귀 출발\n최종 ₩%d / ₩%d\n%s" % [quota.recovered_value, quota.required_value, _current_map_label()]
 		return
-	label.text = "최종 ₩%d / ₩%d\n미정산 ₩%d" % [quota.recovered_value, quota.required_value, pending_recovered_value]
+	label.text = "최종 ₩%d / ₩%d\n미정산 ₩%d\n%s" % [quota.recovered_value, quota.required_value, pending_recovered_value, _current_map_label()]
 
 func _create_threat_visual(root: Node3D) -> void:
 	var body := MeshInstance3D.new()
@@ -449,6 +458,8 @@ func _create_threat_visual(root: Node3D) -> void:
 
 func extract_player_inventory() -> void:
 	if player.inventory.items.is_empty():
+		if current_map_id == MAP_JONGGA_ESTATE:
+			_travel_to_bongo_hub()
 		return
 	var deposited_items: Array = player.inventory.items.duplicate()
 	var value: int = player.inventory.total_value()
@@ -459,6 +470,8 @@ func extract_player_inventory() -> void:
 	player.inventory.clear()
 	if player.has_method("refresh_held_item_views"):
 		player.refresh_held_item_views()
+	if current_map_id == MAP_JONGGA_ESTATE:
+		_travel_to_bongo_hub()
 	_update_bongo_quota_monitor()
 	print("보관:%d 미정산:%d / 할당량:%d" % [value, pending_recovered_value, quota.required_value])
 
@@ -471,6 +484,7 @@ func settle_stored_cargo() -> void:
 	pending_recovered_value = 0
 	pending_cargo_items.clear()
 	_clear_pending_cargo_visuals()
+	_travel_to_settlement_map()
 	_update_bongo_quota_monitor()
 	print("정산:%d / 할당량:%d" % [quota.recovered_value, quota.required_value])
 
@@ -479,11 +493,62 @@ func depart_bongo() -> bool:
 		print("미정산 물품이 있어 출발할 수 없습니다.")
 		return false
 	bongo_departed = true
-	if player != null:
-		player.set("movement_enabled", false)
+	travel_to_retrieval_map(MAP_JONGGA_ESTATE)
 	_update_bongo_quota_monitor()
 	print("BONGO_DEPARTURE: 봉고차가 회수 지점을 떠납니다.")
 	return true
+
+func travel_to_retrieval_map(map_id: String = MAP_JONGGA_ESTATE) -> void:
+	selected_retrieval_map_id = map_id
+	current_map_id = map_id
+	_count_map_travel()
+	_finish_startup_for_travel()
+	_move_player_to(BongoVanPlanScript.PLAYER_START_POSITION)
+	bongo_departed = false
+	_hide_threat_manifestation()
+	_update_bongo_quota_monitor()
+	print("MAP_TRAVEL:%s" % map_id)
+
+func _travel_to_bongo_hub() -> void:
+	current_map_id = MAP_BONGO_HUB
+	_count_map_travel()
+	_finish_startup_for_travel()
+	_move_player_to(BongoVanPlanScript.PLAYER_START_POSITION)
+	_hide_threat_manifestation()
+	_update_bongo_quota_monitor()
+	print("MAP_TRAVEL:%s" % MAP_BONGO_HUB)
+
+func _travel_to_settlement_map() -> void:
+	current_map_id = MAP_SETTLEMENT_OFFICE
+	_count_map_travel()
+	_finish_startup_for_travel()
+	_move_player_to(BongoVanPlanScript.SETTLEMENT_OFFICE_PLAYER_POSITION)
+	_hide_threat_manifestation()
+	print("MAP_TRAVEL:%s" % MAP_SETTLEMENT_OFFICE)
+
+func _count_map_travel() -> void:
+	map_travel_count += 1
+
+func _finish_startup_for_travel() -> void:
+	_startup_done = true
+	_startup_time = 5.0
+
+func _move_player_to(position: Vector3) -> void:
+	var player_node := player as Node3D
+	if player_node == null:
+		return
+	player_node.global_position = position
+	player.set("movement_enabled", true)
+	player.set("velocity", Vector3.ZERO)
+
+func _current_map_label() -> String:
+	match current_map_id:
+		MAP_JONGGA_ESTATE:
+			return "현재: 종가 고택"
+		MAP_SETTLEMENT_OFFICE:
+			return "현재: 정산소"
+		_:
+			return "현재: 봉고차"
 
 func _create_stored_cargo_visual(item: ArtifactDefinition) -> void:
 	_stored_cargo_visual_index += 1
