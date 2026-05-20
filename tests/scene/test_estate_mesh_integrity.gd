@@ -12,8 +12,10 @@ func _initialize() -> void:
 	root.add_child(main)
 	for _i in range(90):
 		await physics_frame
+	await _travel_to_estate(main)
 
 	_assert_gate_wall_seams_are_closed(main)
+	_assert_gate_side_passages_are_blocked(main)
 	_assert_route_floor_surfaces_are_separated(main)
 	_assert_main_house_corner_seams_are_closed(main)
 	_assert_thin_front_decals_are_clear_of_backing_walls(main)
@@ -24,6 +26,16 @@ func _initialize() -> void:
 		return
 	print("ESTATE_MESH_INTEGRITY_SMOKE: snapped seams, decal offsets, and box collisions verified")
 	quit(0)
+
+func _travel_to_estate(main: Node) -> void:
+	if main.has_method("travel_to_retrieval_map"):
+		main.call("travel_to_retrieval_map", "jongga_estate")
+	for _i in range(90):
+		if str(main.get("current_map_id")) == "jongga_estate":
+			await physics_frame
+			return
+		await physics_frame
+	_fail("Mesh integrity test could not travel to the estate map")
 
 func _assert_gate_wall_seams_are_closed(main: Node) -> void:
 	var left_wall := _required_box(main, "OuterEstateGateLeftWall")
@@ -39,6 +51,19 @@ func _assert_gate_wall_seams_are_closed(main: Node) -> void:
 		_fail("Gate side walls are not snapped to the same front z plane")
 	if absf(float(left_bounds["max"].z) - float(right_bounds["max"].z)) > SEAM_TOLERANCE:
 		_fail("Gate side walls are not snapped to the same back z plane")
+
+func _assert_gate_side_passages_are_blocked(main: Node) -> void:
+	_assert_blocked_lateral_passage(main, Vector3(-4.7, 1.6, -14.4), Vector3(-16.5, 1.6, -14.4), "left gate-side courtyard opening")
+	_assert_blocked_lateral_passage(main, Vector3(4.7, 1.6, -14.4), Vector3(16.5, 1.6, -14.4), "right gate-side courtyard opening")
+
+func _assert_blocked_lateral_passage(main: Node, start: Vector3, end: Vector3, label: String) -> void:
+	var space_state := main.get_viewport().world_3d.direct_space_state
+	var query := PhysicsRayQueryParameters3D.create(start, end)
+	query.collide_with_areas = false
+	query.collide_with_bodies = true
+	var result := space_state.intersect_ray(query)
+	if result.is_empty():
+		_fail("Unsealed %s lets the player bypass the main gate" % label)
 
 func _assert_main_house_corner_seams_are_closed(main: Node) -> void:
 	_assert_wall_reaches_back(main, "MainHouseLeftOuterWall", "MainHouseBackWall")

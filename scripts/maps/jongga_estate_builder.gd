@@ -132,6 +132,8 @@ func _create_route_guidance_walls() -> void:
 
 	_create_tall_wall_box("SingleGateLeftReturnWall", Vector3(-7.2, 1.7, -11.2), Vector3(2.4, 3.4, 1.1), "old_plaster")
 	_create_tall_wall_box("SingleGateRightReturnWall", Vector3(7.2, 1.7, -11.2), Vector3(2.4, 3.4, 1.1), "old_plaster")
+	_create_tall_wall_box("GateLeftCourtyardSideSealWall", Vector3(-10.6, 1.8, -14.45), Vector3(9.2, 3.6, 4.9), "old_plaster")
+	_create_tall_wall_box("GateRightCourtyardSideSealWall", Vector3(10.6, 1.8, -14.45), Vector3(9.2, 3.6, 4.9), "old_plaster")
 	_create_box("SidePassageBoardedGate", Vector3(-8.7, 1.85, -10.8), Vector3(3.3, 3.7, 0.55), _fallback_color("aged_wood"), "aged_wood")
 	_create_box("SidePassageBrushScreenA", Vector3(-9.4, 1.35, -5.4), Vector3(3.8, 2.7, 5.2), _fallback_color("wet_moss"), "mud")
 	_create_box("SidePassageBrushScreenB", Vector3(-12.0, 1.45, -14.8), Vector3(3.8, 2.9, 4.4), _fallback_color("wet_moss"), "mud")
