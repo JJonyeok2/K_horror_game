@@ -657,14 +657,26 @@ func _create_bongo_departure_button() -> void:
 
 func _create_settlement_office_map() -> void:
 	var origin: Vector3 = BongoVanPlanScript.SETTLEMENT_OFFICE_ORIGIN
-	_create_box("SettlementOfficeFloor", origin + Vector3(0.0, 0.0, 0.0), Vector3(12.0, 0.32, 10.0), _fallback_color("dark_stone"), "dark_stone")
-	_create_box("SettlementOfficeBackWall", origin + Vector3(0.0, 1.8, 4.8), Vector3(12.0, 3.6, 0.45), _fallback_color("old_plaster"), "old_plaster")
-	_create_box("SettlementOfficeLeftWall", origin + Vector3(-5.8, 1.8, 0.0), Vector3(0.45, 3.6, 10.0), _fallback_color("old_plaster"), "old_plaster")
-	_create_box("SettlementOfficeRightWall", origin + Vector3(5.8, 1.8, 0.0), Vector3(0.45, 3.6, 10.0), _fallback_color("old_plaster"), "old_plaster")
-	_create_box("SettlementOfficeCeiling", origin + Vector3(0.0, 3.65, 0.0), Vector3(12.2, 0.32, 10.2), _fallback_color("black_wood"), "black_wood")
-	_create_box("SettlementOfficeCounter", origin + Vector3(0.0, 0.75, -2.6), Vector3(5.0, 1.1, 0.9), _fallback_color("black_wood"), "black_wood")
-	_create_box("SettlementOfficeMonitor", origin + Vector3(0.0, 1.65, -3.05), Vector3(2.6, 1.1, 0.12), Color(0.02, 0.17, 0.13), "glass")
-	_create_box("SettlementOfficePaperStack", origin + Vector3(-1.7, 1.38, -2.72), Vector3(0.82, 0.18, 0.55), _fallback_color("paper"), "paper")
+	var floor_size: Vector3 = BongoVanPlanScript.SETTLEMENT_OFFICE_FLOOR_SIZE
+	var half_x := floor_size.x * 0.5
+	var half_z := floor_size.z * 0.5
+	_create_box("SettlementOfficeFloor", origin, floor_size, _fallback_color("dark_stone"), "dark_stone")
+	_create_box("SettlementOfficeBackWall", origin + Vector3(0.0, 1.9, half_z - 0.25), Vector3(floor_size.x, 3.8, 0.5), _fallback_color("old_plaster"), "old_plaster")
+	_create_box("SettlementOfficeLeftWall", origin + Vector3(-half_x + 0.25, 1.9, 0.0), Vector3(0.5, 3.8, floor_size.z), _fallback_color("old_plaster"), "old_plaster")
+	_create_box("SettlementOfficeRightWall", origin + Vector3(half_x - 0.25, 1.9, 0.0), Vector3(0.5, 3.8, floor_size.z), _fallback_color("old_plaster"), "old_plaster")
+	_create_box("SettlementOfficeFrontLeftWall", origin + Vector3(-15.0, 1.9, -half_z + 0.25), Vector3(18.0, 3.8, 0.5), _fallback_color("old_plaster"), "old_plaster")
+	_create_box("SettlementOfficeFrontRightWall", origin + Vector3(15.0, 1.9, -half_z + 0.25), Vector3(18.0, 3.8, 0.5), _fallback_color("old_plaster"), "old_plaster")
+	_create_box("SettlementOfficeCeiling", origin + Vector3(0.0, 3.85, 0.0), Vector3(floor_size.x + 0.4, 0.32, floor_size.z + 0.4), _fallback_color("black_wood"), "black_wood")
+	_create_box("SettlementOfficeCounter", origin + Vector3(0.0, 0.75, -13.5), Vector3(16.0, 1.1, 1.1), _fallback_color("black_wood"), "black_wood")
+	_create_box("SettlementOfficeMonitor", origin + Vector3(0.0, 1.68, -14.08), Vector3(4.8, 1.25, 0.12), Color(0.02, 0.17, 0.13), "glass")
+	_create_box("SettlementOfficePaperStack", origin + Vector3(-6.1, 1.38, -13.55), Vector3(1.2, 0.2, 0.72), _fallback_color("paper"), "paper")
+	_create_box("SettlementOfficeLedgerStack", origin + Vector3(6.0, 1.4, -13.55), Vector3(1.5, 0.26, 0.8), _fallback_color("paper"), "paper")
+	_create_box("SettlementOfficeLeftStorageShelf", origin + Vector3(-18.5, 1.0, -5.5), Vector3(2.2, 1.8, 8.0), _fallback_color("black_wood"), "black_wood")
+	_create_box("SettlementOfficeRightStorageShelf", origin + Vector3(18.5, 1.0, -5.5), Vector3(2.2, 1.8, 8.0), _fallback_color("black_wood"), "black_wood")
+	_create_box("SettlementOfficeQueueRailLeft", origin + Vector3(-4.2, 0.85, 2.5), Vector3(0.18, 1.1, 18.0), _fallback_color("metal"), "metal")
+	_create_box("SettlementOfficeQueueRailRight", origin + Vector3(4.2, 0.85, 2.5), Vector3(0.18, 1.1, 18.0), _fallback_color("metal"), "metal")
+	_create_box("SettlementOfficeOverheadBeamA", origin + Vector3(0.0, 3.15, 8.5), Vector3(43.0, 0.28, 0.42), _fallback_color("black_wood"), "black_wood")
+	_create_box("SettlementOfficeOverheadBeamB", origin + Vector3(0.0, 3.15, -4.0), Vector3(43.0, 0.28, 0.42), _fallback_color("black_wood"), "black_wood")
 	_create_bongo_settlement_station()
 
 func _create_extraction_zone() -> void:

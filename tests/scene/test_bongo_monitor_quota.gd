@@ -3,7 +3,7 @@ extends SceneTree
 const MainScene := preload("res://scenes/Main.tscn")
 const ArtifactDefinition := preload("res://scripts/core/artifact_definition.gd")
 const BongoVanPlanScript := preload("res://scripts/maps/bongo_van_plan.gd")
-const SETTLEMENT_OFFICE_TEST_POSITION := Vector3(64.0, 1.34, 276.0)
+const SETTLEMENT_OFFICE_TEST_POSITION := BongoVanPlanScript.SETTLEMENT_OFFICE_PLAYER_POSITION
 const TRAVEL_MAP_ID := "bongo_travel"
 
 var _failed := false
@@ -157,6 +157,7 @@ func _assert_bongo_deposit_waits_for_manual_settlement(main: Node) -> void:
 	if player.global_position.distance_to(SETTLEMENT_OFFICE_TEST_POSITION) > 0.2:
 		_fail("Settlement map should place the player in the settlement office")
 		return
+	_assert_settlement_office_is_large_enough(main, player)
 
 	var settlement := main.find_child("BongoSettlementStation", true, false)
 	if settlement == null or not settlement.has_method("interact"):
@@ -182,6 +183,20 @@ func _assert_bongo_deposit_waits_for_manual_settlement(main: Node) -> void:
 	quota_text = _quota_monitor_text(monitor)
 	if quota_text.find("최종") == -1 or quota_text.find("70") == -1:
 		_fail("BongoQuotaMonitor did not show finalized quota after settlement: %s" % quota_text)
+		return
+
+func _assert_settlement_office_is_large_enough(main: Node, player: Node3D) -> void:
+	var floor := main.find_child("SettlementOfficeFloor", true, false) as Node3D
+	if floor == null:
+		_fail("Settlement map is missing SettlementOfficeFloor")
+		return
+	var floor_size := _box_shape_size(floor)
+	if floor_size.x < 44.0 or floor_size.z < 32.0:
+		_fail("Settlement office is too small for the requested quarter-estate scale: %s" % floor_size)
+		return
+	var local_delta := player.global_position - floor.global_position
+	if abs(local_delta.x) > floor_size.x * 0.5 or abs(local_delta.z) > floor_size.z * 0.5:
+		_fail("Settlement office spawn is outside the enlarged floor")
 		return
 
 func _quota_monitor_text(root: Node) -> String:
