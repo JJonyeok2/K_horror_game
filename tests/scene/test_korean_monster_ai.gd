@@ -27,6 +27,7 @@ func _initialize() -> void:
 
 	_assert_navigation_foundation(main, player)
 	_assert_late_monster_roster(main)
+	_assert_monsters_use_distinct_spawn_anchors(main)
 	_assert_dalgyal_watch_mechanic(main)
 	_assert_eoduksini_flashlight_growth(main)
 	_assert_jangsanbeom_lure_data(main)
@@ -71,6 +72,32 @@ func _assert_late_monster_roster(main: Node) -> void:
 		if not threat.has_method("movement_speed_for_context"):
 			_fail("%s has no Korean monster AI script" % ghost_type)
 			return
+
+func _assert_monsters_use_distinct_spawn_anchors(main: Node) -> void:
+	var expected_anchors := {
+		"dalgyal_gwisin": "GhostHauntDalgyalGwisin",
+		"eoduksini": "GhostHauntEoduksini",
+		"changgwi": "GhostHauntChanggwi",
+		"jangsanbeom": "GhostHauntJangsanbeom",
+	}
+	var positions: Array[Vector3] = []
+	for ghost_type in expected_anchors.keys():
+		var threat := _threat_by_type(main, ghost_type)
+		var anchor := main.find_child(str(expected_anchors[ghost_type]), true, false) as Node3D
+		if threat == null or anchor == null:
+			_fail("Missing threat or spawn anchor for %s" % ghost_type)
+			return
+		var horizontal_delta := Vector2(threat.global_position.x - anchor.global_position.x, threat.global_position.z - anchor.global_position.z).length()
+		if horizontal_delta > 2.0:
+			_fail("%s should spawn near %s, delta=%s" % [ghost_type, expected_anchors[ghost_type], horizontal_delta])
+			return
+		positions.append(threat.global_position)
+	for i in range(positions.size()):
+		for j in range(i + 1, positions.size()):
+			var horizontal_distance := Vector2(positions[i].x - positions[j].x, positions[i].z - positions[j].z).length()
+			if horizontal_distance < 5.0:
+				_fail("Late-stage monsters should not share the same spawn cluster; distance=%s" % horizontal_distance)
+				return
 
 func _assert_dalgyal_watch_mechanic(main: Node) -> void:
 	var dalgyal := _threat_by_type(main, "dalgyal_gwisin")

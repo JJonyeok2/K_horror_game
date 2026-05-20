@@ -433,6 +433,9 @@ func _threat_spawn_position(stage: int) -> Vector3:
 	var player_position := Vector3.ZERO
 	if player_node != null:
 		player_position = player_node.global_position
+	var anchored_position: Variant = _threat_anchor_spawn_position(_threat_ghost_type(stage), _threat_zone_for_stage(stage))
+	if anchored_position != null:
+		return anchored_position as Vector3
 	match _threat_zone_for_stage(stage):
 		"outside_gate_forest":
 			var outside_position := player_position + THREAT_PLAYER_OFFSET + Vector3(4.2, 0.0, -9.0)
@@ -443,6 +446,39 @@ func _threat_spawn_position(stage: int) -> Vector3:
 			interior_position.z = min(interior_position.z, INNER_BUILDING_THREAT_Z - 4.0)
 			return interior_position
 	return player_position + THREAT_PLAYER_OFFSET + Vector3(0.0, 0.0, -18.0 + float(stage) * -1.5)
+
+func _threat_anchor_spawn_position(ghost_type: String, threat_zone: String) -> Variant:
+	var anchor_name := _threat_anchor_name_for_ghost(ghost_type)
+	if anchor_name == "":
+		return null
+	var anchor := find_child(anchor_name, true, false) as Node3D
+	if anchor == null:
+		return null
+	var spawn_position := anchor.global_position + THREAT_PLAYER_OFFSET
+	match threat_zone:
+		"outside_gate_forest":
+			spawn_position.z = max(spawn_position.z, OUTER_GATE_Z + 4.0)
+		"inner_building_only":
+			spawn_position.z = min(spawn_position.z, INNER_BUILDING_THREAT_Z - 4.0)
+	return spawn_position
+
+func _threat_anchor_name_for_ghost(ghost_type: String) -> String:
+	match ghost_type:
+		"dokkaebi":
+			return "GhostHauntDokkaebi"
+		"sangbok_ghost":
+			return "GhostHauntSangbok"
+		"dalgyal_gwisin":
+			return "GhostHauntDalgyalGwisin"
+		"eoduksini":
+			return "GhostHauntEoduksini"
+		"changgwi":
+			return "GhostHauntChanggwi"
+		"jangsanbeom":
+			return "GhostHauntJangsanbeom"
+		"well_spirit":
+			return "GhostHauntWellSpirit"
+	return ""
 
 func _apply_threat_damage(stage: int) -> void:
 	var damage := _threat_damage(stage)
