@@ -96,6 +96,15 @@ func _configure_world() -> void:
 	environment.fog_light_color = Color(0.11, 0.14, 0.15)
 	environment.fog_light_energy = 0.35
 	environment.fog_density = 0.018
+	_set_property_if_available(environment, "volumetric_fog_enabled", not low_spec_mode)
+	_set_property_if_available(environment, "volumetric_fog_density", 0.032)
+	_set_property_if_available(environment, "volumetric_fog_albedo", Color(0.08, 0.105, 0.115))
+	_set_property_if_available(environment, "volumetric_fog_emission", Color(0.005, 0.008, 0.01))
+	_set_property_if_available(environment, "volumetric_fog_emission_energy", 0.35)
+	_set_property_if_available(environment, "sdfgi_enabled", not low_spec_mode)
+	_set_property_if_available(environment, "sdfgi_use_occlusion", true)
+	_set_property_if_available(environment, "sdfgi_read_sky_light", true)
+	_set_property_if_available(environment, "sdfgi_bounce_feedback", 0.35)
 	world_environment.environment = environment
 	add_child(world_environment)
 
@@ -106,26 +115,32 @@ func _create_scene_lighting() -> void:
 	light.rotation_degrees = Vector3(-58, -32, 0)
 	light.light_color = Color(0.72, 0.82, 1.0)
 	light.light_energy = 0.65 if low_spec_mode else 0.95
-	light.shadow_enabled = false
+	light.shadow_enabled = not low_spec_mode
 	add_child(light)
 	_add_lantern_light("VanInteriorLamp", Vector3(0.0, 2.45, 13.0), Color(1.0, 0.62, 0.34), 1.1 if low_spec_mode else 1.8, 5.0)
-	_add_lantern_light("GateWarningLamp", Vector3(-6.7, 2.1, -8.5), Color(1.0, 0.42, 0.25), 1.3 if low_spec_mode else 2.2, 6.0)
+	_add_lantern_light("GateWarningLamp", Vector3(-6.7, 2.1, -8.5), Color(1.0, 0.42, 0.25), 1.3 if low_spec_mode else 2.2, 6.0, not low_spec_mode)
 	if low_spec_mode:
 		_add_lantern_light("ShrineRedLamp", Vector3(0.0, 2.35, -141.0), Color(1.0, 0.12, 0.08), 1.35, 7.5)
 		print("LOW_SPEC_MODE: PBR textures and fog disabled")
 		return
 	_add_lantern_light("CourtyardWellLamp", Vector3(-15.0, 1.7, -41.0), Color(0.7, 0.95, 0.8), 1.2, 8.0)
-	_add_lantern_light("ShrineRedLamp", Vector3(0.0, 2.2, -141.0), Color(1.0, 0.12, 0.08), 2.8, 9.0)
+	_add_lantern_light("ShrineRedLamp", Vector3(0.0, 2.2, -141.0), Color(1.0, 0.12, 0.08), 2.8, 9.0, true)
 
-func _add_lantern_light(label: String, position: Vector3, color: Color, energy: float, light_range: float) -> void:
+func _add_lantern_light(label: String, position: Vector3, color: Color, energy: float, light_range: float, casts_shadow: bool = false) -> void:
 	var lamp := OmniLight3D.new()
 	lamp.name = label
 	lamp.light_color = color
 	lamp.light_energy = energy
 	lamp.omni_range = light_range
-	lamp.shadow_enabled = false
+	lamp.shadow_enabled = casts_shadow
 	add_child(lamp)
 	lamp.global_position = position
+
+func _set_property_if_available(target: Object, property_name: String, value: Variant) -> void:
+	for data in target.get_property_list():
+		if str(data.get("name", "")) == property_name:
+			target.set(property_name, value)
+			return
 
 func _process(delta: float) -> void:
 	if _player_down and Input.is_action_just_pressed("restart_run"):

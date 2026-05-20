@@ -47,4 +47,4 @@ restart_run={
 
 [k_horror]
 
-low_spec_mode=true
+low_spec_mode=false
