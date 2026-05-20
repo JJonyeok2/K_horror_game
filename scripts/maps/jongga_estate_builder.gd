@@ -12,6 +12,7 @@ const StatefulInteractableScript := preload("res://scripts/interactions/stateful
 const BongoSettlementStationScript := preload("res://scripts/interactions/bongo_settlement_station.gd")
 const BongoDepartureButtonScript := preload("res://scripts/interactions/bongo_departure_button.gd")
 const BongoMapSelectorScript := preload("res://scripts/interactions/bongo_map_selector.gd")
+const BongoSettlementMapSelectorScript := preload("res://scripts/interactions/bongo_settlement_map_selector.gd")
 const PerformanceSettingsScript := preload("res://scripts/game/performance_settings.gd")
 
 const SPAWN_POINT := BongoVanPlanScript.PLAYER_START_POSITION
@@ -573,8 +574,8 @@ func _create_bongo_van() -> void:
 		else:
 			_add_visual_box_world(label, position, size, color, material_key, rotation)
 	_create_bongo_quota_monitor()
-	_create_bongo_settlement_station()
 	_create_bongo_map_selector()
+	_create_bongo_settlement_map_selector()
 	_create_bongo_departure_button()
 
 func _create_bongo_quota_monitor() -> void:
@@ -620,6 +621,17 @@ func _create_bongo_map_selector() -> void:
 	selector.set_script(BongoMapSelectorScript)
 	_add_visual_box_world("BongoMapSelectorScreen", BongoVanPlanScript.MAP_SELECTOR_POSITION + Vector3(0.0, 0.04, -0.22), Vector3(0.64, 0.18, 0.04), Color(0.24, 0.8, 0.72), "glass")
 
+func _create_bongo_settlement_map_selector() -> void:
+	var selector := _create_box(
+		BongoVanPlanScript.SETTLEMENT_MAP_SELECTOR_NAME,
+		BongoVanPlanScript.SETTLEMENT_MAP_SELECTOR_POSITION,
+		BongoVanPlanScript.SETTLEMENT_MAP_SELECTOR_SIZE,
+		Color(0.12, 0.10, 0.04),
+		"metal"
+	)
+	selector.set_script(BongoSettlementMapSelectorScript)
+	_add_visual_box_world("BongoSettlementMapSelectorLamp", BongoVanPlanScript.SETTLEMENT_MAP_SELECTOR_POSITION + Vector3(0.0, 0.04, -0.22), Vector3(0.38, 0.14, 0.04), Color(0.92, 0.72, 0.25), "metal")
+
 func _create_bongo_departure_button() -> void:
 	var button := _create_box(
 		BongoVanPlanScript.DEPARTURE_BUTTON_NAME,
@@ -641,6 +653,7 @@ func _create_settlement_office_map() -> void:
 	_create_box("SettlementOfficeCounter", origin + Vector3(0.0, 0.75, -2.6), Vector3(5.0, 1.1, 0.9), _fallback_color("black_wood"), "black_wood")
 	_create_box("SettlementOfficeMonitor", origin + Vector3(0.0, 1.65, -3.05), Vector3(2.6, 1.1, 0.12), Color(0.02, 0.17, 0.13), "glass")
 	_create_box("SettlementOfficePaperStack", origin + Vector3(-1.7, 1.38, -2.72), Vector3(0.82, 0.18, 0.55), _fallback_color("paper"), "paper")
+	_create_bongo_settlement_station()
 
 func _create_extraction_zone() -> void:
 	var extraction := ExtractionScene.instantiate()

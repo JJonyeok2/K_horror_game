@@ -21,6 +21,8 @@ const INNER_BUILDING_THREAT_Z: float = -73.0
 const MAP_BONGO_HUB := "bongo_hub"
 const MAP_JONGGA_ESTATE := "jongga_estate"
 const MAP_SETTLEMENT_OFFICE := "settlement_office"
+const MAP_BONGO_TRAVEL := "bongo_travel"
+const BONGO_TRAVEL_SECONDS: float = 0.55
 
 var player: Node
 var quota := QuotaTracker.new(800)
@@ -39,10 +41,13 @@ var player_down: bool = false
 var bongo_departed: bool = false
 var current_map_id: String = MAP_BONGO_HUB
 var selected_retrieval_map_id: String = ""
+var bongo_traveling: bool = false
+var bongo_travel_destination_id: String = ""
 var map_travel_count: int = 0
 var pending_recovered_value: int = 0
 var pending_cargo_items: Array[ArtifactDefinition] = []
 var _stored_cargo_visual_index: int = 0
+var _bongo_travel_elapsed: float = 0.0
 
 func _ready() -> void:
 	audio_director = AudioDirectorScript.new()
@@ -109,6 +114,7 @@ func _add_lantern_light(label: String, position: Vector3, color: Color, energy: 
 	lamp.global_position = position
 
 func _process(delta: float) -> void:
+	_update_bongo_travel(delta)
 	_update_startup_sequence(delta)
 	var interaction_label: String = ""
 	var interactor: Node = player.get_node_or_null("Camera3D/Interactor")
@@ -421,6 +427,9 @@ func _update_bongo_quota_monitor() -> void:
 	var label := find_child("BongoQuotaMonitorText", true, false) as Label3D
 	if label == null:
 		return
+	if bongo_traveling:
+		label.text = "이동 중\n최종 ₩%d / ₩%d\n%s" % [quota.recovered_value, quota.required_value, _current_map_label()]
+		return
 	if bongo_departed:
 		label.text = "복귀 출발\n최종 ₩%d / ₩%d\n%s" % [quota.recovered_value, quota.required_value, _current_map_label()]
 		return
@@ -458,8 +467,6 @@ func _create_threat_visual(root: Node3D) -> void:
 
 func extract_player_inventory() -> void:
 	if player.inventory.items.is_empty():
-		if current_map_id == MAP_JONGGA_ESTATE:
-			_travel_to_bongo_hub()
 		return
 	var deposited_items: Array = player.inventory.items.duplicate()
 	var value: int = player.inventory.total_value()
@@ -470,12 +477,13 @@ func extract_player_inventory() -> void:
 	player.inventory.clear()
 	if player.has_method("refresh_held_item_views"):
 		player.refresh_held_item_views()
-	if current_map_id == MAP_JONGGA_ESTATE:
-		_travel_to_bongo_hub()
 	_update_bongo_quota_monitor()
 	print("보관:%d 미정산:%d / 할당량:%d" % [value, pending_recovered_value, quota.required_value])
 
 func settle_stored_cargo() -> void:
+	if current_map_id != MAP_SETTLEMENT_OFFICE:
+		print("정산소에 도착해야 정산할 수 있습니다.")
+		return
 	if pending_recovered_value <= 0:
 		print("정산할 물품이 없습니다.")
 		return
@@ -484,47 +492,84 @@ func settle_stored_cargo() -> void:
 	pending_recovered_value = 0
 	pending_cargo_items.clear()
 	_clear_pending_cargo_visuals()
-	_travel_to_settlement_map()
 	_update_bongo_quota_monitor()
 	print("정산:%d / 할당량:%d" % [quota.recovered_value, quota.required_value])
 
 func depart_bongo() -> bool:
-	if pending_recovered_value > 0:
-		print("미정산 물품이 있어 출발할 수 없습니다.")
+	if current_map_id == MAP_BONGO_HUB:
+		travel_to_retrieval_map(MAP_JONGGA_ESTATE)
+		print("BONGO_DEPARTURE: 봉고차가 회수 지점으로 출발합니다.")
+		return true
+	return return_to_bongo_hub()
+
+func return_to_bongo_hub() -> bool:
+	if current_map_id == MAP_BONGO_HUB:
+		print("이미 봉고차 내부입니다.")
 		return false
 	bongo_departed = true
-	travel_to_retrieval_map(MAP_JONGGA_ESTATE)
-	_update_bongo_quota_monitor()
-	print("BONGO_DEPARTURE: 봉고차가 회수 지점을 떠납니다.")
+	_begin_bongo_travel(MAP_BONGO_HUB)
+	print("BONGO_RETURN: 봉고차 내부로 복귀합니다.")
 	return true
 
 func travel_to_retrieval_map(map_id: String = MAP_JONGGA_ESTATE) -> void:
 	selected_retrieval_map_id = map_id
-	current_map_id = map_id
+	_begin_bongo_travel(map_id)
+
+func travel_to_settlement_map() -> void:
+	_begin_bongo_travel(MAP_SETTLEMENT_OFFICE)
+
+func _begin_bongo_travel(destination_id: String) -> void:
+	if bongo_traveling:
+		return
+	bongo_traveling = true
+	bongo_travel_destination_id = destination_id
+	current_map_id = MAP_BONGO_TRAVEL
+	_bongo_travel_elapsed = 0.0
+	if player != null:
+		player.set("movement_enabled", false)
+		player.set("velocity", Vector3.ZERO)
+	_hide_threat_manifestation()
+	_update_bongo_quota_monitor()
+	print("BONGO_TRAVEL_START:%s" % destination_id)
+
+func _update_bongo_travel(delta: float) -> void:
+	if not bongo_traveling:
+		return
+	_bongo_travel_elapsed += delta
+	if _bongo_travel_elapsed < BONGO_TRAVEL_SECONDS:
+		var camera := player.get_node_or_null("Camera3D") as Node3D if player != null else null
+		if camera != null:
+			camera.position.x = sin(_bongo_travel_elapsed * 38.0) * 0.035
+			camera.position.y = 1.55 + sin(_bongo_travel_elapsed * 25.0) * 0.025
+		return
+	_complete_bongo_travel()
+
+func _complete_bongo_travel() -> void:
+	var destination_id := bongo_travel_destination_id
+	bongo_traveling = false
+	bongo_travel_destination_id = ""
+	current_map_id = destination_id
 	_count_map_travel()
 	_finish_startup_for_travel()
-	_move_player_to(BongoVanPlanScript.PLAYER_START_POSITION)
+	_move_player_to(_player_position_for_map(destination_id))
+	_hide_threat_manifestation()
 	bongo_departed = false
-	_hide_threat_manifestation()
 	_update_bongo_quota_monitor()
-	print("MAP_TRAVEL:%s" % map_id)
+	print("MAP_TRAVEL:%s" % destination_id)
+	if destination_id == MAP_JONGGA_ESTATE:
+		print("BONGO_VAN_DOOR: 철컥, 낡은 봉고차 문이 열립니다.")
+		print("도착했습니다. 대문까지 걸어가세요.")
+	elif destination_id == MAP_BONGO_HUB:
+		print("봉고차 내부로 복귀했습니다.")
+	elif destination_id == MAP_SETTLEMENT_OFFICE:
+		print("정산소에 도착했습니다. 카운터에서 정산하세요.")
 
-func _travel_to_bongo_hub() -> void:
-	current_map_id = MAP_BONGO_HUB
-	_count_map_travel()
-	_finish_startup_for_travel()
-	_move_player_to(BongoVanPlanScript.PLAYER_START_POSITION)
-	_hide_threat_manifestation()
-	_update_bongo_quota_monitor()
-	print("MAP_TRAVEL:%s" % MAP_BONGO_HUB)
-
-func _travel_to_settlement_map() -> void:
-	current_map_id = MAP_SETTLEMENT_OFFICE
-	_count_map_travel()
-	_finish_startup_for_travel()
-	_move_player_to(BongoVanPlanScript.SETTLEMENT_OFFICE_PLAYER_POSITION)
-	_hide_threat_manifestation()
-	print("MAP_TRAVEL:%s" % MAP_SETTLEMENT_OFFICE)
+func _player_position_for_map(map_id: String) -> Vector3:
+	match map_id:
+		MAP_SETTLEMENT_OFFICE:
+			return BongoVanPlanScript.SETTLEMENT_OFFICE_PLAYER_POSITION
+		_:
+			return BongoVanPlanScript.PLAYER_START_POSITION
 
 func _count_map_travel() -> void:
 	map_travel_count += 1

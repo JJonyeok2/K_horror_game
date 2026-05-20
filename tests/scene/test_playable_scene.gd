@@ -218,9 +218,24 @@ func _assert_extraction_zone_inside_van(main: Node, player: Node3D) -> void:
 	if int(inventory.call("total_value")) != 0:
 		_fail("Van extraction zone did not clear inventory")
 		return
+	if str(main.get("current_map_id")) == "bongo_travel":
+		_fail("Loading cargo should not start map travel by itself")
+		return
+	var settlement_selector := main.find_child("BongoSettlementMapSelector", true, false)
+	if settlement_selector == null or not settlement_selector.has_method("interact"):
+		_fail("Van has no interactive settlement map selector")
+		return
+	settlement_selector.interact(player)
+	for _i in range(90):
+		if str(main.get("current_map_id")) != "bongo_travel":
+			break
+		await physics_frame
+	if str(main.get("current_map_id")) != "settlement_office":
+		_fail("Settlement selector did not move player to settlement map")
+		return
 	var settlement := main.find_child("BongoSettlementStation", true, false)
 	if settlement == null or not settlement.has_method("interact"):
-		_fail("Van has no interactive settlement station")
+		_fail("Settlement map has no interactive settlement station")
 		return
 	settlement.interact(player)
 	await process_frame

@@ -2,11 +2,11 @@ extends StaticBody3D
 class_name BongoDepartureButton
 
 func interaction_label() -> String:
-	return "봉고차 출발하기"
+	return "봉고차로 복귀하기"
 
 func interact(actor: Node) -> void:
 	if actor == null:
 		return
 	var main := actor.get_parent()
-	if main != null and main.has_method("depart_bongo"):
-		main.depart_bongo()
+	if main != null and main.has_method("return_to_bongo_hub"):
+		main.return_to_bongo_hub()

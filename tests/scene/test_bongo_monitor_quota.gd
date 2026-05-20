@@ -4,6 +4,7 @@ const MainScene := preload("res://scenes/Main.tscn")
 const ArtifactDefinition := preload("res://scripts/core/artifact_definition.gd")
 const BongoVanPlanScript := preload("res://scripts/maps/bongo_van_plan.gd")
 const SETTLEMENT_OFFICE_TEST_POSITION := Vector3(64.0, 1.34, 276.0)
+const TRAVEL_MAP_ID := "bongo_travel"
 
 var _failed := false
 
@@ -58,6 +59,19 @@ func _assert_bongo_map_selector_starts_retrieval_map(main: Node) -> void:
 		return
 	selector.interact(player)
 	await process_frame
+	if str(main.get("current_map_id")) != TRAVEL_MAP_ID:
+		_fail("Map selector should start a bongo travel animation before arrival")
+		return
+	if str(main.get("bongo_travel_destination_id")) != "jongga_estate":
+		_fail("Map selector should set jongga estate as travel destination")
+		return
+	if not bool(main.get("bongo_traveling")):
+		_fail("Map selector should mark bongo as traveling")
+		return
+	if bool(player.get("movement_enabled")):
+		_fail("Player movement should pause during bongo travel animation")
+		return
+	await _wait_for_travel_complete(main)
 	if str(main.get("current_map_id")) != "jongga_estate":
 		_fail("Map selector should move the run to the selected retrieval map")
 		return
@@ -90,11 +104,11 @@ func _assert_bongo_deposit_waits_for_manual_settlement(main: Node) -> void:
 	if int(main.get("pending_recovered_value")) != 70:
 		_fail("Depositing in the van should create pending cargo value")
 		return
-	if str(main.get("current_map_id")) != "bongo_hub":
-		_fail("Returning to the van should move back to the bongo interior hub")
+	if str(main.get("current_map_id")) != "jongga_estate":
+		_fail("Loading cargo should not leave the active retrieval map before pressing the return button")
 		return
-	if int(main.get("map_travel_count")) != 2:
-		_fail("Returning to the van should count as map travel back to the hub")
+	if int(main.get("map_travel_count")) != 1:
+		_fail("Loading cargo should not count as map travel")
 		return
 	if main.find_child("StoredCargoItem01", true, false) == null:
 		_fail("Deposited item should remain visible in the van before settlement")
@@ -110,9 +124,40 @@ func _assert_bongo_deposit_waits_for_manual_settlement(main: Node) -> void:
 		return
 	departure_button.interact(player)
 	await process_frame
-	if bool(main.get("bongo_departed")):
-		_fail("Bongo should not depart while pending cargo is unsettled")
+	if str(main.get("current_map_id")) != TRAVEL_MAP_ID or str(main.get("bongo_travel_destination_id")) != "bongo_hub":
+		_fail("Return button should start travel back to the bongo hub")
 		return
+	await _wait_for_travel_complete(main)
+	if str(main.get("current_map_id")) != "bongo_hub":
+		_fail("Return button should finish in the bongo interior hub")
+		return
+	if int(main.get("map_travel_count")) != 2:
+		_fail("Returning to the bongo hub should count as the second map travel")
+		return
+	if int(main.get("pending_recovered_value")) != 70:
+		_fail("Pending cargo should stay loaded after returning to the bongo hub")
+		return
+
+	var settlement_selector := main.find_child("BongoSettlementMapSelector", true, false)
+	if settlement_selector == null or not settlement_selector.has_method("interact"):
+		_fail("Missing interactive BongoSettlementMapSelector")
+		return
+	settlement_selector.interact(player)
+	await process_frame
+	if str(main.get("current_map_id")) != TRAVEL_MAP_ID or str(main.get("bongo_travel_destination_id")) != "settlement_office":
+		_fail("Settlement map selector should start travel to the settlement map")
+		return
+	await _wait_for_travel_complete(main)
+	if str(main.get("current_map_id")) != "settlement_office":
+		_fail("Settlement map selector should finish in the settlement map")
+		return
+	if int(main.get("map_travel_count")) != 3:
+		_fail("Settlement map travel should be the third map travel")
+		return
+	if player.global_position.distance_to(SETTLEMENT_OFFICE_TEST_POSITION) > 0.2:
+		_fail("Settlement map should place the player in the settlement office")
+		return
+
 	var settlement := main.find_child("BongoSettlementStation", true, false)
 	if settlement == null or not settlement.has_method("interact"):
 		_fail("Missing interactive BongoSettlementStation")
@@ -129,13 +174,10 @@ func _assert_bongo_deposit_waits_for_manual_settlement(main: Node) -> void:
 		_fail("Pending cargo value was not cleared after settlement")
 		return
 	if str(main.get("current_map_id")) != "settlement_office":
-		_fail("Manual settlement should move to the settlement map")
+		_fail("Manual settlement should happen inside the settlement map")
 		return
 	if int(main.get("map_travel_count")) != 3:
-		_fail("Manual settlement should count settlement-map travel")
-		return
-	if player.global_position.distance_to(SETTLEMENT_OFFICE_TEST_POSITION) > 0.2:
-		_fail("Manual settlement should place the player in the settlement map")
+		_fail("Manual settlement should not add another map travel after arriving at the office")
 		return
 	quota_text = _quota_monitor_text(monitor)
 	if quota_text.find("최종") == -1 or quota_text.find("70") == -1:
@@ -154,6 +196,12 @@ func _quota_monitor_text(root: Node) -> String:
 		if nested != "":
 			return nested
 	return ""
+
+func _wait_for_travel_complete(main: Node) -> void:
+	for _i in range(90):
+		if str(main.get("current_map_id")) != TRAVEL_MAP_ID:
+			return
+		await physics_frame
 
 func _box_shape_size(node: Node) -> Vector3:
 	if node == null:
