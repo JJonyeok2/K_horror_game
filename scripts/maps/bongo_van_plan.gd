@@ -17,6 +17,9 @@ const CAMERA_CLEARANCE_UNDER_ROOF := 0.32
 const RETURN_ZONE_NAME = "VanInteriorReturnZone"
 const RETURN_ZONE_POSITION := Vector3(0.0, 0.55, 273.35)
 const RETURN_ZONE_SIZE := Vector3(2.8, 2.1, 2.4)
+const HUB_REAR_DOOR_BLOCKER_NAME = "BongoHubRearDoorBlocker"
+const HUB_REAR_DOOR_BLOCKER_POSITION := Vector3(0.0, 1.62, 270.08)
+const HUB_REAR_DOOR_BLOCKER_SIZE := Vector3(3.35, 2.58, 0.28)
 
 const COLOR_BODY := Color(0.72, 0.68, 0.56)
 const COLOR_BODY_SHADOW := Color(0.56, 0.53, 0.44)

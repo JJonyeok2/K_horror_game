@@ -13,6 +13,7 @@ const BongoSettlementStationScript := preload("res://scripts/interactions/bongo_
 const BongoDepartureButtonScript := preload("res://scripts/interactions/bongo_departure_button.gd")
 const BongoMapSelectorScript := preload("res://scripts/interactions/bongo_map_selector.gd")
 const BongoSettlementMapSelectorScript := preload("res://scripts/interactions/bongo_settlement_map_selector.gd")
+const BongoHubRearDoorLockScript := preload("res://scripts/interactions/bongo_hub_rear_door_lock.gd")
 const PerformanceSettingsScript := preload("res://scripts/game/performance_settings.gd")
 
 const SPAWN_POINT := BongoVanPlanScript.PLAYER_START_POSITION
@@ -573,10 +574,21 @@ func _create_bongo_van() -> void:
 			body.rotation_degrees = rotation
 		else:
 			_add_visual_box_world(label, position, size, color, material_key, rotation)
+	_create_bongo_hub_rear_door_blocker()
 	_create_bongo_quota_monitor()
 	_create_bongo_map_selector()
 	_create_bongo_settlement_map_selector()
 	_create_bongo_departure_button()
+
+func _create_bongo_hub_rear_door_blocker() -> void:
+	var blocker := _create_box(
+		BongoVanPlanScript.HUB_REAR_DOOR_BLOCKER_NAME,
+		BongoVanPlanScript.HUB_REAR_DOOR_BLOCKER_POSITION,
+		BongoVanPlanScript.HUB_REAR_DOOR_BLOCKER_SIZE,
+		BongoVanPlanScript.COLOR_BODY_SHADOW,
+		"van_paint"
+	)
+	blocker.set_script(BongoHubRearDoorLockScript)
 
 func _create_bongo_quota_monitor() -> void:
 	var monitor := Node3D.new()

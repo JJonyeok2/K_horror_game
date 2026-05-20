@@ -24,6 +24,8 @@ func _initialize() -> void:
 
 	_assert_required_map_nodes(main)
 	_assert_van_camera_clearance(main, player)
+	await _assert_hub_exit_locked_until_map_selected(main, player)
+	await _travel_to_jongga_estate(main, player)
 	await _assert_van_exit_without_jump(player)
 	_assert_gate_interaction(main, player)
 	await _assert_side_passage_risk(main, player)
@@ -40,6 +42,7 @@ func _assert_required_map_nodes(main: Node) -> void:
 		"BongoRoof": "StaticBody3D",
 		"BongoRearStep": "StaticBody3D",
 		"BongoLowExitRamp": "StaticBody3D",
+		"BongoHubRearDoorBlocker": "StaticBody3D",
 		"LongApproachRoad": "StaticBody3D",
 		"OuterEstateGate": "Node3D",
 		"LeftSwingGatePanel": "StaticBody3D",
@@ -92,6 +95,51 @@ func _assert_van_camera_clearance(main: Node, player: Node3D) -> void:
 	var local_delta := player.global_position - floor.global_position
 	if abs(local_delta.x) > floor_size.x * 0.5 or abs(local_delta.z) > floor_size.z * 0.5:
 		_fail("Player does not start inside van interior footprint")
+		return
+
+func _assert_hub_exit_locked_until_map_selected(main: Node, player: Node3D) -> void:
+	if str(main.get("current_map_id")) != "bongo_hub":
+		_fail("Playable scene should start in the bongo hub before map selection")
+		return
+	var blocker := main.find_child("BongoHubRearDoorBlocker", true, false) as StaticBody3D
+	if blocker == null:
+		_fail("Bongo hub needs a closed rear-door blocker before map selection")
+		return
+	if not blocker.visible:
+		_fail("Bongo rear-door blocker should be visible in the hub")
+		return
+	if _box_shape_disabled(blocker):
+		_fail("Bongo rear-door blocker collision should be active in the hub")
+		return
+	player.global_position = BongoVanPlanScript.PLAYER_START_POSITION
+	player.rotation = Vector3.ZERO
+	player.set("velocity", Vector3.ZERO)
+	player.set("movement_enabled", true)
+	Input.action_press("move_forward")
+	for _i in range(120):
+		await physics_frame
+	Input.action_release("move_forward")
+	var locked_exit_z: float = BongoVanPlanScript.PLAYER_START_POSITION.z - 1.75
+	if player.global_position.z < locked_exit_z:
+		_fail("Player exited the bongo before selecting a map: z=%s" % player.global_position.z)
+		return
+
+func _travel_to_jongga_estate(main: Node, player: Node3D) -> void:
+	var selector := main.find_child("BongoMapSelector", true, false)
+	if selector == null or not selector.has_method("interact"):
+		_fail("Missing BongoMapSelector for playable scene travel")
+		return
+	selector.interact(player)
+	for _i in range(90):
+		if str(main.get("current_map_id")) != "bongo_travel":
+			break
+		await physics_frame
+	if str(main.get("current_map_id")) != "jongga_estate":
+		_fail("Playable scene did not arrive at jongga estate after map selection")
+		return
+	var blocker := main.find_child("BongoHubRearDoorBlocker", true, false) as StaticBody3D
+	if blocker != null and (blocker.visible or not _box_shape_disabled(blocker)):
+		_fail("Bongo rear-door blocker should open after arriving at the retrieval map")
 		return
 
 func _assert_health_hud(main: Node, player: Node3D) -> void:
@@ -273,6 +321,12 @@ func _box_shape_size(node: Node) -> Vector3:
 	if shape == null:
 		return Vector3.ZERO
 	return shape.size
+
+func _box_shape_disabled(node: Node) -> bool:
+	var collision := node.find_child("CollisionShape3D", true, false) as CollisionShape3D
+	if collision == null:
+		return true
+	return collision.disabled
 
 func _cylinder_shape_height(node: Node) -> float:
 	var collision := node.find_child("CollisionShape3D", true, false) as CollisionShape3D

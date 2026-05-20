@@ -57,6 +57,7 @@ func _ready() -> void:
 	var map := JonggaEstateBuilder.new()
 	add_child(map)
 	map.build(self)
+	_update_bongo_hub_exit_state()
 	player = PlayerScene.instantiate()
 	add_child(player)
 	startup_sequence.apply_player_start(player)
@@ -151,10 +152,11 @@ func _update_startup_sequence(delta: float) -> void:
 			player.movement_enabled = true
 		if camera != null:
 			camera.position = Vector3(0, 1.55, 0)
-		print("BONGO_VAN_DOOR: 철컥, 낡은 봉고차 문이 열립니다.")
 		if current_map_id == MAP_BONGO_HUB:
+			print("BONGO_VAN_DOOR: 덜컥, 봉고차 뒷문이 잠겨 있습니다.")
 			print("봉고차 단말기에서 회수 지점을 선택하세요.")
 		else:
+			print("BONGO_VAN_DOOR: 철컥, 낡은 봉고차 문이 열립니다.")
 			print("도착했습니다. 대문까지 걸어가세요.")
 
 func register_artifact(artifact: Node) -> void:
@@ -525,6 +527,7 @@ func _begin_bongo_travel(destination_id: String) -> void:
 	bongo_travel_destination_id = destination_id
 	current_map_id = MAP_BONGO_TRAVEL
 	_bongo_travel_elapsed = 0.0
+	_update_bongo_hub_exit_state()
 	if player != null:
 		player.set("movement_enabled", false)
 		player.set("velocity", Vector3.ZERO)
@@ -551,6 +554,7 @@ func _complete_bongo_travel() -> void:
 	current_map_id = destination_id
 	_count_map_travel()
 	_finish_startup_for_travel()
+	_update_bongo_hub_exit_state()
 	_move_player_to(_player_position_for_map(destination_id))
 	_hide_threat_manifestation()
 	bongo_departed = false
@@ -570,6 +574,16 @@ func _player_position_for_map(map_id: String) -> Vector3:
 			return BongoVanPlanScript.SETTLEMENT_OFFICE_PLAYER_POSITION
 		_:
 			return BongoVanPlanScript.PLAYER_START_POSITION
+
+func _update_bongo_hub_exit_state() -> void:
+	var blocker := find_child(BongoVanPlanScript.HUB_REAR_DOOR_BLOCKER_NAME, true, false) as StaticBody3D
+	if blocker == null:
+		return
+	var closed := current_map_id != MAP_JONGGA_ESTATE
+	blocker.visible = closed
+	var collision := blocker.find_child("CollisionShape3D", true, false) as CollisionShape3D
+	if collision != null:
+		collision.disabled = not closed
 
 func _count_map_travel() -> void:
 	map_travel_count += 1

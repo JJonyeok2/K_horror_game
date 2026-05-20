@@ -15,6 +15,7 @@ func _initialize() -> void:
 		_fail("Main did not create player")
 		return
 
+	await _travel_to_jongga_estate(main, player)
 	await _assert_sprint_stamina(player)
 	await _assert_exhausted_walk_recovery(player)
 	_assert_folklore_route_props(main)
@@ -24,6 +25,20 @@ func _initialize() -> void:
 		return
 	print("SPRINT_THREAT_SMOKE: sprint stamina, jangseung, hidden path cover, threat present")
 	quit(0)
+
+func _travel_to_jongga_estate(main: Node, player: Node3D) -> void:
+	var selector := main.find_child("BongoMapSelector", true, false)
+	if selector == null or not selector.has_method("interact"):
+		_fail("Missing BongoMapSelector before sprint test")
+		return
+	selector.interact(player)
+	for _i in range(90):
+		if str(main.get("current_map_id")) != "bongo_travel":
+			break
+		await physics_frame
+	if str(main.get("current_map_id")) != "jongga_estate":
+		_fail("Sprint test should run after arriving at the retrieval map")
+		return
 
 func _assert_sprint_stamina(player: Node3D) -> void:
 	if not InputMap.has_action("sprint"):
