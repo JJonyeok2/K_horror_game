@@ -12,6 +12,9 @@ var restart_button: Button
 var bongo_monitor_panel: ColorRect
 var bongo_monitor_title: Label
 var bongo_monitor_body: Label
+var interaction_prompt_root: Control
+var interaction_key_label: Label
+var interaction_target_label: Label
 
 const GAUGE_WIDTH: float = 220.0
 const GAUGE_HEIGHT: float = 14.0
@@ -63,6 +66,7 @@ func _ready() -> void:
 	restart_button.pressed.connect(_on_restart_pressed)
 	add_child(restart_button)
 	_create_bongo_monitor_panel()
+	_create_interaction_prompt()
 
 func _place_right_gauge(gauge: ColorRect, top: float) -> void:
 	gauge.anchor_left = 1.0
@@ -87,20 +91,103 @@ func update_status(
 	is_sprinting: bool = false
 ) -> void:
 	var sprint_label := "달리기" if is_sprinting else "스태미너"
-	label.text = "무게 %.1f/%.1f\n원한 단계 %d\n체력 %.0f%%\n%s %.0f%%\n%s\n%s" % [
+	label.text = "무게 %.1f/%.1f\n원한 단계 %d\n체력 %.0f%%\n%s %.0f%%\n%s" % [
 		weight,
 		max_weight,
 		resentment_stage,
 		clamp(health_ratio, 0.0, 1.0) * 100.0,
 		sprint_label,
 		clamp(stamina_ratio, 0.0, 1.0) * 100.0,
-		hand_status,
-		interaction_label
+		hand_status
 	]
+	_update_interaction_prompt(interaction_label)
 	health_fill.size.x = GAUGE_FILL_WIDTH * clamp(health_ratio, 0.0, 1.0)
 	health_fill.color = Color(0.94, 0.35, 0.18, 0.96) if health_ratio < 0.3 else Color(0.72, 0.12, 0.1, 0.96)
 	stamina_fill.size.x = GAUGE_FILL_WIDTH * clamp(stamina_ratio, 0.0, 1.0)
 	stamina_fill.color = Color(0.78, 0.55, 0.35, 0.95) if stamina_ratio < 0.25 else Color(0.54, 0.78, 0.42, 0.95)
+
+func _create_interaction_prompt() -> void:
+	interaction_prompt_root = Control.new()
+	interaction_prompt_root.name = "InteractionPromptRoot"
+	interaction_prompt_root.visible = false
+	interaction_prompt_root.anchor_left = 0.5
+	interaction_prompt_root.anchor_right = 0.5
+	interaction_prompt_root.anchor_top = 1.0
+	interaction_prompt_root.anchor_bottom = 1.0
+	interaction_prompt_root.offset_left = -220.0
+	interaction_prompt_root.offset_right = 220.0
+	interaction_prompt_root.offset_top = -118.0
+	interaction_prompt_root.offset_bottom = -54.0
+	add_child(interaction_prompt_root)
+
+	interaction_key_label = Label.new()
+	interaction_key_label.name = "InteractionKeyLabel"
+	interaction_key_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	interaction_key_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	interaction_key_label.anchor_left = 0.0
+	interaction_key_label.anchor_right = 1.0
+	interaction_key_label.anchor_top = 0.0
+	interaction_key_label.anchor_bottom = 0.0
+	interaction_key_label.offset_left = 0.0
+	interaction_key_label.offset_right = 0.0
+	interaction_key_label.offset_top = 0.0
+	interaction_key_label.offset_bottom = 32.0
+	interaction_key_label.add_theme_font_size_override("font_size", 22)
+	interaction_key_label.add_theme_color_override("font_color", Color(0.92, 0.9, 0.82, 0.94))
+	interaction_prompt_root.add_child(interaction_key_label)
+
+	interaction_target_label = Label.new()
+	interaction_target_label.name = "InteractionTargetLabel"
+	interaction_target_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	interaction_target_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	interaction_target_label.anchor_left = 0.0
+	interaction_target_label.anchor_right = 1.0
+	interaction_target_label.anchor_top = 0.0
+	interaction_target_label.anchor_bottom = 0.0
+	interaction_target_label.offset_left = 0.0
+	interaction_target_label.offset_right = 0.0
+	interaction_target_label.offset_top = 30.0
+	interaction_target_label.offset_bottom = 58.0
+	interaction_target_label.add_theme_font_size_override("font_size", 16)
+	interaction_target_label.add_theme_color_override("font_color", Color(0.76, 0.74, 0.68, 0.58))
+	interaction_target_label.modulate = Color(1.0, 1.0, 1.0, 0.58)
+	interaction_prompt_root.add_child(interaction_target_label)
+
+func _update_interaction_prompt(raw_label: String) -> void:
+	if interaction_prompt_root == null:
+		return
+	var prompt := raw_label.strip_edges()
+	if prompt.is_empty():
+		interaction_prompt_root.visible = false
+		return
+	var parsed := _parse_interaction_prompt(prompt)
+	interaction_key_label.text = "[E] %s" % parsed.action
+	interaction_target_label.text = parsed.target
+	interaction_prompt_root.visible = true
+
+func _parse_interaction_prompt(prompt: String) -> Dictionary:
+	var suffixes := [
+		{"suffix": " 회수", "action": "줍기"},
+		{"suffix": " 줍기", "action": "줍기"},
+		{"suffix": " 열기", "action": "열기"},
+		{"suffix": " 닫기", "action": "닫기"},
+		{"suffix": " 받기", "action": "받기"},
+		{"suffix": " 정산받기", "action": "정산"},
+		{"suffix": " 당기기", "action": "당기기"},
+		{"suffix": " 놓기", "action": "놓기"},
+		{"suffix": " 뒤지기", "action": "뒤지기"},
+		{"suffix": "으로 이동하기", "action": "이동"},
+		{"suffix": "로 이동하기", "action": "이동"},
+		{"suffix": " 복귀하기", "action": "복귀"}
+	]
+	for rule in suffixes:
+		var suffix: String = rule.suffix
+		if prompt.ends_with(suffix):
+			var target := prompt.substr(0, prompt.length() - suffix.length()).strip_edges()
+			if target.is_empty():
+				target = prompt
+			return {"action": rule.action, "target": target}
+	return {"action": "상호작용", "target": prompt}
 
 func _create_bongo_monitor_panel() -> void:
 	bongo_monitor_panel = ColorRect.new()
