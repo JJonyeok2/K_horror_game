@@ -14,16 +14,33 @@ git switch k-horror-mvp2
 
 - Git
 - Godot 4.6.x
-- macOS 기준으로 테스트 중
-- Windows/Linux도 Godot 4.6.x에서 열 수 있지만, 현재 안내는 macOS 중심입니다.
+- Windows 10/11 또는 macOS
+- 이 저장소를 받을 작업 폴더
 
-Godot 다운로드:
+Godot 다운로드 주소:
 
-https://godotengine.org/download/macos/
+- Windows: https://godotengine.org/download/windows/
+- macOS: https://godotengine.org/download/macos/
+
+외부 PBR 머티리얼은 `assets/external/ambientcg/materials` 아래에 포함되어 있습니다. 별도 그래픽 패키지를 다시 받을 필요는 없습니다.
 
 ## 처음 설치하기
 
 원하는 작업 폴더에서 저장소를 복제합니다.
+
+### Windows 기준
+
+PowerShell 또는 Git Bash에서 실행합니다.
+
+```powershell
+git clone https://github.com/JJonyeok2/K_horror_game.git
+cd K_horror_game
+git switch k-horror-mvp2
+```
+
+### macOS 기준
+
+터미널에서 실행합니다.
 
 ```bash
 git clone https://github.com/JJonyeok2/K_horror_game.git
@@ -31,13 +48,20 @@ cd K_horror_game
 git switch k-horror-mvp2
 ```
 
-외부 PBR 머티리얼은 `assets/external/ambientcg/materials` 아래에 포함되어 있습니다. 별도 그래픽 패키지를 다시 받을 필요는 없습니다.
-
 ## Godot 앱으로 실행하기
+
+### Windows 기준
 
 1. Godot 4.6.x를 실행합니다.
 2. Project Manager에서 `Import`를 누릅니다.
-3. 이 저장소의 `project.godot` 파일을 선택합니다.
+3. 복제한 `K_horror_game` 폴더 안의 `project.godot` 파일을 선택합니다.
+4. 프로젝트가 열리면 우측 상단 실행 버튼을 누릅니다.
+
+### macOS 기준
+
+1. Godot 4.6.x를 실행합니다.
+2. Project Manager에서 `Import`를 누릅니다.
+3. 복제한 `K_horror_game` 폴더 안의 `project.godot` 파일을 선택합니다.
 4. 프로젝트가 열리면 우측 상단 실행 버튼을 누릅니다.
 
 메인 씬은 이미 `project.godot`에 지정되어 있습니다.
@@ -48,7 +72,29 @@ run/main_scene="res://scenes/Main.tscn"
 
 ## 터미널에서 실행하기
 
-Godot CLI가 `godot` 명령으로 잡혀 있으면 다음처럼 실행합니다.
+### Windows 기준
+
+Godot 실행 파일이 PATH에 잡혀 있으면 PowerShell에서 다음처럼 실행합니다.
+
+```powershell
+godot --path .
+```
+
+PATH에 등록하지 않았다면 Godot 실행 파일 경로를 직접 지정합니다. 파일명은 설치한 버전에 따라 다를 수 있습니다.
+
+```powershell
+& "C:\Program Files\Godot\Godot_v4.6.2-stable_win64.exe" --path .
+```
+
+Godot를 압축 파일로 받은 경우에는 저장소 폴더에서 실행 파일의 실제 위치를 넣습니다.
+
+```powershell
+& "D:\Tools\Godot\Godot_v4.6.2-stable_win64.exe" --path .
+```
+
+### macOS 기준
+
+Godot CLI가 `godot` 명령으로 잡혀 있으면 터미널에서 다음처럼 실행합니다.
 
 ```bash
 godot --path .
@@ -121,7 +167,23 @@ low_spec_mode=false
 
 ## 테스트 실행
 
-Godot CLI가 `godot`으로 잡혀 있으면 코어 테스트를 실행할 수 있습니다.
+### Windows 기준
+
+Godot CLI가 `godot`으로 잡혀 있으면 PowerShell에서 코어 테스트를 실행할 수 있습니다.
+
+```powershell
+godot --headless --path . --script res://tests/run_tests.gd
+```
+
+PATH에 등록하지 않았다면 실행 파일 경로를 직접 지정합니다.
+
+```powershell
+& "C:\Program Files\Godot\Godot_v4.6.2-stable_win64.exe" --headless --path . --script res://tests/run_tests.gd
+```
+
+### macOS 기준
+
+Godot CLI가 `godot`으로 잡혀 있으면 터미널에서 코어 테스트를 실행할 수 있습니다.
 
 ```bash
 godot --headless --path . --script res://tests/run_tests.gd
@@ -138,6 +200,7 @@ godot --headless --path . --script res://tests/scene/test_estate_density_and_int
 godot --headless --path . --script res://tests/scene/test_low_spec_mode.gd
 godot --headless --path . --script res://tests/scene/test_external_materials.gd
 godot --headless --path . --script res://tests/scene/test_estate_route_structure.gd
+godot --headless --path . --script res://tests/scene/test_estate_mesh_integrity.gd
 ```
 
 Godot CLI가 alias로만 등록되어 있지 않다면 macOS에서 다음처럼 직접 실행합니다.
@@ -145,6 +208,21 @@ Godot CLI가 alias로만 등록되어 있지 않다면 macOS에서 다음처럼 
 ```bash
 /Applications/Godot.app/Contents/MacOS/Godot --headless --path . --script res://tests/run_tests.gd
 ```
+
+### 렌더링/모델링 검증
+
+종가 고택 맵의 벽, 바닥, 장식 메쉬 유격과 Z-fighting 회귀는 아래 테스트로 확인합니다.
+
+```bash
+godot --headless --path . --script res://tests/scene/test_estate_mesh_integrity.gd
+```
+
+이 테스트는 다음을 검사합니다.
+
+- 대문 좌우 벽이 같은 기준면에 스냅되어 있는지
+- 안채와 숨겨진 내부 벽 모서리에 시야/충돌 틈이 없는지
+- 부적, 종이문, 종이부적 장식이 벽면이나 보에 박혀 깜빡이지 않는지
+- 박스 메쉬와 콜리전 크기가 서로 일치하는지
 
 ## 문제 해결
 

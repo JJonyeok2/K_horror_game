@@ -19,6 +19,7 @@ const PerformanceSettingsScript := preload("res://scripts/game/performance_setti
 const SPAWN_POINT := BongoVanPlanScript.PLAYER_START_POSITION
 const GATE_NODE_NAME := "OuterEstateGate"
 const GATE_POSITION := Vector3(0.0, 0.0, -12.0)
+const ESTATE_BOX_SNAP: float = 0.05
 const ESTATE_WALL_MIN_HEIGHT: float = 5.6
 const ESTATE_ROOF_MIN_CENTER_Y: float = 5.45
 
@@ -77,7 +78,7 @@ func build(main: Node) -> void:
 
 func _create_continuous_ground_and_route_stitches() -> void:
 	_create_floor("EstateContinuousGround", Vector3(0.0, -0.04, 62.0), Vector3(82.0, 0.12, 426.0), _fallback_color("packed_earth"), "packed_earth")
-	_create_floor("LongForestApproachRoad", Vector3(0.0, 0.025, 130.0), Vector3(8.5, 0.18, 288.0), _fallback_color("mud"), "mud")
+	_create_floor("LongForestApproachRoad", Vector3(0.0, -0.03, 130.0), Vector3(8.5, 0.16, 288.0), _fallback_color("mud"), "mud")
 	var stitches := [
 		{"name": "GateToCourtyardFloorStitch", "position": Vector3(0.0, 0.025, -16.0), "size": Vector3(12.0, 0.16, 2.4), "material_key": "packed_earth"},
 		{"name": "CourtyardToBuildingFloorStitch", "position": Vector3(0.0, 0.025, -64.0), "size": Vector3(18.0, 0.16, 3.0), "material_key": "mud"},
@@ -113,18 +114,10 @@ func _create_planned_walls() -> void:
 			position = _keep_bottom_position(position, size, raised_size)
 			size = raised_size
 		if label == "ApproachWallLeft":
-			_create_box("ApproachWallLeftNorth", Vector3(position.x, position.y, 16.0), Vector3(size.x, size.y, 18.0), _fallback_color(material_key), material_key)
-			_create_box("ApproachWallLeftMiddleSeal", Vector3(position.x, position.y, 1.0), Vector3(size.x, size.y, 12.0), _fallback_color(material_key), material_key)
-			_create_box("ApproachWallLeftSouth", Vector3(position.x, position.y, -7.0), Vector3(size.x, size.y, 4.0), _fallback_color(material_key), material_key)
+			_create_box("ApproachWallLeftMiddleSeal", position, size, _fallback_color(material_key), material_key)
 			continue
 		if label == "ApproachWallRight":
-			_create_box("ApproachWallRightNorth", Vector3(position.x, position.y, 16.0), Vector3(size.x, size.y, 18.0), _fallback_color(material_key), material_key)
-			_create_box("ApproachWallRightMiddleSeal", Vector3(position.x, position.y, 1.0), Vector3(size.x, size.y, 12.0), _fallback_color(material_key), material_key)
-			_create_box("ApproachWallRightSouth", Vector3(position.x, position.y, -7.0), Vector3(size.x, size.y, 4.0), _fallback_color(material_key), material_key)
-			continue
-		if label == "OuterEstateGateLeftWall":
-			_create_box("OuterEstateGateLeftWallInner", Vector3(-7.0, position.y, position.z), Vector3(2.9, size.y, size.z), _fallback_color(material_key), material_key)
-			_create_box("OuterEstateGateLeftWallOuter", Vector3(-15.0, position.y, position.z), Vector3(1.9, size.y, size.z), _fallback_color(material_key), material_key)
+			_create_box("ApproachWallRightMiddleSeal", position, size, _fallback_color(material_key), material_key)
 			continue
 		_create_box(label, position, size, _fallback_color(material_key), material_key)
 
@@ -296,17 +289,17 @@ func _create_main_house_building() -> void:
 	_create_tall_wall_box("MainHouseFrontWallLeft", Vector3(-13.8, 1.7, -73.4), Vector3(16.8, 3.4, 0.55), "old_plaster")
 	_create_tall_wall_box("MainHouseFrontWallRight", Vector3(13.8, 1.7, -73.4), Vector3(16.8, 3.4, 0.55), "old_plaster")
 	_create_box("MainHouseDoorThreshold", Vector3(0.0, 0.22, -73.15), Vector3(8.2, 0.22, 1.2), _fallback_color("aged_wood"), "aged_wood")
-	_create_tall_wall_box("MainHouseLeftOuterWall", Vector3(-22.0, 1.65, -93.0), Vector3(0.65, 3.3, 39.0), "old_plaster")
-	_create_tall_wall_box("MainHouseRightOuterWall", Vector3(22.0, 1.65, -93.0), Vector3(0.65, 3.3, 39.0), "old_plaster")
+	_create_tall_wall_box("MainHouseLeftOuterWall", Vector3(-22.0, 1.65, -93.25), Vector3(0.65, 3.3, 40.5), "old_plaster")
+	_create_tall_wall_box("MainHouseRightOuterWall", Vector3(22.0, 1.65, -93.25), Vector3(0.65, 3.3, 40.5), "old_plaster")
 	_create_box("MainHouseCenterPartition", Vector3(-9.2, 1.35, -86.0), Vector3(11.6, 2.7, 0.4), _fallback_color("aged_wood"), "aged_wood")
 	_create_box("MainHouseCenterPartitionRight", Vector3(9.2, 1.35, -86.0), Vector3(11.6, 2.7, 0.4), _fallback_color("aged_wood"), "aged_wood")
 	_create_box("MainHouseRearPartitionLeft", Vector3(-9.8, 1.35, -96.0), Vector3(10.8, 2.7, 0.4), _fallback_color("aged_wood"), "aged_wood")
 	_create_box("MainHouseRearPartitionRight", Vector3(9.8, 1.35, -96.0), Vector3(10.8, 2.7, 0.4), _fallback_color("aged_wood"), "aged_wood")
 	_create_box("MainHouseRoof", Vector3(0.0, 4.9, -93.0), Vector3(48.5, 0.45, 43.0), _fallback_color("roof_tile"), "roof_tile")
 	_create_box("MainHouseRoofFrontLip", Vector3(0.0, 4.55, -72.0), Vector3(50.0, 0.35, 1.4), _fallback_color("roof_tile"), "roof_tile")
-	_add_visual_box_world("MainHousePaperDoorA", Vector3(-12.4, 1.45, -73.72), Vector3(1.4, 2.15, 0.05), _fallback_color("paper"), "paper")
-	_add_visual_box_world("MainHousePaperDoorB", Vector3(8.2, 1.45, -73.72), Vector3(1.4, 2.15, 0.05), _fallback_color("paper"), "paper")
-	_add_visual_box_world("MainHousePaperDoorC", Vector3(12.4, 1.45, -73.72), Vector3(1.4, 2.15, 0.05), _fallback_color("paper"), "paper")
+	_add_visual_box_world("MainHousePaperDoorA", Vector3(-12.4, 1.45, -73.05), Vector3(1.4, 2.15, 0.05), _fallback_color("paper"), "paper")
+	_add_visual_box_world("MainHousePaperDoorB", Vector3(8.2, 1.45, -73.05), Vector3(1.4, 2.15, 0.05), _fallback_color("paper"), "paper")
+	_add_visual_box_world("MainHousePaperDoorC", Vector3(12.4, 1.45, -73.05), Vector3(1.4, 2.15, 0.05), _fallback_color("paper"), "paper")
 	_create_interactable_box("MainHouseSlidingDoor", Vector3(0.0, 1.35, -73.5), Vector3(2.4, 2.15, 0.14), _fallback_color("aged_wood"), "aged_wood", "안채 문 열기", "안채 문 닫기", Vector3(5.4, 0.0, 0.0), Vector3.ZERO)
 	_add_visual_box_world("MainHouseLeftRoomPaperWall", Vector3(-5.2, 1.5, -86.0), Vector3(0.06, 2.2, 8.8), _fallback_color("paper"), "paper")
 	_add_visual_box_world("MainHouseRightRoomPaperWall", Vector3(5.2, 1.5, -86.0), Vector3(0.06, 2.2, 8.8), _fallback_color("paper"), "paper")
@@ -322,8 +315,8 @@ func _create_hidden_main_house_interior() -> void:
 	_create_tall_wall_box("MainHouseHiddenFalseWall", Vector3(-5.6, 1.55, -98.0), Vector3(7.8, 3.1, 0.45), "aged_wood")
 	_create_tall_wall_box("MainHouseHiddenScreenRight", Vector3(5.2, 1.55, -103.0), Vector3(5.6, 3.1, 0.45), "aged_wood")
 	_create_tall_wall_box("MainHouseHiddenBackWall", Vector3(0.0, 1.65, -115.2), Vector3(9.0, 3.3, 0.55), "old_plaster")
-	_create_tall_wall_box("MainHouseHiddenLeftWall", Vector3(-7.2, 1.45, -101.5), Vector3(0.45, 2.9, 17.5), "old_plaster")
-	_create_tall_wall_box("MainHouseHiddenRightWall", Vector3(7.2, 1.45, -101.5), Vector3(0.45, 2.9, 17.5), "old_plaster")
+	_create_tall_wall_box("MainHouseHiddenLeftWall", Vector3(-7.2, 1.45, -103.85), Vector3(0.45, 2.9, 23.2), "old_plaster")
+	_create_tall_wall_box("MainHouseHiddenRightWall", Vector3(7.2, 1.45, -103.85), Vector3(0.45, 2.9, 23.2), "old_plaster")
 	_create_box("MainHouseHiddenAncestralChest", Vector3(0.0, 0.55, -111.8), Vector3(2.0, 0.75, 0.9), _fallback_color("black_wood"), "black_wood")
 
 func _create_secondary_roofed_buildings() -> void:
@@ -341,8 +334,8 @@ func _create_front_courtyard_outbuildings() -> void:
 	_create_box("FrontSarangchaeRightPost", left_origin + Vector3(5.8, 1.35, -3.2), Vector3(0.45, 2.7, 3.2), _fallback_color("old_plaster"), "old_plaster")
 	_create_box("FrontSarangchaeFrontRail", left_origin + Vector3(0.0, 0.82, -5.0), Vector3(11.8, 0.5, 0.35), _fallback_color("aged_wood"), "aged_wood")
 	_create_box("FrontSarangchaeRoof", left_origin + Vector3(0.0, 3.08, 0.0), Vector3(13.4, 0.38, 11.2), _fallback_color("roof_tile"), "roof_tile")
-	_add_visual_box_world("FrontSarangchaePaperDoorA", left_origin + Vector3(-2.2, 1.55, -5.18), Vector3(1.2, 1.8, 0.05), _fallback_color("paper"), "paper")
-	_add_visual_box_world("FrontSarangchaePaperDoorB", left_origin + Vector3(1.8, 1.55, -5.18), Vector3(1.2, 1.8, 0.05), _fallback_color("paper"), "paper")
+	_add_visual_box_world("FrontSarangchaePaperDoorA", left_origin + Vector3(-2.2, 1.55, -4.75), Vector3(1.2, 1.8, 0.05), _fallback_color("paper"), "paper")
+	_add_visual_box_world("FrontSarangchaePaperDoorB", left_origin + Vector3(1.8, 1.55, -4.75), Vector3(1.2, 1.8, 0.05), _fallback_color("paper"), "paper")
 
 	var right_origin := Vector3(25.0, 0.0, -43.0)
 	_create_box("FrontStorehouseAnnexFloor", right_origin + Vector3(0.0, 0.14, 0.0), Vector3(10.5, 0.28, 8.5), _fallback_color("packed_earth"), "packed_earth")
@@ -375,8 +368,8 @@ func _create_servant_quarters() -> void:
 	_create_box("ServantQuartersFrontRight", origin + Vector3(2.9, 1.45, -4.4), Vector3(4.2, 2.9, 0.45), _fallback_color("old_plaster"), "old_plaster")
 	_create_box("ServantQuartersRoof", origin + Vector3(0.0, 3.15, 0.0), Vector3(11.2, 0.35, 10.2), _fallback_color("roof_tile"), "roof_tile")
 	_create_interactable_box("ServantQuartersDoor", origin + Vector3(0.0, 1.12, -4.55), Vector3(1.35, 2.05, 0.16), _fallback_color("aged_wood"), "aged_wood", "행랑채 문 열기", "행랑채 문 닫기", Vector3(0.85, 0.0, 0.0), Vector3(0.0, 72.0, 0.0))
-	_add_visual_box_world("ServantQuartersPaperPanel", origin + Vector3(-3.7, 1.6, -4.66), Vector3(1.0, 1.55, 0.05), _fallback_color("paper"), "paper")
-	_add_visual_box_world("ServantQuartersHangingCloth", origin + Vector3(3.5, 1.6, -4.66), Vector3(0.9, 1.35, 0.05), Color(0.36, 0.32, 0.25), "paper")
+	_add_visual_box_world("ServantQuartersPaperPanel", origin + Vector3(-3.7, 1.6, -4.10), Vector3(1.0, 1.55, 0.05), _fallback_color("paper"), "paper")
+	_add_visual_box_world("ServantQuartersHangingCloth", origin + Vector3(3.5, 1.6, -4.10), Vector3(0.9, 1.35, 0.05), Color(0.36, 0.32, 0.25), "paper")
 
 func _create_collapsed_kitchen() -> void:
 	var origin := Vector3(-27.0, 0.0, -116.5)
@@ -442,9 +435,9 @@ func _create_gate() -> void:
 	_create_tall_wall_box("GateBypassBlockRight", Vector3(5.05, 1.7, -12.0), Vector3(1.1, 3.4, 1.25), "old_plaster")
 	_create_tall_wall_box("GateSideSeamLeft", Vector3(-5.45, 1.15, -10.5), Vector3(0.55, 2.3, 3.0), "old_plaster")
 	_create_tall_wall_box("GateSideSeamRight", Vector3(5.45, 1.15, -10.5), Vector3(0.55, 2.3, 3.0), "old_plaster")
-	_create_box("OuterGateTalismanA", Vector3(-1.25, 2.55, -12.35), Vector3(0.38, 0.82, 0.05), Color(0.86, 0.74, 0.42), "paper")
-	_create_box("OuterGateTalismanB", Vector3(1.25, 2.55, -12.35), Vector3(0.38, 0.82, 0.05), Color(0.86, 0.74, 0.42), "paper")
-	_create_box("OuterGateGeumjulRope", Vector3(0.0, 2.95, -12.38), Vector3(7.3, 0.08, 0.08), Color(0.74, 0.62, 0.32), "straw")
+	_create_box("OuterGateTalismanA", Vector3(-1.25, 2.55, -11.68), Vector3(0.38, 0.82, 0.05), Color(0.86, 0.74, 0.42), "paper")
+	_create_box("OuterGateTalismanB", Vector3(1.25, 2.55, -11.68), Vector3(0.38, 0.82, 0.05), Color(0.86, 0.74, 0.42), "paper")
+	_create_box("OuterGateGeumjulRope", Vector3(0.0, 2.95, -11.66), Vector3(7.3, 0.08, 0.08), Color(0.74, 0.62, 0.32), "straw")
 
 func _create_side_passage_risk_trigger(main: Node) -> void:
 	var area := Area3D.new()
@@ -526,7 +519,7 @@ func _create_outhouse(label: String, position: Vector3) -> void:
 	_create_child_body(house, "%sFrontLeft" % label, Vector3(-1.25, 0.1, -2.15), Vector3(1.55, 2.3, 0.22), _fallback_color("straw"), "straw")
 	_create_child_body(house, "%sFrontRight" % label, Vector3(1.25, 0.1, -2.15), Vector3(1.55, 2.3, 0.22), _fallback_color("straw"), "straw")
 	_create_child_body(house, "%sRoof" % label, Vector3(0.0, 1.38, 0.0), Vector3(4.7, 0.3, 5.0), _fallback_color("roof_tile"), "roof_tile")
-	_add_visual_box(house, "%sDarkDoorway" % label, Vector3(0.0, 0.0, -2.28), Vector3(1.0, 1.85, 0.05), Color(0.02, 0.018, 0.014), "")
+	_add_visual_box(house, "%sDarkDoorway" % label, Vector3(0.0, 0.0, -2.34), Vector3(1.0, 1.85, 0.05), Color(0.02, 0.018, 0.014), "")
 
 func _create_storehouse(label: String, position: Vector3, size: Vector3) -> void:
 	var shed := Node3D.new()
@@ -563,7 +556,7 @@ func _create_charm_cluster(label: String, position: Vector3, size: Vector3) -> v
 	for i in range(7):
 		var x := -size.x * 0.42 + float(i) * size.x / 7.0
 		var y := sin(float(i) * 1.7) * 0.18
-		_add_visual_box(root, "%sPaper%d" % [label, i + 1], Vector3(x, y, 0.0), Vector3(0.34, 0.95, 0.04), _fallback_color("paper"), "paper")
+		_add_visual_box(root, "%sPaper%d" % [label, i + 1], Vector3(x, y, 0.12), Vector3(0.34, 0.95, 0.04), _fallback_color("paper"), "paper")
 	_create_box("%sBeam" % label, position + Vector3(0.0, size.y * 0.45, 0.0), Vector3(size.x, 0.12, 0.12), _fallback_color("black_wood"), "black_wood")
 
 func _create_bongo_van() -> void:
@@ -761,12 +754,43 @@ func _create_child_body(parent: Node3D, label: String, local_position: Vector3, 
 func _adjust_estate_structure_box(label: String, position: Vector3, size: Vector3) -> Dictionary:
 	if _skip_estate_height_adjustment(label):
 		return {"position": position, "size": size}
+	if _should_snap_estate_box(label):
+		var snapped := _snap_estate_footprint(position, size)
+		position = snapped["position"]
+		size = snapped["size"]
 	if _is_estate_wall_like(label):
 		var raised_size := _heightened_size(size, ESTATE_WALL_MIN_HEIGHT)
 		return {"position": _keep_bottom_position(position, size, raised_size), "size": raised_size}
 	if label.contains("Roof") and size.y <= 0.8:
 		position.y = max(position.y, ESTATE_ROOF_MIN_CENTER_Y)
 	return {"position": position, "size": size}
+
+func _should_snap_estate_box(label: String) -> bool:
+	return (
+		label.contains("Wall")
+		or label.contains("Gate")
+		or label.contains("Roof")
+		or label.contains("Floor")
+		or label.contains("Ground")
+		or label.contains("Road")
+		or label.contains("Threshold")
+		or label.contains("Stitch")
+		or label.contains("Seal")
+		or label.contains("Chamber")
+		or label.contains("Porch")
+	)
+
+func _snap_estate_footprint(position: Vector3, size: Vector3) -> Dictionary:
+	return {
+		"position": Vector3(_snap_float(position.x), position.y, _snap_float(position.z)),
+		"size": Vector3(_snap_size_component(size.x), size.y, _snap_size_component(size.z)),
+	}
+
+func _snap_size_component(value: float) -> float:
+	return max(ESTATE_BOX_SNAP, _snap_float(value))
+
+func _snap_float(value: float) -> float:
+	return round(value / ESTATE_BOX_SNAP) * ESTATE_BOX_SNAP
 
 func _skip_estate_height_adjustment(label: String) -> bool:
 	return (
@@ -850,13 +874,17 @@ func _add_visual_box_world(label: String, position: Vector3, size: Vector3, colo
 func _make_material(material_key: String, fallback_color: Color) -> StandardMaterial3D:
 	var external_material := _try_make_external_material(material_key)
 	if external_material != null:
-		return external_material
+		return _finalize_material(external_material)
 	var surface_name := str(MATERIAL_SURFACES.get(material_key, ""))
 	if surface_name != "":
-		return VisualPaletteScript.make_material(surface_name)
+		return _finalize_material(VisualPaletteScript.make_material(surface_name))
 	var material := StandardMaterial3D.new()
 	material.albedo_color = fallback_color
 	material.roughness = 0.86
+	return _finalize_material(material)
+
+func _finalize_material(material: StandardMaterial3D) -> StandardMaterial3D:
+	material.cull_mode = BaseMaterial3D.CULL_DISABLED
 	return material
 
 func _try_make_external_material(material_key: String) -> StandardMaterial3D:
