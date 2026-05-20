@@ -121,6 +121,11 @@ func _create_planned_walls() -> void:
 		if label == "ApproachWallRight":
 			_create_box("ApproachWallRightMiddleSeal", position, size, _fallback_color(material_key), material_key)
 			continue
+		if label == "MainHouseBackWall":
+			var split_size := Vector3(16.8, size.y, size.z)
+			_create_box("MainHouseBackWall", Vector3(-14.1, position.y, position.z), split_size, _fallback_color(material_key), material_key)
+			_create_box("MainHouseBackWallRight", Vector3(14.1, position.y, position.z), split_size, _fallback_color(material_key), material_key)
+			continue
 		_create_box(label, position, size, _fallback_color(material_key), material_key)
 
 func _create_route_guidance_walls() -> void:
@@ -164,18 +169,18 @@ func _create_route_guidance_walls() -> void:
 	_create_tall_wall_box("ShrineApproachRightWall", Vector3(9.5, 1.25, -119.0), Vector3(0.65, 2.5, 24.0), "shrine_red")
 
 func _create_approach_forest() -> void:
-	for i in range(17):
-		var z := 260.0 - float(i) * 16.5
-		var left_height := 8.5 + float(i % 4) * 0.9
-		var right_height := 9.0 + float((i + 2) % 4) * 0.8
-		_create_forest_tree("ApproachForestTreeLeft%02d" % [i + 1], Vector3(-7.2 - float(i % 3) * 1.1, 0.0, z), left_height)
-		_create_forest_tree("ApproachForestTreeRight%02d" % [i + 1], Vector3(7.2 + float((i + 1) % 3) * 1.05, 0.0, z - 7.5), right_height)
+	for i in range(34):
+		var z := 260.0 - float(i) * 8.2
+		var left_height := 11.8 + float(i % 5) * 0.9
+		var right_height := 12.2 + float((i + 2) % 5) * 0.85
+		_create_forest_tree("ApproachForestTreeLeft%02d" % [i + 1], Vector3(-6.6 - float(i % 4) * 0.95, 0.0, z), left_height)
+		_create_forest_tree("ApproachForestTreeRight%02d" % [i + 1], Vector3(6.6 + float((i + 1) % 4) * 0.9, 0.0, z - 4.2), right_height)
 		if i % 2 == 0:
-			_create_box("ApproachBrushCluster%02d" % [i + 1], Vector3(-3.7, 0.55, z - 3.0), Vector3(1.9, 0.85, 2.2), _fallback_color("wet_moss"), "mud")
-			_create_box("ApproachBrushClusterRight%02d" % [i + 1], Vector3(3.7, 0.55, z - 8.0), Vector3(1.8, 0.82, 2.1), _fallback_color("wet_moss"), "mud")
-		if i % 4 == 0:
-			var canopy_x := -6.6 if i % 8 == 0 else 6.6
-			_create_box("DeepForestCanopy%02d" % [i + 1], Vector3(canopy_x, 7.2, z - 5.0), Vector3(3.2, 0.45, 8.6), _fallback_color("dead_tree"), "dead_tree")
+			_create_box("ApproachBrushCluster%02d" % [i + 1], Vector3(-4.9, 0.62, z - 2.2), Vector3(2.2, 1.0, 2.7), _fallback_color("wet_moss"), "mud")
+			_create_box("ApproachBrushClusterRight%02d" % [i + 1], Vector3(4.9, 0.62, z - 5.3), Vector3(2.1, 0.98, 2.6), _fallback_color("wet_moss"), "mud")
+		if i % 3 == 0:
+			var canopy_x := -6.8 if i % 6 == 0 else 6.8
+			_create_box("DeepForestCanopy%02d" % [i + 1], Vector3(canopy_x, 8.4, z - 3.8), Vector3(3.6, 0.5, 10.2), _fallback_color("dead_tree"), "dead_tree")
 
 	_create_box("DeepForestCanopyA", Vector3(-6.8, 7.45, 188.0), Vector3(3.4, 0.5, 11.0), _fallback_color("dead_tree"), "dead_tree")
 	_create_box("DeepForestCanopyB", Vector3(6.8, 7.25, 92.0), Vector3(3.4, 0.48, 10.0), _fallback_color("dead_tree"), "dead_tree")
@@ -198,9 +203,9 @@ func _create_approach_forest() -> void:
 	_create_return_route_obstacles()
 
 func _create_return_route_obstacles() -> void:
-	_create_box("ReturnRouteBaffleLeft01", Vector3(-1.9, 0.74, 218.0), Vector3(5.0, 1.2, 0.55), _fallback_color("wet_moss"), "mud")
-	_create_box("ReturnRouteBaffleRight01", Vector3(1.9, 0.74, 171.0), Vector3(5.0, 1.2, 0.55), _fallback_color("wet_moss"), "mud")
-	_create_box("ReturnRouteBaffleLeft02", Vector3(-1.85, 0.74, 116.0), Vector3(5.1, 1.2, 0.55), _fallback_color("wet_moss"), "mud")
+	_create_box("ReturnRouteBaffleLeft01", Vector3(-4.45, 0.58, 218.0), Vector3(2.2, 0.88, 0.55), _fallback_color("wet_moss"), "mud")
+	_create_box("ReturnRouteBaffleRight01", Vector3(4.45, 0.58, 171.0), Vector3(2.2, 0.88, 0.55), _fallback_color("wet_moss"), "mud")
+	_create_box("ReturnRouteBaffleLeft02", Vector3(-4.5, 0.58, 116.0), Vector3(2.25, 0.88, 0.55), _fallback_color("wet_moss"), "mud")
 
 	var ramp_a := _create_box("ReturnRouteHillRamp01", Vector3(0.0, 0.16, 234.0), Vector3(7.6, 0.22, 17.0), _fallback_color("mud"), "mud")
 	ramp_a.rotation_degrees.x = -3.5
@@ -327,7 +332,7 @@ func _create_main_house_building() -> void:
 	_add_visual_box_world("MainHousePaperDoorA", Vector3(-12.4, 1.45, -73.05), Vector3(1.4, 2.15, 0.05), _fallback_color("paper"), "paper")
 	_add_visual_box_world("MainHousePaperDoorB", Vector3(8.2, 1.45, -73.05), Vector3(1.4, 2.15, 0.05), _fallback_color("paper"), "paper")
 	_add_visual_box_world("MainHousePaperDoorC", Vector3(12.4, 1.45, -73.05), Vector3(1.4, 2.15, 0.05), _fallback_color("paper"), "paper")
-	_create_interactable_box("MainHouseSlidingDoor", Vector3(0.0, 1.35, -73.5), Vector3(2.4, 2.15, 0.14), _fallback_color("aged_wood"), "aged_wood", "안채 문 열기", "안채 문 닫기", Vector3(5.4, 0.0, 0.0), Vector3.ZERO)
+	_create_interactable_box("MainHouseSlidingDoor", Vector3(0.0, 1.35, -73.5), Vector3(10.8, 2.15, 0.14), _fallback_color("aged_wood"), "aged_wood", "안채 문 열기", "안채 문 닫기", Vector3(11.2, 0.0, 0.0), Vector3.ZERO)
 	_add_visual_box_world("MainHouseLeftRoomPaperWall", Vector3(-5.2, 1.5, -86.0), Vector3(0.06, 2.2, 8.8), _fallback_color("paper"), "paper")
 	_add_visual_box_world("MainHouseRightRoomPaperWall", Vector3(5.2, 1.5, -86.0), Vector3(0.06, 2.2, 8.8), _fallback_color("paper"), "paper")
 	_create_box("MainHouseLowTable", Vector3(-4.0, 0.42, -89.5), Vector3(2.2, 0.32, 1.1), _fallback_color("black_wood"), "black_wood")
@@ -341,7 +346,8 @@ func _create_hidden_main_house_interior() -> void:
 	_create_box("MainHouseHiddenDeepChamber", Vector3(0.0, 0.26, -111.0), Vector3(4.6, 0.24, 7.8), _fallback_color("shadow"), "shadow")
 	_create_tall_wall_box("MainHouseHiddenFalseWall", Vector3(-5.6, 1.55, -98.0), Vector3(7.8, 3.1, 0.45), "aged_wood")
 	_create_tall_wall_box("MainHouseHiddenScreenRight", Vector3(5.2, 1.55, -103.0), Vector3(5.6, 3.1, 0.45), "aged_wood")
-	_create_tall_wall_box("MainHouseHiddenBackWall", Vector3(0.0, 1.65, -115.2), Vector3(9.0, 3.3, 0.55), "old_plaster")
+	_create_tall_wall_box("MainHouseHiddenBackWall", Vector3(-7.2, 1.65, -115.2), Vector3(2.8, 3.3, 0.55), "old_plaster")
+	_create_tall_wall_box("MainHouseHiddenBackWallRight", Vector3(4.9, 1.65, -115.2), Vector3(4.6, 3.3, 0.55), "old_plaster")
 	_create_tall_wall_box("MainHouseHiddenLeftWall", Vector3(-7.2, 1.45, -103.85), Vector3(0.45, 2.9, 23.2), "old_plaster")
 	_create_tall_wall_box("MainHouseHiddenRightWall", Vector3(7.2, 1.45, -103.85), Vector3(0.45, 2.9, 23.2), "old_plaster")
 	_create_box("MainHouseHiddenAncestralChest", Vector3(0.0, 0.55, -111.8), Vector3(2.0, 0.75, 0.9), _fallback_color("black_wood"), "black_wood")

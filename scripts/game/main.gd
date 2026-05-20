@@ -29,6 +29,7 @@ const WORLD_SCOPE_BONGO_BODY := "bongo_body"
 const WORLD_SCOPE_BONGO_HUB_ONLY := "bongo_hub_only"
 const WORLD_SCOPE_BONGO_DEPARTURE := "bongo_departure"
 const WORLD_SCOPE_SETTLEMENT := "settlement"
+const SHRINE_THREAT_GRACE_SECONDS: float = 8.0
 
 var player: Node
 var quota := QuotaTracker.new(800)
@@ -58,6 +59,7 @@ var _stored_cargo_visual_index: int = 0
 var _bongo_travel_elapsed: float = 0.0
 var _world_map_root: Node3D
 var _bongo_monitor_open: bool = false
+var _threat_spawn_grace_remaining: float = 0.0
 
 func _ready() -> void:
 	audio_director = AudioDirectorScript.new()
@@ -169,6 +171,7 @@ func _process(delta: float) -> void:
 	_update_bongo_quota_monitor()
 
 func _physics_process(delta: float) -> void:
+	_update_threat_spawn_grace(delta)
 	_update_threat_health_loop(delta)
 
 func _update_startup_sequence(delta: float) -> void:
@@ -196,6 +199,8 @@ func register_artifact(artifact: Node) -> void:
 	artifact.picked_up.connect(_on_artifact_picked_up)
 
 func _on_artifact_picked_up(definition: ArtifactDefinition) -> void:
+	if definition.has_tag("shrine_item") and definition.resentment_gain >= 4:
+		_threat_spawn_grace_remaining = max(_threat_spawn_grace_remaining, SHRINE_THREAT_GRACE_SECONDS)
 	resentment.add_resentment(definition.resentment_gain, "%s 회수" % definition.display_name)
 
 func _on_resentment_changed(value: int, stage: int, reason: String) -> void:
@@ -204,6 +209,11 @@ func _on_resentment_changed(value: int, stage: int, reason: String) -> void:
 	_update_threat_manifestation(stage)
 
 func _update_threat_manifestation(stage: int) -> void:
+	if _threat_spawn_grace_remaining > 0.0:
+		for threat_stage in _threat_active_stages(stage):
+			if _threat_can_damage(threat_stage):
+				_hide_threat_for_stage(threat_stage)
+		return
 	for threat_stage in _threat_active_stages(stage):
 		if _threat_can_damage(threat_stage) and _threat_zone_allows_player(threat_stage):
 			_ensure_threat_manifestation(threat_stage)
@@ -240,6 +250,11 @@ func _update_threat_health_loop(delta: float) -> void:
 	if _player_down or player == null:
 		return
 	var stage := resentment.stage()
+	if _threat_spawn_grace_remaining > 0.0:
+		for threat_stage in _threat_active_stages(stage):
+			if _threat_can_damage(threat_stage):
+				_hide_threat_for_stage(threat_stage)
+		return
 	var player_node: Node3D = player as Node3D
 	if player_node == null:
 		return
@@ -270,6 +285,13 @@ func _update_threat_health_loop(delta: float) -> void:
 				_apply_threat_damage(threat_stage)
 		else:
 			_threat_attack_elapsed_by_stage[threat_stage] = 0.0
+
+func _update_threat_spawn_grace(delta: float) -> void:
+	if _threat_spawn_grace_remaining <= 0.0:
+		return
+	_threat_spawn_grace_remaining = max(0.0, _threat_spawn_grace_remaining - delta)
+	if is_equal_approx(_threat_spawn_grace_remaining, 0.0):
+		_update_threat_manifestation(resentment.stage())
 
 func _move_threat_toward_target(threat: Node3D, target_position: Vector3, stage: int, _distance_to_player: float, delta: float) -> void:
 	var pattern := _threat_attack_pattern(stage)

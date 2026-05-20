@@ -324,7 +324,7 @@ const ARTIFACT_SPAWNS := [
 		"resentment": 6,
 		"tags": ["shrine_item", "ancestor_item", "high_value"],
 		"hand_slots": 2,
-		"positions": [Vector3(0.0, 1.25, -141.0)]
+		"positions": [Vector3(0.0, 1.78, -141.0)]
 	},
 	{
 		"id": "ritual_jegi",
@@ -334,7 +334,7 @@ const ARTIFACT_SPAWNS := [
 		"resentment": 5,
 		"tags": ["jegi", "제단", "shrine_item", "ritual"],
 		"hand_slots": 1,
-		"positions": [Vector3(-2.5, 1.25, -140.8), Vector3(2.5, 1.25, -140.8)]
+		"positions": [Vector3(-2.5, 1.76, -140.8), Vector3(2.5, 1.76, -140.8)]
 	}
 ]
 
