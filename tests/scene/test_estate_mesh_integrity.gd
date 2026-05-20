@@ -55,6 +55,8 @@ func _assert_gate_wall_seams_are_closed(main: Node) -> void:
 func _assert_gate_side_passages_are_blocked(main: Node) -> void:
 	_assert_blocked_lateral_passage(main, Vector3(-4.7, 1.6, -14.4), Vector3(-16.5, 1.6, -14.4), "left gate-side courtyard opening")
 	_assert_blocked_lateral_passage(main, Vector3(4.7, 1.6, -14.4), Vector3(16.5, 1.6, -14.4), "right gate-side courtyard opening")
+	_assert_blocked_lateral_passage(main, Vector3(-32.0, 1.35, -24.0), Vector3(-32.0, 1.35, -9.0), "left front courtyard outer opening")
+	_assert_blocked_lateral_passage(main, Vector3(32.0, 1.35, -24.0), Vector3(32.0, 1.35, -9.0), "right front courtyard outer opening")
 
 func _assert_blocked_lateral_passage(main: Node, start: Vector3, end: Vector3, label: String) -> void:
 	var space_state := main.get_viewport().world_3d.direct_space_state
@@ -75,6 +77,7 @@ func _assert_main_house_corner_seams_are_closed(main: Node) -> void:
 
 func _assert_route_floor_surfaces_are_separated(main: Node) -> void:
 	_assert_floor_overlay_clearance(main, "LongForestApproachRoad", "LongApproachRoad")
+	_assert_floor_overlay_clearance(main, "LeftSideYard", "SideYardChoke")
 
 func _assert_floor_overlay_clearance(main: Node, lower_label: String, upper_label: String) -> void:
 	var lower := _required_box(main, lower_label)

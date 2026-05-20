@@ -127,8 +127,8 @@ const FLOOR_ZONES := [
 	},
 	{
 		"name": "SideYardChoke",
-		"position": Vector3(-23.0, 0.02, -29.0),
-		"size": Vector3(6.0, 0.26, 12.0),
+		"position": Vector3(-23.0, 0.08, -29.0),
+		"size": Vector3(6.0, 0.24, 12.0),
 		"material_key": "dark_stone",
 		"tags": ["choke", "risk_exit"]
 	},
