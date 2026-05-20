@@ -701,6 +701,36 @@ func _create_settlement_office_map() -> void:
 	_create_box("SettlementOfficeOverheadBeamA", origin + Vector3(0.0, 3.15, 8.5), Vector3(43.0, 0.28, 0.42), _fallback_color("black_wood"), "black_wood")
 	_create_box("SettlementOfficeOverheadBeamB", origin + Vector3(0.0, 3.15, -4.0), Vector3(43.0, 0.28, 0.42), _fallback_color("black_wood"), "black_wood")
 	_create_bongo_settlement_station()
+	_create_settlement_office_bongo_van()
+
+func _create_settlement_office_bongo_van() -> void:
+	var origin: Vector3 = BongoVanPlanScript.SETTLEMENT_BONGO_ORIGIN
+	_create_box("SettlementOfficeBongoParkingPad", BongoVanPlanScript.SETTLEMENT_BONGO_PARKING_PAD_POSITION, BongoVanPlanScript.SETTLEMENT_BONGO_PARKING_PAD_SIZE, _fallback_color("packed_earth"), "packed_earth")
+	_create_box("SettlementOfficeBongoInteriorFloor", origin, Vector3(3.8, 0.18, 6.2), BongoVanPlanScript.COLOR_FLOOR, "van_paint")
+	_create_box("SettlementOfficeBongoLeftCargoWall", origin + Vector3(-2.05, 1.44, 0.15), Vector3(0.22, 2.55, 5.7), BongoVanPlanScript.COLOR_BODY, "van_paint")
+	_create_box("SettlementOfficeBongoRightCargoWall", origin + Vector3(2.05, 1.44, 0.15), Vector3(0.22, 2.55, 5.7), BongoVanPlanScript.COLOR_BODY, "van_paint")
+	_create_box("SettlementOfficeBongoRoof", origin + Vector3(0.0, 2.78, 0.15), Vector3(4.25, 0.22, 5.7), BongoVanPlanScript.COLOR_BODY, "van_paint")
+	_create_box("SettlementOfficeBongoCabin", origin + Vector3(0.0, 1.06, -4.05), Vector3(3.65, 1.74, 1.85), BongoVanPlanScript.COLOR_BODY_SHADOW, "van_paint")
+	_create_box("SettlementOfficeBongoWindshield", origin + Vector3(0.0, 1.65, -3.08), Vector3(2.85, 0.7, 0.12), BongoVanPlanScript.COLOR_GLASS, "glass")
+	_create_box("SettlementOfficeBongoFrontBumper", origin + Vector3(0.0, 0.42, -5.08), Vector3(3.65, 0.28, 0.22), BongoVanPlanScript.COLOR_TRIM, "metal")
+	_create_box("SettlementOfficeBongoRearStep", origin + Vector3(0.0, -0.04, 3.65), Vector3(3.45, 0.24, 0.85), BongoVanPlanScript.COLOR_TRIM, "metal")
+	var ramp := _create_box("SettlementOfficeBongoEntryRamp", origin + Vector3(0.0, -0.08, 4.35), Vector3(3.25, 0.14, 1.1), BongoVanPlanScript.COLOR_TRIM, "metal")
+	ramp.rotation_degrees.x = 3.5
+	_create_box("SettlementOfficeBongoOpenLeftRearDoor", origin + Vector3(-2.7, 1.1, 3.1), Vector3(0.22, 2.15, 1.5), BongoVanPlanScript.COLOR_BODY, "van_paint")
+	_create_box("SettlementOfficeBongoOpenRightRearDoor", origin + Vector3(2.7, 1.1, 3.1), Vector3(0.22, 2.15, 1.5), BongoVanPlanScript.COLOR_BODY, "van_paint")
+	_create_box("SettlementOfficeBongoWheelFrontLeft", origin + Vector3(-1.7, -0.12, -3.85), Vector3(0.45, 0.72, 0.72), BongoVanPlanScript.COLOR_TRIM, "metal")
+	_create_box("SettlementOfficeBongoWheelFrontRight", origin + Vector3(1.7, -0.12, -3.85), Vector3(0.45, 0.72, 0.72), BongoVanPlanScript.COLOR_TRIM, "metal")
+	_create_box("SettlementOfficeBongoWheelRearLeft", origin + Vector3(-1.7, -0.12, 2.15), Vector3(0.45, 0.72, 0.72), BongoVanPlanScript.COLOR_TRIM, "metal")
+	_create_box("SettlementOfficeBongoWheelRearRight", origin + Vector3(1.7, -0.12, 2.15), Vector3(0.45, 0.72, 0.72), BongoVanPlanScript.COLOR_TRIM, "metal")
+	var return_button := _create_box(
+		BongoVanPlanScript.SETTLEMENT_BONGO_RETURN_BUTTON_NAME,
+		BongoVanPlanScript.SETTLEMENT_BONGO_RETURN_BUTTON_POSITION,
+		BongoVanPlanScript.SETTLEMENT_BONGO_RETURN_BUTTON_SIZE,
+		Color(0.42, 0.05, 0.04),
+		"shrine_red"
+	)
+	return_button.set_script(BongoDepartureButtonScript)
+	_add_visual_box_world("SettlementOfficeBongoReturnButtonLamp", BongoVanPlanScript.SETTLEMENT_BONGO_RETURN_BUTTON_POSITION + Vector3(0.0, 0.04, 0.22), Vector3(0.34, 0.14, 0.04), Color(0.95, 0.08, 0.04), "shrine_red")
 
 func _create_extraction_zone() -> void:
 	var extraction := ExtractionScene.instantiate()

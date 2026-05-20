@@ -184,6 +184,35 @@ func _assert_bongo_deposit_waits_for_manual_settlement(main: Node) -> void:
 	if quota_text.find("최종") == -1 or quota_text.find("70") == -1:
 		_fail("BongoQuotaMonitor did not show finalized quota after settlement: %s" % quota_text)
 		return
+	await _assert_settlement_bongo_returns_to_hub(main, player)
+
+func _assert_settlement_bongo_returns_to_hub(main: Node, player: Node3D) -> void:
+	var settlement_bongo_floor := main.find_child("SettlementOfficeBongoInteriorFloor", true, false) as Node3D
+	if settlement_bongo_floor == null:
+		_fail("Settlement map needs its own parked bongo van")
+		return
+	if settlement_bongo_floor.global_position.distance_to(BongoVanPlanScript.SETTLEMENT_OFFICE_ORIGIN) > 36.0:
+		_fail("Settlement bongo should be placed at the settlement map, not reuse the hub van")
+		return
+	var settlement_return_button := main.find_child("SettlementOfficeBongoReturnButton", true, false)
+	if settlement_return_button == null or not settlement_return_button.has_method("interact"):
+		_fail("Settlement bongo needs an interactive return button")
+		return
+	settlement_return_button.interact(player)
+	await process_frame
+	if str(main.get("current_map_id")) != TRAVEL_MAP_ID or str(main.get("bongo_travel_destination_id")) != "bongo_hub":
+		_fail("Settlement bongo return button should start travel back to the bongo hub")
+		return
+	await _wait_for_travel_complete(main)
+	if str(main.get("current_map_id")) != "bongo_hub":
+		_fail("Settlement bongo should return the player to the bongo interior hub")
+		return
+	if int(main.get("map_travel_count")) != 4:
+		_fail("Returning from settlement bongo should count as the fourth map travel")
+		return
+	if player.global_position.distance_to(BongoVanPlanScript.PLAYER_START_POSITION) > 0.2:
+		_fail("Settlement bongo return should place the player back inside the bongo hub")
+		return
 
 func _assert_settlement_office_is_large_enough(main: Node, player: Node3D) -> void:
 	var floor := main.find_child("SettlementOfficeFloor", true, false) as Node3D
