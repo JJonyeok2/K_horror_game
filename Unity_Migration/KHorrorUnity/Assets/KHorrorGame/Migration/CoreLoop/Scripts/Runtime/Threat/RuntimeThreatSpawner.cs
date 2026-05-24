@@ -57,6 +57,7 @@ namespace KHorrorGame.Migration
                 resentmentStage * 31));
 
             ApplyDecision(decision);
+            EnsureInteriorGhostAtMaximumThreat(canSpawnThreats, resentmentStage, currentMap);
             return decision;
         }
 
@@ -115,6 +116,24 @@ namespace KHorrorGame.Migration
             actor.gameObject.SetActive(true);
             actor.SetAutomaticTick(false);
             actor.Configure(enemyKind, profile, playerTarget, homeTerritory, spawnAnchor.position);
+        }
+
+        private void EnsureInteriorGhostAtMaximumThreat(bool canSpawnThreats, int resentmentStage, GameMapId currentMap)
+        {
+            if (!canSpawnThreats
+                || currentMap != GameMapId.JonggaEstate
+                || resentmentStage < ThreatStageProfile.MaxStage
+                || IsActorActive(ghostActor))
+            {
+                return;
+            }
+
+            ActivateActor(
+                ghostActor,
+                ghostSpawnAnchor,
+                EnemyKind.Ghost,
+                TerritoryKind.EstateInterior,
+                ThreatStageProfile.ForStage(resentmentStage));
         }
 
         private void TickActor(EnemyBrain actor, TerritoryKind targetTerritory)

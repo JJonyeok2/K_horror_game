@@ -276,6 +276,55 @@ namespace KHorrorGame.Migration.Tests
         }
 
         [Test]
+        public void RuntimeThreatSpawnerKeepsInteriorGhostActiveAtMaximumThreatEvenFromForest()
+        {
+            var root = new GameObject("MaxThreatSpawnerFixture");
+            var player = new GameObject("PlayerFixture");
+            var ghost = new GameObject("GhostActorFixture");
+            var dokkaebi = new GameObject("DokkaebiActorFixture");
+            var ghostAnchor = new GameObject("GhostAnchorFixture");
+            var dokkaebiAnchor = new GameObject("DokkaebiAnchorFixture");
+            var cue = new GameObject("CueFixture").AddComponent<Light>();
+            var spawner = root.AddComponent<RuntimeThreatSpawner>();
+
+            try
+            {
+                player.AddComponent<PlayerDamageReceiver>();
+                var ghostBrain = ghost.AddComponent<EnemyBrain>();
+                var dokkaebiBrain = dokkaebi.AddComponent<EnemyBrain>();
+                ghost.SetActive(false);
+                dokkaebi.SetActive(false);
+                ghostAnchor.transform.position = new Vector3(-8f, 0f, 129f);
+                dokkaebiAnchor.transform.position = new Vector3(4f, 0f, 36f);
+
+                SetObject(spawner, "playerTarget", player.transform);
+                SetObject(spawner, "ghostActor", ghostBrain);
+                SetObject(spawner, "dokkaebiActor", dokkaebiBrain);
+                SetObject(spawner, "ghostSpawnAnchor", ghostAnchor.transform);
+                SetObject(spawner, "dokkaebiSpawnAnchor", dokkaebiAnchor.transform);
+                SetObject(spawner, "spawnCueLight", cue);
+
+                var decision = spawner.EvaluateThreats(true, 5, GameMapId.JonggaEstate, TerritoryKind.ForestApproach);
+
+                Assert.AreEqual(ThreatDirectorAction.SpawnDokkaebi, decision.Action);
+                Assert.IsTrue(dokkaebi.activeSelf, "Forest pressure should still create the outside dokkaebi.");
+                Assert.IsTrue(ghost.activeSelf, "Maximum shrine threat must also keep an interior ghost alive.");
+                Assert.AreEqual(ghostAnchor.transform.position, ghost.transform.position);
+                Assert.AreEqual(TerritoryKind.EstateInterior, ghostBrain.HomeTerritory);
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(root);
+                UnityEngine.Object.DestroyImmediate(player);
+                UnityEngine.Object.DestroyImmediate(ghost);
+                UnityEngine.Object.DestroyImmediate(dokkaebi);
+                UnityEngine.Object.DestroyImmediate(ghostAnchor);
+                UnityEngine.Object.DestroyImmediate(dokkaebiAnchor);
+                UnityEngine.Object.DestroyImmediate(cue.gameObject);
+            }
+        }
+
+        [Test]
         public void InteriorGhostSpawnSupportsDeepShrineEncounter()
         {
             EditorSceneManager.OpenScene(ScenePath);
