@@ -40,6 +40,13 @@
   - Regenerate `KHorror_Main` and verify the full EditMode suite passes.
   - _Requirements: 3.6, 4.5, 4.6, 5.1, 8.1, 8.2, 8.3, 9.3_
 
+- [x] H7. Hotfix shrine approach route funnel
+  - Add a regression test proving the shrine entrance cannot be approached directly from east or west side shortcuts.
+  - Add stone and bamboo route boundaries so the shrine entrance is reached from the intended back route.
+  - Keep the central back shrine path open and regenerate `KHorror_Main`.
+  - Verify the full EditMode suite passes.
+  - _Requirements: 4.5, 4.6, 4.7, 7.3, 9.3_
+
 - [x] 1. Establish territory foundations
   - Add `EnemyKind` and `TerritoryKind` domain enums.
   - Add a testable `EnemyTerritoryRules` service that answers whether a kind can enter a territory.

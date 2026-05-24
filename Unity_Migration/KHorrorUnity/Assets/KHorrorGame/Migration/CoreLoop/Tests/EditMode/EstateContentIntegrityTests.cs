@@ -91,11 +91,71 @@ namespace KHorrorGame.Migration.Tests
             }
         }
 
+        [Test]
+        public void ShrineEntranceOnlyAllowsApproachFromBackRoute()
+        {
+            EditorSceneManager.OpenScene(ScenePath);
+            Physics.SyncTransforms();
+
+            AssertShrineSideBoundary(
+                new Vector3(-4.2f, 1.2f, 94.5f),
+                Vector3.left,
+                "Shrine entrance can be reached directly from the courtyard/kitchen side.");
+            AssertShrineSideBoundary(
+                new Vector3(-4.2f, 1.2f, 98.7f),
+                Vector3.left,
+                "Shrine front can be reached directly from the courtyard/kitchen side.");
+
+            AssertShrineSideBoundary(
+                new Vector3(-11.8f, 1.2f, 94.5f),
+                Vector3.right,
+                "Shrine entrance can be reached directly from the outer west side.");
+            AssertShrineSideBoundary(
+                new Vector3(-11.8f, 1.2f, 98.7f),
+                Vector3.right,
+                "Shrine front can be reached directly from the outer west side.");
+
+            var intendedHits = Physics.RaycastAll(new Vector3(-8f, 1.2f, 91f), Vector3.forward, 5.4f)
+                .Where(hit => IsShrineRouteBoundary(hit.collider.name))
+                .ToArray();
+            Assert.IsEmpty(intendedHits, "Intended back shrine path is blocked by shrine route boundary.");
+        }
+
+        private static void AssertShrineSideBoundary(Vector3 origin, Vector3 direction, string failureMessage)
+        {
+            Assert.IsTrue(
+                TryFindShrineRouteBoundary(origin, direction, out var hit),
+                failureMessage);
+            Assert.LessOrEqual(hit.distance, 2.5f, "Shrine side blocker is too far from the shortcut route.");
+        }
+
         private static void SetObject(UnityEngine.Object target, string propertyName, UnityEngine.Object value)
         {
             var serialized = new SerializedObject(target);
             serialized.FindProperty(propertyName).objectReferenceValue = value;
             serialized.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        private static bool TryFindShrineRouteBoundary(Vector3 origin, Vector3 direction, out RaycastHit boundaryHit)
+        {
+            var hits = Physics.RaycastAll(origin, direction.normalized, 8f)
+                .Where(hit => IsShrineRouteBoundary(hit.collider.name))
+                .OrderBy(hit => hit.distance);
+
+            foreach (var hit in hits)
+            {
+                boundaryHit = hit;
+                return true;
+            }
+
+            boundaryHit = default;
+            return false;
+        }
+
+        private static bool IsShrineRouteBoundary(string objectName)
+        {
+            return objectName.Contains("ShrineRouteBoundary", StringComparison.Ordinal) ||
+                   objectName.Contains("ShrineApproachBlocker", StringComparison.Ordinal);
         }
     }
 }

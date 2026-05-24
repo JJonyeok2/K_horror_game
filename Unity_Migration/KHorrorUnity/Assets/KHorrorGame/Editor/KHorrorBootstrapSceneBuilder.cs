@@ -536,6 +536,7 @@ namespace KHorrorGame.Editor
         private static void CreateShrineLoop(Transform parent)
         {
             CreateCube("BackShrinePath", parent, new Vector3(-8f, 0f, 91f), new Vector3(3.2f, 0.2f, 15f), Materials.Road);
+            CreateShrineRouteBoundaries(parent);
             CreateCube("ShrineFoundation", parent, new Vector3(-8f, 0.2f, 99f), new Vector3(5.8f, 0.35f, 4.8f), Materials.Stone);
             CreateCube("ShrineFloor", parent, new Vector3(-8f, 0.55f, 99f), new Vector3(5.5f, 0.25f, 4.5f), Materials.Wood);
             CreateCube("ShrineBackWall", parent, new Vector3(-8f, 1.8f, 101.2f), new Vector3(5.5f, 3.2f, 0.3f), Materials.DarkWood);
@@ -559,6 +560,18 @@ namespace KHorrorGame.Editor
             CreateSphere("ShrineCandleFlame_A", parent, new Vector3(-8.45f, 1.72f, 99.9f), new Vector3(0.12f, 0.18f, 0.12f), Materials.LanternGlow);
             CreateSphere("ShrineCandleFlame_B", parent, new Vector3(-7.55f, 1.72f, 99.9f), new Vector3(0.12f, 0.18f, 0.12f), Materials.LanternGlow);
             CreateStoneCairn(parent, new Vector3(-10.6f, 0.3f, 94.5f), "ShrinePathCairn");
+        }
+
+        private static void CreateShrineRouteBoundaries(Transform parent)
+        {
+            CreateCube("ShrineRouteBoundary_WestStone", parent, new Vector3(-10.45f, 1.25f, 94.2f), new Vector3(0.45f, 2.5f, 12.4f), Materials.StoneWall);
+            CreateCube("ShrineRouteBoundary_EastStone", parent, new Vector3(-5.55f, 1.25f, 94.2f), new Vector3(0.45f, 2.5f, 12.4f), Materials.StoneWall);
+            CreateBambooCluster(parent, new Vector3(-10.15f, 0f, 90.2f), "ShrineRouteWestBamboo_A");
+            CreateBambooCluster(parent, new Vector3(-10.15f, 0f, 95.5f), "ShrineRouteWestBamboo_B");
+            CreateBambooCluster(parent, new Vector3(-10.15f, 0f, 99.2f), "ShrineRouteWestBamboo_C");
+            CreateBambooCluster(parent, new Vector3(-5.85f, 0f, 90.1f), "ShrineRouteEastBamboo_A");
+            CreateBambooCluster(parent, new Vector3(-5.85f, 0f, 95.4f), "ShrineRouteEastBamboo_B");
+            CreateBambooCluster(parent, new Vector3(-5.85f, 0f, 99.1f), "ShrineRouteEastBamboo_C");
         }
 
         private static void CreateTree(Transform parent, string name, Vector3 basePosition, float height)
