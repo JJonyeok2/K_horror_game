@@ -67,7 +67,7 @@
   - Add safe fallback behavior for missing or overlapping volumes.
   - _Requirements: 3.5, 4.6, 9.2_
 
-- [ ] 3. Wire territory volumes into the generated scene
+- [x] 3. Wire territory volumes into the generated scene
   - Update `KHorrorBootstrapSceneBuilder` to create parent objects for `ForestApproach`, `FrontGateBoundary`, `Courtyard`, `MainHouse`, `BackRoute`, and `Shrine`.
   - Add trigger volumes for forest approach and estate interior.
   - Keep the front gate portal player-only and block AI traversal by default.

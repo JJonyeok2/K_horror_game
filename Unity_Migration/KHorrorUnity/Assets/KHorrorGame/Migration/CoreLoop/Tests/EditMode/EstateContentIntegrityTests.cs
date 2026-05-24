@@ -187,6 +187,46 @@ namespace KHorrorGame.Migration.Tests
         }
 
         [Test]
+        public void EstateHasTerritoryRootsResolverAndGateAiBoundary()
+        {
+            EditorSceneManager.OpenScene(ScenePath);
+            Physics.SyncTransforms();
+
+            var resolver = UnityEngine.Object.FindObjectOfType<TerritoryResolver>(true);
+            Assert.IsNotNull(resolver, "Generated scene should include one TerritoryResolver.");
+
+            var estateRoot = GameObject.Find("JonggaEstate");
+            Assert.IsNotNull(estateRoot, "JonggaEstate root should exist.");
+
+            var requiredZoneRoots = new[]
+            {
+                "ForestApproach",
+                "FrontGateBoundary",
+                "Courtyard",
+                "MainHouse",
+                "BackRoute",
+                "Shrine",
+            };
+
+            foreach (var zoneName in requiredZoneRoots)
+            {
+                var zoneRoot = estateRoot.transform.Find(zoneName);
+                Assert.IsNotNull(zoneRoot, zoneName + " should be a direct zone root under JonggaEstate.");
+            }
+
+            AssertTerritoryVolume("ForestApproachTerritoryVolume", TerritoryKind.ForestApproach, new Vector3(0f, 1f, 36f));
+            AssertTerritoryVolume("EstateInteriorTerritoryVolume", TerritoryKind.EstateInterior, new Vector3(0f, 1f, 82f));
+            AssertTerritoryVolume("ShrineTerritoryVolume", TerritoryKind.EstateInterior, new Vector3(-8f, 1f, 141f));
+
+            var aiBlocker = GameObject.Find("FrontGateAIBoundaryBlocker");
+            Assert.IsNotNull(aiBlocker, "Front gate should have an AI boundary blocker so enemies do not use the player portal.");
+            var blockerCollider = aiBlocker.GetComponent<Collider>();
+            Assert.IsNotNull(blockerCollider, "FrontGateAIBoundaryBlocker should have a collider.");
+            Assert.IsTrue(blockerCollider.enabled, "FrontGateAIBoundaryBlocker collider should be enabled.");
+            Assert.IsFalse(blockerCollider.isTrigger, "FrontGateAIBoundaryBlocker should physically block AI traversal by default.");
+        }
+
+        [Test]
         public void RuntimeThreatSpawnerActivatesDokkaebiForForestThreat()
         {
             var root = new GameObject("SpawnerFixture");
@@ -363,6 +403,21 @@ namespace KHorrorGame.Migration.Tests
 
             boundaryHit = default;
             return false;
+        }
+
+        private static void AssertTerritoryVolume(string volumeName, TerritoryKind expectedTerritory, Vector3 probePoint)
+        {
+            var volumeObject = GameObject.Find(volumeName);
+            Assert.IsNotNull(volumeObject, volumeName + " should exist.");
+
+            var volume = volumeObject.GetComponent<TerritoryVolume>();
+            Assert.IsNotNull(volume, volumeName + " should have a TerritoryVolume component.");
+            Assert.AreEqual(expectedTerritory, volume.Territory, volumeName + " has wrong territory.");
+
+            var collider = volumeObject.GetComponent<Collider>();
+            Assert.IsNotNull(collider, volumeName + " should have a collider.");
+            Assert.IsTrue(collider.isTrigger, volumeName + " should be a trigger volume.");
+            Assert.IsTrue(collider.bounds.Contains(probePoint), volumeName + " should contain probe point " + probePoint);
         }
 
         private static bool IsShrineRouteBoundary(string objectName)

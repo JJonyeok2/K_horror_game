@@ -28,11 +28,16 @@ namespace KHorrorGame.Migration
             EnsureTriggerCollider();
         }
 
-        public void ConfigureForTests(TerritoryKind newTerritory, int newPriority)
+        public void Configure(TerritoryKind newTerritory, int newPriority)
         {
             territory = newTerritory;
             priority = newPriority;
             EnsureTriggerCollider();
+        }
+
+        public void ConfigureForTests(TerritoryKind newTerritory, int newPriority)
+        {
+            Configure(newTerritory, newPriority);
         }
 
         private void EnsureTriggerCollider()

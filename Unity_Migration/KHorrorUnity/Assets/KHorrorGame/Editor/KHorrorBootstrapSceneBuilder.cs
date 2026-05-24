@@ -59,6 +59,7 @@ namespace KHorrorGame.Editor
             SetObject(controller, "settlementRoot", settlement);
             SetObject(controller, "travelRoot", travel);
             SetFloat(controller, "travelSeconds", 0.55f);
+            systems.AddComponent<TerritoryResolver>();
 
             CreateLighting(systems.transform, player.CameraLight, player.Camera);
             CreateHud(systems.transform, controller, player.Controller, player.Interactor);
@@ -184,24 +185,36 @@ namespace KHorrorGame.Editor
 
         private static void CreateEstateProxy(Transform parent, GameLoopController gameLoop, UnityPlayerController player)
         {
-            CreateCube("ApproachRoad_MuddyCenter", parent, new Vector3(0f, 0f, 34f), new Vector3(7f, 0.2f, 36f), Materials.Road);
-            CreateCube("ApproachRoad_GrassLeft", parent, new Vector3(-5.5f, 0.02f, 34f), new Vector3(4f, 0.16f, 36f), Materials.Grass);
-            CreateCube("ApproachRoad_GrassRight", parent, new Vector3(5.5f, 0.02f, 34f), new Vector3(4f, 0.16f, 36f), Materials.Grass);
-            CreateCube("OuterGateThresholdStone", parent, new Vector3(0f, 0.08f, 53f), new Vector3(8f, 0.24f, 1.2f), Materials.Stone);
-            CreateCube("OuterGateContinuousUnderfloor", parent, new Vector3(0f, -0.08f, 54.45f), new Vector3(9.2f, 0.42f, 4.6f), Materials.Stone);
-            CreateCube("OuterGatePackedEarthBridge", parent, new Vector3(0f, 0f, 55.05f), new Vector3(8.3f, 0.2f, 4.4f), Materials.Courtyard);
+            var forestRoot = CreateZoneRoot(parent, "ForestApproach");
+            var gateRoot = CreateZoneRoot(parent, "FrontGateBoundary");
+            var courtyardRoot = CreateZoneRoot(parent, "Courtyard");
+            var mainHouseRoot = CreateZoneRoot(parent, "MainHouse");
+            var backRouteRoot = CreateZoneRoot(parent, "BackRoute");
+            var shrineRoot = CreateZoneRoot(parent, "Shrine");
+
+            CreateTerritoryVolume("ForestApproachTerritoryVolume", forestRoot, TerritoryKind.ForestApproach, new Vector3(0f, 1.5f, 31f), new Vector3(24f, 5f, 46f), 10);
+            CreateTerritoryVolume("EstateInteriorTerritoryVolume", parent, TerritoryKind.EstateInterior, new Vector3(0f, 1.5f, 101.5f), new Vector3(24f, 5f, 93f), 0);
+            CreateTerritoryVolume("ShrineTerritoryVolume", shrineRoot, TerritoryKind.EstateInterior, new Vector3(ShrineX, 1.5f, ShrineZ), new Vector3(8f, 5f, 14f), 5);
+            CreateColliderOnlyBox("FrontGateAIBoundaryBlocker", gateRoot, new Vector3(0f, 1.5f, 54.05f), new Vector3(7.2f, 3f, 0.35f), false);
+
+            CreateCube("ApproachRoad_MuddyCenter", forestRoot, new Vector3(0f, 0f, 34f), new Vector3(7f, 0.2f, 36f), Materials.Road);
+            CreateCube("ApproachRoad_GrassLeft", forestRoot, new Vector3(-5.5f, 0.02f, 34f), new Vector3(4f, 0.16f, 36f), Materials.Grass);
+            CreateCube("ApproachRoad_GrassRight", forestRoot, new Vector3(5.5f, 0.02f, 34f), new Vector3(4f, 0.16f, 36f), Materials.Grass);
+            CreateCube("OuterGateThresholdStone", gateRoot, new Vector3(0f, 0.08f, 53f), new Vector3(8f, 0.24f, 1.2f), Materials.Stone);
+            CreateCube("OuterGateContinuousUnderfloor", gateRoot, new Vector3(0f, -0.08f, 54.45f), new Vector3(9.2f, 0.42f, 4.6f), Materials.Stone);
+            CreateCube("OuterGatePackedEarthBridge", gateRoot, new Vector3(0f, 0f, 55.05f), new Vector3(8.3f, 0.2f, 4.4f), Materials.Courtyard);
             CreateEstateGroundContinuity(parent);
-            var gateInsideSpawn = CreateMarker("EstateGateInsideSpawn", new Vector3(0f, 1f, 59.8f), Quaternion.identity, parent);
-            var gateOutsideSpawn = CreateMarker("EstateGateOutsideSpawn", new Vector3(0f, 1f, 51.25f), Quaternion.Euler(0f, 180f, 0f), parent);
+            var gateInsideSpawn = CreateMarker("EstateGateInsideSpawn", new Vector3(0f, 1f, 59.8f), Quaternion.identity, gateRoot);
+            var gateOutsideSpawn = CreateMarker("EstateGateOutsideSpawn", new Vector3(0f, 1f, 51.25f), Quaternion.Euler(0f, 180f, 0f), gateRoot);
 
             CreateDistantSilhouette(parent);
-            CreateForest(parent);
-            CreateOuterGate(parent, gateInsideSpawn, gateOutsideSpawn);
-            CreateCourtyard(parent);
-            CreateMainHouse(parent);
-            CreateSarangchae(parent);
-            CreateRearCompound(parent);
-            CreateShrineLoop(parent);
+            CreateForest(forestRoot);
+            CreateOuterGate(gateRoot, gateInsideSpawn, gateOutsideSpawn);
+            CreateCourtyard(courtyardRoot);
+            CreateMainHouse(mainHouseRoot);
+            CreateSarangchae(courtyardRoot);
+            CreateRearCompound(backRouteRoot);
+            CreateShrineLoop(shrineRoot);
 
             CreateEstateArtifacts(parent, gameLoop);
             CreateRuntimeThreatSpawner(parent, gameLoop, player);
@@ -1339,6 +1352,46 @@ namespace KHorrorGame.Editor
             marker.position = position;
             marker.rotation = rotation;
             return marker;
+        }
+
+        private static Transform CreateZoneRoot(Transform parent, string name)
+        {
+            var zone = new GameObject(name).transform;
+            zone.SetParent(parent);
+            zone.localPosition = Vector3.zero;
+            zone.localRotation = Quaternion.identity;
+            zone.localScale = Vector3.one;
+            return zone;
+        }
+
+        private static TerritoryVolume CreateTerritoryVolume(
+            string name,
+            Transform parent,
+            TerritoryKind territory,
+            Vector3 position,
+            Vector3 size,
+            int priority)
+        {
+            var volumeObject = CreateColliderOnlyBox(name, parent, position, size, true);
+            var volume = volumeObject.AddComponent<TerritoryVolume>();
+            volume.Configure(territory, priority);
+            return volume;
+        }
+
+        private static GameObject CreateColliderOnlyBox(
+            string name,
+            Transform parent,
+            Vector3 position,
+            Vector3 size,
+            bool isTrigger)
+        {
+            var boxObject = new GameObject(name);
+            boxObject.transform.SetParent(parent);
+            boxObject.transform.position = position;
+            var collider = boxObject.AddComponent<BoxCollider>();
+            collider.size = size;
+            collider.isTrigger = isTrigger;
+            return boxObject;
         }
 
         private static void SetObject(Object target, string propertyName, Object value)
