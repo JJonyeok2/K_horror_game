@@ -55,6 +55,7 @@ namespace KHorrorGame.Migration
                 new QuotaTracker(startingQuotaValue),
                 new ResentmentTracker(),
                 travelSeconds);
+            EnsureCargoHoldReferences();
 
             State.TravelStarted += OnTravelStarted;
             State.TravelCompleted += OnTravelCompleted;
@@ -224,6 +225,7 @@ namespace KHorrorGame.Migration
 
         private bool CanSettleLoadedCargo()
         {
+            EnsureCargoHoldReferences();
             return State != null
                    && !State.IsTraveling
                    && State.CurrentMap == GameMapId.BongoHub
@@ -254,6 +256,7 @@ namespace KHorrorGame.Migration
 
         private void TransferEstateCargoToHub()
         {
+            EnsureCargoHoldReferences();
             if (hubCargoHold == null || estateCargoHold == null || hubCargoHold == estateCargoHold)
             {
                 return;
@@ -264,6 +267,7 @@ namespace KHorrorGame.Migration
 
         private VanCargoHold ResolveSettlementCargoHold()
         {
+            EnsureCargoHoldReferences();
             if (State != null && State.CurrentMap == GameMapId.BongoHub && hubCargoHold != null)
             {
                 return hubCargoHold;
@@ -280,6 +284,52 @@ namespace KHorrorGame.Migration
             }
 
             return hubCargoHold != null ? hubCargoHold : estateCargoHold;
+        }
+
+        private void EnsureCargoHoldReferences()
+        {
+            if (hubCargoHold == null)
+            {
+                hubCargoHold = FindCargoHoldInRoot(bongoHubRoot, "BongoHubCargoHold");
+            }
+
+            if (hubCargoHold == null && bongoHubRoot != null)
+            {
+                hubCargoHold = CreateRuntimeHubCargoHold();
+            }
+
+            if (estateCargoHold == null)
+            {
+                estateCargoHold = FindCargoHoldInRoot(estateRoot, "EstateReturnBongo");
+            }
+        }
+
+        private VanCargoHold CreateRuntimeHubCargoHold()
+        {
+            var root = new GameObject("BongoHubCargoHold");
+            root.transform.SetParent(bongoHubRoot.transform, false);
+            root.transform.localPosition = Vector3.zero;
+            root.transform.localRotation = Quaternion.identity;
+            return root.AddComponent<VanCargoHold>();
+        }
+
+        private static VanCargoHold FindCargoHoldInRoot(GameObject root, string preferredObjectName)
+        {
+            if (root == null)
+            {
+                return null;
+            }
+
+            foreach (var hold in root.GetComponentsInChildren<VanCargoHold>(true))
+            {
+                if (hold != null && hold.name == preferredObjectName)
+                {
+                    return hold;
+                }
+            }
+
+            var holds = root.GetComponentsInChildren<VanCargoHold>(true);
+            return holds.Length > 0 ? holds[0] : null;
         }
 
         private void ShowSettlementFeedback(int value)

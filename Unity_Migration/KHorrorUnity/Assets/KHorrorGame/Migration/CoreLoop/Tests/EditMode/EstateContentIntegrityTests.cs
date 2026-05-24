@@ -572,23 +572,30 @@ namespace KHorrorGame.Migration.Tests
             EditorSceneManager.OpenScene(ScenePath);
 
             var gameLoop = UnityEngine.Object.FindObjectOfType<GameLoopController>(true);
-            var hubHoldObject = GameObject.Find("BongoHubCargoHold");
+            var bongoHub = GameObject.Find("BongoHub");
             var estateBongo = GameObject.Find("EstateReturnBongo");
 
             Assert.IsNotNull(gameLoop, "GameLoopController should exist.");
-            Assert.IsNotNull(hubHoldObject, "Bongo hub needs a visible cargo hold for settlement after returning.");
-            Assert.IsNotNull(hubHoldObject.GetComponent<VanCargoHold>(), "BongoHubCargoHold should use VanCargoHold.");
+            Assert.IsNotNull(bongoHub, "BongoHub root should exist.");
             Assert.IsNotNull(estateBongo, "Estate return bongo should exist.");
             Assert.IsNotNull(estateBongo.GetComponent<VanCargoHold>(), "Estate return bongo should keep its loading hold.");
 
+            InvokeAwake(gameLoop);
+
             var serialized = new SerializedObject(gameLoop);
+            var hubHold = serialized.FindProperty("hubCargoHold").objectReferenceValue as VanCargoHold;
+            var estateHold = serialized.FindProperty("estateCargoHold").objectReferenceValue as VanCargoHold;
+
+            Assert.IsNotNull(hubHold, "GameLoopController should resolve or create a hub cargo hold at runtime.");
+            Assert.AreEqual("BongoHubCargoHold", hubHold.name, "Runtime-created hub cargo hold should use the expected name.");
+            Assert.IsTrue(hubHold.transform.IsChildOf(bongoHub.transform), "Hub cargo hold should live under the BongoHub root.");
             Assert.AreSame(
-                hubHoldObject.GetComponent<VanCargoHold>(),
+                hubHold,
                 serialized.FindProperty("hubCargoHold").objectReferenceValue,
                 "GameLoopController should settle from the hub cargo hold.");
             Assert.AreSame(
                 estateBongo.GetComponent<VanCargoHold>(),
-                serialized.FindProperty("estateCargoHold").objectReferenceValue,
+                estateHold,
                 "GameLoopController should transfer estate cargo into the hub hold on return.");
         }
 
