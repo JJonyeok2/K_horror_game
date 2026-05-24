@@ -61,7 +61,7 @@
   - Add EditMode tests for ghost-only estate territory and dokkaebi-only forest territory.
   - _Requirements: 2.6, 3.1, 3.3, 3.5, 9.2_
 
-- [ ] 2. Add Unity territory volumes
+- [x] 2. Add Unity territory volumes
   - Add `TerritoryVolume` MonoBehaviour with serialized `TerritoryKind`.
   - Add `TerritoryResolver` that resolves a world position or collider overlap to a territory.
   - Add safe fallback behavior for missing or overlapping volumes.
