@@ -20,6 +20,12 @@
   - Regenerate `KHorror_Main` and verify the full EditMode suite passes.
   - _Requirements: 4.1, 4.4, 4.5, 4.6, 9.3_
 
+- [x] H4. Hotfix estate escape boundaries
+  - Add regression tests for south, west, east, and north escape-blocking boundaries at standing and jump height.
+  - Add map boundary ridges around the approach, forest, courtyard, rear route, and shrine playable envelope.
+  - Regenerate `KHorror_Main` and verify the full EditMode suite passes.
+  - _Requirements: 4.1, 4.3, 4.5, 4.6, 9.3_
+
 - [x] 1. Establish territory foundations
   - Add `EnemyKind` and `TerritoryKind` domain enums.
   - Add a testable `EnemyTerritoryRules` service that answers whether a kind can enter a territory.

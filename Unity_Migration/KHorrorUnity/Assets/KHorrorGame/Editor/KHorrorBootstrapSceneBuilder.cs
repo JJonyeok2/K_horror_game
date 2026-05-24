@@ -220,6 +220,10 @@ namespace KHorrorGame.Editor
             CreateCube("InsideGateLandingPad", parent, new Vector3(0f, 0.03f, 58.2f), new Vector3(8.2f, 0.14f, 3.2f), Materials.Courtyard);
             CreateCube("CourtyardToMainHousePad", parent, new Vector3(0f, 0.04f, 78.2f), new Vector3(8.6f, 0.14f, 2.2f), Materials.Courtyard);
             CreateCube("ShrineEntryPackedEarthPad", parent, new Vector3(-8f, 0.04f, 96.15f), new Vector3(4.4f, 0.14f, 1.5f), Materials.Road);
+            CreateCube("SouthMapBoundaryDitch", parent, new Vector3(0f, 1.9f, 0.5f), new Vector3(25f, 3.8f, 1.2f), Materials.DistantHill);
+            CreateCube("WestMapBoundaryRidge", parent, new Vector3(-12.35f, 2.1f, 55f), new Vector3(0.9f, 4.2f, 110f), Materials.DistantHill);
+            CreateCube("EastMapBoundaryRidge", parent, new Vector3(12.35f, 2.1f, 55f), new Vector3(0.9f, 4.2f, 110f), Materials.DistantHill);
+            CreateCube("NorthMapBoundaryRidge", parent, new Vector3(0f, 2.4f, 108.5f), new Vector3(25f, 4.8f, 1.4f), Materials.DistantHill);
         }
 
         private static void CreateSettlementProxy(Transform parent, GameLoopController gameLoop)
