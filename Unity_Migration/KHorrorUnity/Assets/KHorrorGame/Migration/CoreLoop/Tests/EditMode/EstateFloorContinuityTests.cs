@@ -26,8 +26,10 @@ namespace KHorrorGame.Migration.Tests
                 new GroundSample("main house front threshold", new Vector3(0f, 0f, 79.2f)),
                 new GroundSample("main house center floor", new Vector3(0f, 0f, 82.5f)),
                 new GroundSample("main house rear seam", new Vector3(-6.1f, 0f, 86.58f)),
-                new GroundSample("back shrine path", new Vector3(-8f, 0f, 91f)),
-                new GroundSample("shrine front floor", new Vector3(-8f, 0f, 96.8f)),
+                new GroundSample("rear compound first turn", new Vector3(-8.9f, 0f, 96.2f)),
+                new GroundSample("rear compound east run", new Vector3(4.0f, 0f, 114.5f)),
+                new GroundSample("rear compound west run", new Vector3(-8f, 0f, 132.8f)),
+                new GroundSample("shrine front floor", new Vector3(-8f, 0f, 138.8f)),
             };
 
             foreach (var sample in samples)
@@ -52,7 +54,11 @@ namespace KHorrorGame.Migration.Tests
                 new GroundSample("rear threshold", new Vector3(-6.1f, 0f, 86.85f)),
                 new GroundSample("rear lower step", new Vector3(-6.7f, 0f, 87.65f)),
                 new GroundSample("back path pad", new Vector3(-7.4f, 0f, 88.9f)),
-                new GroundSample("shrine path", new Vector3(-8f, 0f, 91.5f)),
+                new GroundSample("rear entry path", new Vector3(-8.9f, 0f, 92.5f)),
+                new GroundSample("rear first crossing", new Vector3(-2.7f, 0f, 105.2f)),
+                new GroundSample("rear east run", new Vector3(4.0f, 0f, 114.5f)),
+                new GroundSample("rear second crossing", new Vector3(-2.0f, 0f, 123.6f)),
+                new GroundSample("deep shrine path", new Vector3(-8f, 0f, 132.8f)),
             };
 
             var previous = samples[0];

@@ -47,6 +47,14 @@
   - Verify the full EditMode suite passes.
   - _Requirements: 4.5, 4.6, 4.7, 7.3, 9.3_
 
+- [x] H8. Hotfix deep shrine route and rear estate density
+  - Add regression tests for deep rear shrine placement, best Jongga loot placement, main house side shortcut blockers, and rear route density.
+  - Move the shrine to the rear of the estate and place the highest-value Jongga spirit tablet there.
+  - Add a layered rear compound with zigzag walls, storehouse, side room, garden props, lanterns, bamboo, and jangseung.
+  - Extend estate ground, lighting, and boundaries for the deeper route.
+  - Regenerate `KHorror_Main` and verify the full EditMode suite passes.
+  - _Requirements: 3.6, 4.5, 4.6, 4.7, 7.1, 7.3, 9.3_
+
 - [x] 1. Establish territory foundations
   - Add `EnemyKind` and `TerritoryKind` domain enums.
   - Add a testable `EnemyTerritoryRules` service that answers whether a kind can enter a territory.

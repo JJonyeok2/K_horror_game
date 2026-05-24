@@ -21,9 +21,9 @@ namespace KHorrorGame.Migration.Tests
                 new BoundaryCheck("south approach limit", new Vector3(0f, 1.2f, 3f), Vector3.back),
                 new BoundaryCheck("west forest limit", new Vector3(-8f, 1.2f, 24f), Vector3.left),
                 new BoundaryCheck("east forest limit", new Vector3(8f, 1.2f, 38f), Vector3.right),
-                new BoundaryCheck("west shrine limit", new Vector3(-9f, 1.2f, 98f), Vector3.left),
+                new BoundaryCheck("west shrine limit", new Vector3(-9f, 1.2f, 140f), Vector3.left),
                 new BoundaryCheck("east courtyard limit", new Vector3(9f, 1.2f, 70f), Vector3.right),
-                new BoundaryCheck("north shrine limit", new Vector3(-8f, 1.2f, 103f), Vector3.forward),
+                new BoundaryCheck("north shrine limit", new Vector3(-8f, 1.2f, 146f), Vector3.forward),
             };
 
             foreach (var check in checks)
@@ -46,7 +46,7 @@ namespace KHorrorGame.Migration.Tests
                 new BoundaryCheck("south approach upper limit", new Vector3(0f, 2.4f, 3f), Vector3.back),
                 new BoundaryCheck("west forest upper limit", new Vector3(-8f, 2.4f, 24f), Vector3.left),
                 new BoundaryCheck("east forest upper limit", new Vector3(8f, 2.4f, 38f), Vector3.right),
-                new BoundaryCheck("north shrine upper limit", new Vector3(-8f, 2.4f, 103f), Vector3.forward),
+                new BoundaryCheck("north shrine upper limit", new Vector3(-8f, 2.4f, 146f), Vector3.forward),
             };
 
             foreach (var check in checks)
