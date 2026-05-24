@@ -7,14 +7,27 @@ namespace KHorrorGame.Migration
     public sealed class VanCargoDepositZone : MonoBehaviour
     {
         [SerializeField] private GameLoopController gameLoop;
+        [SerializeField] private VanCargoHold cargoHold;
 
         private UnityPlayerController currentActor;
+
+        public string LastFeedbackMessage { get; private set; } = string.Empty;
 
         private void Awake()
         {
             if (gameLoop == null)
             {
                 gameLoop = FindObjectOfType<GameLoopController>();
+            }
+
+            if (cargoHold == null)
+            {
+                cargoHold = GetComponentInParent<VanCargoHold>();
+            }
+
+            if (cargoHold == null)
+            {
+                cargoHold = GetComponentInChildren<VanCargoHold>();
             }
 
             var zoneCollider = GetComponent<Collider>();
@@ -55,20 +68,45 @@ namespace KHorrorGame.Migration
         {
             if (actor == null || gameLoop == null || gameLoop.State == null)
             {
+                SetFeedback("Cannot load cargo");
                 return false;
             }
 
             if (gameLoop.State.CurrentMap != GameMapId.JonggaEstate || gameLoop.State.IsTraveling)
             {
+                SetFeedback("Cargo loading unavailable");
                 return false;
             }
 
             if (actor.Inventory.Items.Count <= 0)
             {
+                SetFeedback("No cargo to load");
                 return false;
             }
 
-            return gameLoop.ExtractPlayerInventory();
+            if (cargoHold == null)
+            {
+                SetFeedback("Cargo hold missing");
+                return false;
+            }
+
+            var item = actor.Inventory.PopLastItem();
+            if (item == null)
+            {
+                SetFeedback("No cargo to load");
+                return false;
+            }
+
+            if (!cargoHold.TryStore(item, out _))
+            {
+                actor.Inventory.TryAdd(item);
+                SetFeedback("Cargo hold full");
+                return false;
+            }
+
+            actor.RefreshHeldItemViews();
+            SetFeedback("Cargo loaded");
+            return true;
         }
 
         private void CaptureActor(Collider other)
@@ -95,6 +133,15 @@ namespace KHorrorGame.Migration
         {
             var zoneCollider = GetComponent<Collider>();
             return actor != null && zoneCollider != null && zoneCollider.bounds.Contains(actor.transform.position);
+        }
+
+        private void SetFeedback(string message)
+        {
+            LastFeedbackMessage = message ?? string.Empty;
+            if (gameLoop != null)
+            {
+                gameLoop.ShowFeedback(LastFeedbackMessage);
+            }
         }
     }
 }

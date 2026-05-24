@@ -517,6 +517,10 @@ namespace KHorrorGame.Migration.Tests
             Assert.IsNotNull(depositZone, "Return bongo needs a cargo zone for loading items with G before returning.");
             Assert.IsNotNull(depositZone.GetComponent(depositType), "ReturnBongoCargoDepositZone should use VanCargoDepositZone.");
 
+            var returnBongo = GameObject.Find("EstateReturnBongo");
+            Assert.IsNotNull(returnBongo, "Estate return bongo should exist.");
+            Assert.IsNotNull(returnBongo.GetComponent<VanCargoHold>(), "Estate return bongo should own a physical cargo hold.");
+
             var trigger = depositZone.GetComponent<Collider>();
             Assert.IsNotNull(trigger, "ReturnBongoCargoDepositZone should have a collider.");
             Assert.IsTrue(trigger.isTrigger, "The cargo deposit zone should detect entry without blocking the van.");
@@ -531,6 +535,7 @@ namespace KHorrorGame.Migration.Tests
             var playerObject = new GameObject("DepositPlayerFixture");
             var controllerObject = new GameObject("DepositGameLoopFixture");
             var zoneObject = new GameObject("DepositZoneFixture");
+            var cargoHoldObject = new GameObject("DepositCargoHoldFixture");
 
             try
             {
@@ -544,9 +549,15 @@ namespace KHorrorGame.Migration.Tests
                 var artifact = new ArtifactDefinition("Brass bowl", 260, 2.1f, 1, null, 2);
                 Assert.IsTrue(player.TryCollectArtifact(artifact));
 
+                var cargoHold = cargoHoldObject.AddComponent<VanCargoHold>();
+                var slot = new GameObject("DepositCargoSlot").transform;
+                slot.SetParent(cargoHoldObject.transform, false);
+                cargoHold.RegisterSlot(slot);
+
                 zoneObject.AddComponent<BoxCollider>();
                 var zone = zoneObject.AddComponent(depositType);
                 SetObject((UnityEngine.Object)zone, "gameLoop", gameLoop);
+                SetObject((UnityEngine.Object)zone, "cargoHold", cargoHold);
 
                 var manualDeposit = depositType.GetMethod("ManualDeposit");
                 Assert.IsNotNull(manualDeposit, "VanCargoDepositZone should expose ManualDeposit for deterministic tests.");
@@ -555,7 +566,9 @@ namespace KHorrorGame.Migration.Tests
 
                 Assert.IsTrue(deposited, "G cargo deposit should accept the held item.");
                 Assert.AreEqual(0, player.Inventory.Items.Count, "Hands should be empty so the player can leave the van again.");
-                Assert.AreEqual(260, gameLoop.State.PendingRecoveredValue, "Deposited cargo should stay loaded in the van.");
+                Assert.AreEqual(0, gameLoop.State.PendingRecoveredValue, "G cargo deposit should not convert cargo to invisible pending value.");
+                Assert.AreEqual(1, cargoHold.CargoCount, "Deposited cargo should stay visible in the van cargo hold.");
+                Assert.AreEqual(260, cargoHold.TotalCargoValue, "Physical cargo should preserve the held artifact value.");
                 Assert.AreEqual(GameMapId.JonggaEstate, gameLoop.State.CurrentMap, "Depositing with G must not return to hub.");
                 Assert.IsFalse(gameLoop.State.IsTraveling, "Depositing with G should not start travel.");
             }
@@ -564,6 +577,7 @@ namespace KHorrorGame.Migration.Tests
                 UnityEngine.Object.DestroyImmediate(playerObject);
                 UnityEngine.Object.DestroyImmediate(controllerObject);
                 UnityEngine.Object.DestroyImmediate(zoneObject);
+                UnityEngine.Object.DestroyImmediate(cargoHoldObject);
             }
         }
 

@@ -413,6 +413,11 @@ namespace KHorrorGame.Editor
             root.transform.rotation = Quaternion.Euler(0f, 180f, 0f);
             var returnTerminal = root.AddComponent<BongoReturnTerminal>();
             SetObject(returnTerminal, "gameLoop", gameLoop);
+            var cargoHold = root.AddComponent<VanCargoHold>();
+            RegisterCargoSlot(root.transform, cargoHold, "ReturnBongoCargoSlot_0", new Vector3(-0.82f, 0.62f, 3.25f));
+            RegisterCargoSlot(root.transform, cargoHold, "ReturnBongoCargoSlot_1", new Vector3(0f, 0.62f, 3.25f));
+            RegisterCargoSlot(root.transform, cargoHold, "ReturnBongoCargoSlot_2", new Vector3(0.82f, 0.62f, 3.25f));
+            RegisterFallbackCargoSlot(root.transform, cargoHold, "ReturnBongoCargoFallback", new Vector3(-0.82f, 0.62f, 2.68f));
 
             CreateCube("ReturnBongoBody", root.transform, new Vector3(0f, 1.15f, 0f), new Vector3(4.2f, 2.05f, 6.2f), Materials.VanPaint);
             CreateCube("ReturnBongoRoof", root.transform, new Vector3(0f, 2.28f, 0f), new Vector3(4.35f, 0.32f, 6.35f), Materials.VanRoof);
@@ -427,6 +432,7 @@ namespace KHorrorGame.Editor
             var cargoDepositZone = CreateColliderOnlyBox("ReturnBongoCargoDepositZone", root.transform, new Vector3(0f, 1.05f, 3.25f), new Vector3(3.35f, 2.15f, 2.15f), true);
             var cargoDeposit = cargoDepositZone.AddComponent<VanCargoDepositZone>();
             SetObject(cargoDeposit, "gameLoop", gameLoop);
+            SetObject(cargoDeposit, "cargoHold", cargoHold);
             CreateCube("ReturnBongoCargoPad_G", root.transform, new Vector3(0f, 0.32f, 3.38f), new Vector3(2.8f, 0.08f, 1.25f), Materials.Extraction).GetComponent<Collider>().enabled = false;
             CreateCube("ReturnBongoFrontBumper", root.transform, new Vector3(0f, 0.55f, -4.2f), new Vector3(3.7f, 0.32f, 0.18f), Materials.RustedMetal);
             CreateCube("ReturnBongoRearBumper", root.transform, new Vector3(0f, 0.55f, 4.18f), new Vector3(3.7f, 0.32f, 0.18f), Materials.RustedMetal);
@@ -439,6 +445,22 @@ namespace KHorrorGame.Editor
             CreatePointLight("ReturnBongoCabGlow", root.transform, new Vector3(0f, 1.8f, 2.2f), new Color(0.72f, 0.88f, 0.72f), 1.1f, 4.5f);
             CreatePointLight("ReturnBongoTailLampLeft", root.transform, new Vector3(-1.58f, 0.92f, 4.1f), new Color(1f, 0.08f, 0.035f), 0.95f, 3f);
             CreatePointLight("ReturnBongoTailLampRight", root.transform, new Vector3(1.58f, 0.92f, 4.1f), new Color(1f, 0.08f, 0.035f), 0.95f, 3f);
+        }
+
+        private static void RegisterCargoSlot(Transform parent, VanCargoHold cargoHold, string name, Vector3 localPosition)
+        {
+            var slot = new GameObject(name).transform;
+            slot.SetParent(parent, false);
+            slot.localPosition = localPosition;
+            cargoHold.RegisterSlot(slot);
+        }
+
+        private static void RegisterFallbackCargoSlot(Transform parent, VanCargoHold cargoHold, string name, Vector3 localPosition)
+        {
+            var slot = new GameObject(name).transform;
+            slot.SetParent(parent, false);
+            slot.localPosition = localPosition;
+            cargoHold.RegisterFallbackSlot(slot);
         }
 
         private static void CreateForest(Transform parent)

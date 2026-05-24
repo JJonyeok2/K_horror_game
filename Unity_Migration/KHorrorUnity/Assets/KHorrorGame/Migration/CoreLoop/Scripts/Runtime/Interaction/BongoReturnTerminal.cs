@@ -43,11 +43,6 @@ namespace KHorrorGame.Migration
                 return;
             }
 
-            if (actor.Inventory.Items.Count > 0)
-            {
-                gameLoop.ExtractPlayerInventory();
-            }
-
             gameLoop.ReturnToBongoHub();
         }
     }

@@ -49,13 +49,23 @@ namespace KHorrorGame.Migration
 
             if (centerPromptText != null)
             {
-                centerPromptText.text = interactor != null ? interactor.CurrentLabel : string.Empty;
+                centerPromptText.text = ResolveCenterPrompt();
             }
 
             if (staminaFill != null && player != null)
             {
                 staminaFill.fillAmount = player.StaminaRatio;
             }
+        }
+
+        private string ResolveCenterPrompt()
+        {
+            if (gameLoop != null && !string.IsNullOrEmpty(gameLoop.FeedbackMessage))
+            {
+                return gameLoop.FeedbackMessage;
+            }
+
+            return interactor != null ? interactor.CurrentLabel : string.Empty;
         }
     }
 }

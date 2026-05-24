@@ -14,7 +14,7 @@
   - C1 테스트를 통과시킨 뒤 커밋하고 `origin/unity-conversion`에 푸시한다.
   - _Requirements: 1.1, 1.3, 1.4, 1.6, 2.1, 2.2_
 
-- [ ] C3. `VanCargoDepositZone`을 물리 적재 방식으로 교체
+- [x] C3. `VanCargoDepositZone`을 물리 적재 방식으로 교체
   - 기존 `ExtractPlayerInventory()` 직접 호출 흐름을 제거한다.
   - `G` 입력 시 손에 든 물건을 `VanCargoHold`에 `VanCargoItem`으로 생성한다.
   - 생성 성공 후에만 플레이어 인벤토리와 손 시각화를 비운다.

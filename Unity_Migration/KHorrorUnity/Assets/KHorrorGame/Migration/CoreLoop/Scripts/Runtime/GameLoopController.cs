@@ -20,13 +20,16 @@ namespace KHorrorGame.Migration
         [Header("Run Rules")]
         [SerializeField] private int startingQuotaValue = 800;
         [SerializeField] private float travelSeconds = BongoRunStateMachine.DefaultTravelSeconds;
+        [SerializeField] private float feedbackSeconds = 2f;
 
         private Inventory fallbackInventory;
+        private float feedbackRemainingSeconds;
 
         public event Action<GameLoopController> StateChanged;
 
         public BongoRunStateMachine State { get; private set; }
         public ThreatSpawnGate ThreatGate { get; private set; }
+        public string FeedbackMessage { get; private set; } = string.Empty;
 
         public Inventory PlayerInventory => player != null ? player.Inventory : fallbackInventory;
         public QuotaTracker Quota => State.Quota;
@@ -65,6 +68,7 @@ namespace KHorrorGame.Migration
         {
             State.TickTravel(Time.deltaTime);
             ThreatGate.Tick(Time.deltaTime);
+            TickFeedback(Time.deltaTime);
         }
 
         public bool OperateBongoTerminal()
@@ -91,6 +95,13 @@ namespace KHorrorGame.Migration
         public bool ReturnToBongoHub()
         {
             return State.ReturnToBongoHub();
+        }
+
+        public void ShowFeedback(string message)
+        {
+            FeedbackMessage = message ?? string.Empty;
+            feedbackRemainingSeconds = string.IsNullOrEmpty(FeedbackMessage) ? 0f : Mathf.Max(feedbackSeconds, 0.01f);
+            NotifyStateChanged();
         }
 
         public void RegisterArtifactPicked(ArtifactDefinition definition)
@@ -196,6 +207,23 @@ namespace KHorrorGame.Migration
         private void NotifyStateChanged()
         {
             StateChanged?.Invoke(this);
+        }
+
+        private void TickFeedback(float deltaSeconds)
+        {
+            if (string.IsNullOrEmpty(FeedbackMessage) || feedbackRemainingSeconds <= 0f)
+            {
+                return;
+            }
+
+            feedbackRemainingSeconds -= Mathf.Max(deltaSeconds, 0f);
+            if (feedbackRemainingSeconds > 0f)
+            {
+                return;
+            }
+
+            FeedbackMessage = string.Empty;
+            NotifyStateChanged();
         }
     }
 }
