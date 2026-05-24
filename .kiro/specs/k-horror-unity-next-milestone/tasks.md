@@ -6,6 +6,13 @@
   - Regenerate `KHorror_Main` and verify EditMode tests still pass.
   - _Requirements: 6.3, 7.4, 7.6_
 
+- [x] H2. Hotfix estate return and rear route continuity
+  - Add a visible return bongo interaction that can return without cargo or load cargo then return.
+  - Open the main house front entry and rear exit connector toward the shrine path.
+  - Add first-pass sarangchae and kitchen shed structures behind the courtyard.
+  - Move shrine pickup onto the accessible shrine floor area.
+  - _Requirements: 1.3, 1.4, 4.4, 4.5, 4.6, 6.3_
+
 - [x] 1. Establish territory foundations
   - Add `EnemyKind` and `TerritoryKind` domain enums.
   - Add a testable `EnemyTerritoryRules` service that answers whether a kind can enter a territory.

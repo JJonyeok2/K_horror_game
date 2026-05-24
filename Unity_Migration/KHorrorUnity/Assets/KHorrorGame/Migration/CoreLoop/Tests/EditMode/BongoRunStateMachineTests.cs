@@ -63,6 +63,22 @@ namespace KHorrorGame.Migration.Tests
         }
 
         [Test]
+        public void EstateReturnDoesNotRequireCargo()
+        {
+            var state = CreateState(0f);
+
+            Assert.IsTrue(state.OperateBongoTerminal());
+            state.CompleteBongoTravel();
+            Assert.AreEqual(GameMapId.JonggaEstate, state.CurrentMap);
+
+            Assert.IsTrue(state.ReturnToBongoHub());
+            state.CompleteBongoTravel();
+
+            Assert.AreEqual(GameMapId.BongoHub, state.CurrentMap);
+            Assert.AreEqual(0, state.PendingRecoveredValue);
+        }
+
+        [Test]
         public void InventoryEnforcesTwoHands()
         {
             var inventory = new Inventory(12f, 2);

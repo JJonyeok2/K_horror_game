@@ -195,13 +195,14 @@ namespace KHorrorGame.Editor
             CreateOuterGate(parent, gateInsideSpawn, gateOutsideSpawn);
             CreateCourtyard(parent);
             CreateMainHouse(parent);
+            CreateSarangchae(parent);
             CreateShrineLoop(parent);
 
             var artifact = CreateCube("Artifact_BrassBowl", parent, new Vector3(2.2f, 0.5f, 70f), new Vector3(0.45f, 0.3f, 0.45f), Materials.Artifact);
             var pickup = artifact.AddComponent<ArtifactPickup>();
             SetObject(pickup, "gameLoop", gameLoop);
 
-            var shrineArtifact = CreateCube("Artifact_ShrineToken", parent, new Vector3(-7.8f, 0.45f, 95f), new Vector3(0.36f, 0.28f, 0.36f), Materials.ShrineToken);
+            var shrineArtifact = CreateCube("Artifact_ShrineToken", parent, new Vector3(-7.8f, 0.88f, 98.25f), new Vector3(0.36f, 0.28f, 0.36f), Materials.ShrineToken);
             var shrinePickup = shrineArtifact.AddComponent<ArtifactPickup>();
             SetObject(shrinePickup, "gameLoop", gameLoop);
 
@@ -231,6 +232,8 @@ namespace KHorrorGame.Editor
             root.transform.SetParent(parent);
             root.transform.position = new Vector3(-2.2f, 0f, 20.1f);
             root.transform.rotation = Quaternion.Euler(0f, 180f, 0f);
+            var returnTerminal = root.AddComponent<BongoReturnTerminal>();
+            SetObject(returnTerminal, "gameLoop", gameLoop);
 
             CreateCube("ReturnBongoBody", root.transform, new Vector3(0f, 1.15f, 0f), new Vector3(4.2f, 2.05f, 6.2f), Materials.VanPaint);
             CreateCube("ReturnBongoRoof", root.transform, new Vector3(0f, 2.28f, 0f), new Vector3(4.35f, 0.32f, 6.35f), Materials.VanRoof);
@@ -249,13 +252,6 @@ namespace KHorrorGame.Editor
             CreateCylinder("ReturnBongoWheel_FR", root.transform, new Vector3(2.15f, 0.52f, -2.35f), new Vector3(0.42f, 0.22f, 0.42f), Materials.Tire, Quaternion.Euler(0f, 0f, 90f));
             CreateCylinder("ReturnBongoWheel_RL", root.transform, new Vector3(-2.15f, 0.52f, 2.35f), new Vector3(0.42f, 0.22f, 0.42f), Materials.Tire, Quaternion.Euler(0f, 0f, 90f));
             CreateCylinder("ReturnBongoWheel_RR", root.transform, new Vector3(2.15f, 0.52f, 2.35f), new Vector3(0.42f, 0.22f, 0.42f), Materials.Tire, Quaternion.Euler(0f, 0f, 90f));
-
-            var extraction = CreateCube("VanInteriorReturnZone", root.transform, new Vector3(0f, 1.0f, 3.35f), new Vector3(3.1f, 1.65f, 1.45f), Materials.Extraction);
-            extraction.GetComponent<MeshRenderer>().enabled = false;
-            var collider = extraction.GetComponent<Collider>();
-            collider.isTrigger = true;
-            var extractionZone = extraction.AddComponent<ExtractionZone>();
-            SetObject(extractionZone, "gameLoop", gameLoop);
 
             CreatePointLight("ReturnBongoCabGlow", root.transform, new Vector3(0f, 1.8f, 2.2f), new Color(0.72f, 0.88f, 0.72f), 1.1f, 4.5f);
             CreatePointLight("ReturnBongoTailLampLeft", root.transform, new Vector3(-1.58f, 0.92f, 4.1f), new Color(1f, 0.08f, 0.035f), 0.95f, 3f);
@@ -382,7 +378,10 @@ namespace KHorrorGame.Editor
             CreateCube("MainHouseStoneFoundation", parent, new Vector3(0f, 0.2f, 83f), new Vector3(15.2f, 0.4f, 8.1f), Materials.Stone);
             CreateCube("MainHouseWoodenMaru", parent, new Vector3(0f, 0.55f, 80.2f), new Vector3(14.2f, 0.28f, 1.8f), Materials.Wood);
             CreateCube("MainHouseFloor", parent, new Vector3(0f, 0.55f, 83f), new Vector3(14f, 0.35f, 7f), Materials.Wood);
-            CreateCube("MainHouseBackWall", parent, new Vector3(0f, 2f, 86.6f), new Vector3(14f, 3.5f, 0.35f), Materials.Plaster);
+            CreateCube("MainHouseFrontLowStep", parent, new Vector3(0f, 0.16f, 78.55f), new Vector3(6.2f, 0.22f, 0.9f), Materials.Stone);
+            CreateCube("MainHouseFrontHighStep", parent, new Vector3(0f, 0.34f, 79.1f), new Vector3(4.4f, 0.22f, 0.75f), Materials.Stone);
+            CreateCube("MainHouseBackWall_Right", parent, new Vector3(0.7f, 2f, 86.6f), new Vector3(12.2f, 3.5f, 0.35f), Materials.Plaster);
+            CreateCube("MainHouseBackWall_LeftStub", parent, new Vector3(-6.78f, 2f, 86.6f), new Vector3(0.44f, 3.5f, 0.35f), Materials.Plaster);
             CreateCube("MainHouseLeftWall", parent, new Vector3(-7f, 2f, 83f), new Vector3(0.35f, 3.5f, 7f), Materials.Plaster);
             CreateCube("MainHouseRightWall", parent, new Vector3(7f, 2f, 83f), new Vector3(0.35f, 3.5f, 7f), Materials.Plaster);
             CreateCube("MainHouseFrontBeam", parent, new Vector3(0f, 3.25f, 79.7f), new Vector3(14.8f, 0.35f, 0.35f), Materials.DarkWood);
@@ -390,11 +389,23 @@ namespace KHorrorGame.Editor
             for (var i = 0; i < 7; i++)
             {
                 var x = -6f + i * 2f;
+                if (i == 3)
+                {
+                    CreateCube("MainHouseOpenDoor_LeftPanel", parent, new Vector3(-0.92f, 1.75f, 79.34f), new Vector3(0.52f, 2.15f, 0.08f), Materials.DoorPaper);
+                    CreateCube("MainHouseOpenDoor_RightPanel", parent, new Vector3(0.92f, 1.75f, 79.34f), new Vector3(0.52f, 2.15f, 0.08f), Materials.DoorPaper);
+                    continue;
+                }
+
                 CreateCube("MainHouseFrontColumn_" + i, parent, new Vector3(x, 1.75f, 79.55f), new Vector3(0.32f, 2.45f, 0.32f), Materials.DarkWood);
                 CreateCube("MainHousePaperDoor_" + i, parent, new Vector3(x, 1.75f, 79.38f), new Vector3(1.25f, 2.15f, 0.08f), Materials.DoorPaper);
                 CreateCube("MainHouseDoorMuntinV_" + i, parent, new Vector3(x, 1.75f, 79.31f), new Vector3(0.08f, 2.25f, 0.08f), Materials.DarkWood);
                 CreateCube("MainHouseDoorMuntinH_" + i, parent, new Vector3(x, 1.75f, 79.3f), new Vector3(1.28f, 0.08f, 0.08f), Materials.DarkWood);
             }
+
+            CreateCube("MainHouseInteriorLeftRoomWall", parent, new Vector3(-3.1f, 1.85f, 83.2f), new Vector3(0.22f, 2.6f, 5.2f), Materials.Plaster);
+            CreateCube("MainHouseInteriorRightRoomWall", parent, new Vector3(3.1f, 1.85f, 83.2f), new Vector3(0.22f, 2.6f, 5.2f), Materials.Plaster);
+            CreateCube("MainHouseInnerBackRoomScreen", parent, new Vector3(0f, 1.6f, 84.95f), new Vector3(4.4f, 2.0f, 0.18f), Materials.DoorPaper);
+            CreateCube("MainHouseBackExitConnectorFloor", parent, new Vector3(-6.6f, 0.14f, 88.5f), new Vector3(2.6f, 0.22f, 3.7f), Materials.Road);
 
             CreateCube("MainHouseRoof_LeftSlope", parent, new Vector3(-3.6f, 4.35f, 83f), new Vector3(9.0f, 0.42f, 9.6f), Materials.Roof, Quaternion.Euler(0f, 0f, 11f));
             CreateCube("MainHouseRoof_RightSlope", parent, new Vector3(3.6f, 4.35f, 83f), new Vector3(9.0f, 0.42f, 9.6f), Materials.Roof, Quaternion.Euler(0f, 0f, -11f));
@@ -405,8 +416,43 @@ namespace KHorrorGame.Editor
             CreateRafterRow(parent, 87.05f, "BackRafter");
             CreatePaperCharm(parent, new Vector3(-2.4f, 2.85f, 79.15f), "MainDoorCharm_Left");
             CreatePaperCharm(parent, new Vector3(2.4f, 2.7f, 79.15f), "MainDoorCharm_Right");
-            CreateCube("BackExitGap", parent, new Vector3(-7.6f, 0.1f, 87.8f), new Vector3(1.6f, 0.2f, 5f), Materials.Road);
+            CreateCube("BackExitGap", parent, new Vector3(-7.6f, 0.1f, 88.5f), new Vector3(2.2f, 0.2f, 6.4f), Materials.Road);
             CreateBambooCluster(parent, new Vector3(-9.1f, 0f, 88.5f), "BackExitBamboo");
+        }
+
+        private static void CreateSarangchae(Transform parent)
+        {
+            CreateCube("SarangchaeStoneFoundation", parent, new Vector3(9.2f, 0.18f, 75.5f), new Vector3(3.9f, 0.36f, 8.4f), Materials.Stone);
+            CreateCube("SarangchaeWoodFloor", parent, new Vector3(9.15f, 0.48f, 75.5f), new Vector3(3.55f, 0.25f, 7.8f), Materials.Wood);
+            CreateCube("SarangchaeFrontStep", parent, new Vector3(6.95f, 0.2f, 75.5f), new Vector3(1.0f, 0.22f, 5.4f), Materials.Stone);
+            CreateCube("SarangchaeBackWall", parent, new Vector3(11.05f, 1.85f, 75.5f), new Vector3(0.28f, 2.9f, 7.8f), Materials.Plaster);
+            CreateCube("SarangchaeNorthWall", parent, new Vector3(9.2f, 1.85f, 79.5f), new Vector3(3.65f, 2.9f, 0.28f), Materials.Plaster);
+            CreateCube("SarangchaeSouthWall", parent, new Vector3(9.2f, 1.85f, 71.5f), new Vector3(3.65f, 2.9f, 0.28f), Materials.Plaster);
+
+            for (var i = 0; i < 4; i++)
+            {
+                var z = 72.4f + i * 2.05f;
+                CreateCube("SarangchaeFrontColumn_" + i, parent, new Vector3(7.3f, 1.65f, z), new Vector3(0.28f, 2.35f, 0.28f), Materials.DarkWood);
+            }
+
+            CreateCube("SarangchaeOpenPaperDoor_A", parent, new Vector3(7.22f, 1.55f, 74.3f), new Vector3(0.08f, 1.9f, 0.72f), Materials.DoorPaper);
+            CreateCube("SarangchaeOpenPaperDoor_B", parent, new Vector3(7.22f, 1.55f, 76.6f), new Vector3(0.08f, 1.9f, 0.72f), Materials.DoorPaper);
+            CreateCube("SarangchaeInteriorScreen", parent, new Vector3(9.15f, 1.55f, 75.5f), new Vector3(0.12f, 2.0f, 3.2f), Materials.DoorPaper);
+            CreateCube("SarangchaeFrontBeam", parent, new Vector3(7.32f, 3.1f, 75.5f), new Vector3(0.36f, 0.32f, 8.2f), Materials.DarkWood);
+            CreateCube("SarangchaeBackBeam", parent, new Vector3(11.04f, 3.1f, 75.5f), new Vector3(0.36f, 0.32f, 8.2f), Materials.DarkWood);
+            CreateCube("SarangchaeRoof_LeftSlope", parent, new Vector3(8.25f, 4.0f, 75.5f), new Vector3(2.4f, 0.36f, 9.0f), Materials.Roof, Quaternion.Euler(0f, 0f, 10f));
+            CreateCube("SarangchaeRoof_RightSlope", parent, new Vector3(10.05f, 4.0f, 75.5f), new Vector3(2.4f, 0.36f, 9.0f), Materials.Roof, Quaternion.Euler(0f, 0f, -10f));
+            CreateCube("SarangchaeRoofRidge", parent, new Vector3(9.15f, 4.45f, 75.5f), new Vector3(0.32f, 0.26f, 9.3f), Materials.RoofRidge);
+            CreateRoofTileRibs(parent, new Vector3(9.15f, 4.18f, 75.5f), 3.8f, 8.8f, "SarangchaeTileRib");
+            CreatePaperLantern(parent, new Vector3(7.0f, 2.35f, 78.3f), "SarangchaeLantern");
+
+            CreateCube("KitchenShedFoundation", parent, new Vector3(-3.0f, 0.15f, 91.5f), new Vector3(5.8f, 0.3f, 3.8f), Materials.Stone);
+            CreateCube("KitchenShedFloor", parent, new Vector3(-3.0f, 0.43f, 91.5f), new Vector3(5.4f, 0.25f, 3.4f), Materials.Wood);
+            CreateCube("KitchenShedBackWall", parent, new Vector3(-3.0f, 1.65f, 93.25f), new Vector3(5.4f, 2.4f, 0.24f), Materials.Plaster);
+            CreateCube("KitchenShedLeftWall", parent, new Vector3(-5.8f, 1.65f, 91.5f), new Vector3(0.24f, 2.4f, 3.4f), Materials.Plaster);
+            CreateCube("KitchenShedRightWall", parent, new Vector3(-0.2f, 1.65f, 91.5f), new Vector3(0.24f, 2.4f, 3.4f), Materials.Plaster);
+            CreateCube("KitchenShedRoof", parent, new Vector3(-3.0f, 3.0f, 91.5f), new Vector3(6.1f, 0.35f, 4.1f), Materials.Roof, Quaternion.Euler(0f, 0f, -4f));
+            CreateCylinder("KitchenOnggiJar", parent, new Vector3(-4.3f, 0.75f, 89.9f), new Vector3(0.55f, 0.6f, 0.55f), Materials.Jar);
         }
 
         private static void CreateShrineLoop(Transform parent)
