@@ -236,6 +236,45 @@ namespace KHorrorGame.Migration.Tests
         }
 
         [Test]
+        public void RuntimeThreatSpawnerGraceCueDoesNotActivateActors()
+        {
+            var root = new GameObject("GraceSpawnerFixture");
+            var player = new GameObject("PlayerFixture");
+            var ghost = new GameObject("GhostActorFixture");
+            var dokkaebi = new GameObject("DokkaebiActorFixture");
+            var cue = new GameObject("CueFixture").AddComponent<Light>();
+            var spawner = root.AddComponent<RuntimeThreatSpawner>();
+
+            try
+            {
+                var ghostBrain = ghost.AddComponent<EnemyBrain>();
+                var dokkaebiBrain = dokkaebi.AddComponent<EnemyBrain>();
+                ghost.SetActive(false);
+                dokkaebi.SetActive(false);
+
+                SetObject(spawner, "playerTarget", player.transform);
+                SetObject(spawner, "ghostActor", ghostBrain);
+                SetObject(spawner, "dokkaebiActor", dokkaebiBrain);
+                SetObject(spawner, "spawnCueLight", cue);
+
+                var decision = spawner.EvaluateThreats(false, 5, GameMapId.JonggaEstate, TerritoryKind.EstateInterior);
+
+                Assert.AreEqual(ThreatDirectorAction.CueOnly, decision.Action);
+                Assert.IsFalse(ghost.activeSelf);
+                Assert.IsFalse(dokkaebi.activeSelf);
+                Assert.IsTrue(cue.enabled);
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(root);
+                UnityEngine.Object.DestroyImmediate(player);
+                UnityEngine.Object.DestroyImmediate(ghost);
+                UnityEngine.Object.DestroyImmediate(dokkaebi);
+                UnityEngine.Object.DestroyImmediate(cue.gameObject);
+            }
+        }
+
+        [Test]
         public void ShrineEntranceOnlyAllowsApproachFromBackRoute()
         {
             EditorSceneManager.OpenScene(ScenePath);

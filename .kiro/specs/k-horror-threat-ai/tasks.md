@@ -29,7 +29,7 @@
   - Regenerate `KHorror_Main`, verify full EditMode tests pass, then commit and push.
   - _Requirements: 3.1, 3.2, 3.3, 3.4, 4.1, 6.1, 6.3, 6.4, 6.5_
 
-- [ ] H13. Pattern variance escalation
+- [x] H13. Pattern variance escalation
   - Add deterministic pattern variance to `EnemyBrain` using stage profile values.
   - Add pause, burst, feint retreat, and side-step pattern windows.
   - Add tests proving higher stages unlock more variance without immediate attack during shrine grace.

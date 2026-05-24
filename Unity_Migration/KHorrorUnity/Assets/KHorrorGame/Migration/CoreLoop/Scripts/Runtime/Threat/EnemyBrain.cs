@@ -16,8 +16,12 @@ namespace KHorrorGame.Migration
         private Vector3 homePosition;
         private PlayerDamageReceiver targetDamageReceiver;
         private float attackCooldownSeconds;
+        private float patternTimerSeconds;
+        private int patternStep;
+        private int patternSeed;
 
         public EnemyBrainState State { get; private set; } = EnemyBrainState.Idle;
+        public EnemyBrainPattern CurrentPattern { get; private set; } = EnemyBrainPattern.Direct;
         public EnemyKind EnemyKind
         {
             get { return enemyKind; }
@@ -89,6 +93,10 @@ namespace KHorrorGame.Migration
             homePosition = newHomePosition;
             targetDamageReceiver = target != null ? target.GetComponent<PlayerDamageReceiver>() : null;
             attackCooldownSeconds = 0f;
+            patternTimerSeconds = 0f;
+            patternStep = 0;
+            patternSeed = CreatePatternSeed(newEnemyKind, newStats, newHomePosition);
+            CurrentPattern = EnemyBrainPattern.Direct;
             State = EnemyBrainState.Idle;
         }
 
@@ -119,22 +127,26 @@ namespace KHorrorGame.Migration
             if (distanceToTarget > stats.DetectionRange)
             {
                 State = EnemyBrainState.Idle;
+                CurrentPattern = EnemyBrainPattern.Direct;
                 return;
             }
 
             if (distanceToTarget <= stats.AttackRange)
             {
                 State = EnemyBrainState.Attacking;
+                CurrentPattern = EnemyBrainPattern.Direct;
                 TryAttackTarget();
                 return;
             }
 
             State = EnemyBrainState.Chasing;
-            MoveToward(targetPosition, delta);
+            MoveTowardWithPattern(targetPosition, delta);
+            UpdatePattern(delta);
         }
 
         private void ReturnHome(float deltaSeconds)
         {
+            CurrentPattern = EnemyBrainPattern.Direct;
             var destination = FlattenToSelfHeight(homePosition);
             if (Vector3.Distance(transform.position, destination) <= returnArrivalDistance)
             {
@@ -144,6 +156,57 @@ namespace KHorrorGame.Migration
 
             State = EnemyBrainState.Returning;
             MoveToward(destination, deltaSeconds);
+        }
+
+        private void MoveTowardWithPattern(Vector3 targetPosition, float deltaSeconds)
+        {
+            var directionToTarget = targetPosition - transform.position;
+            if (directionToTarget.sqrMagnitude <= 0.0001f)
+            {
+                return;
+            }
+
+            var direction = directionToTarget.normalized;
+            switch (CurrentPattern)
+            {
+                case EnemyBrainPattern.Pause:
+                    return;
+                case EnemyBrainPattern.Burst:
+                    MoveToward(targetPosition, deltaSeconds * 1.65f);
+                    return;
+                case EnemyBrainPattern.FeintRetreat:
+                    MoveToward(transform.position - direction * Mathf.Max(0.8f, stats.AttackRange), deltaSeconds * 0.8f);
+                    return;
+                case EnemyBrainPattern.SideStep:
+                    var sideSign = patternStep % 2 == 0 ? 1f : -1f;
+                    var side = new Vector3(-direction.z, 0f, direction.x) * sideSign;
+                    MoveToward(transform.position + side * 1.6f + direction * 0.25f, deltaSeconds);
+                    return;
+                default:
+                    MoveToward(targetPosition, deltaSeconds);
+                    return;
+            }
+        }
+
+        private void UpdatePattern(float deltaSeconds)
+        {
+            if (stats.UnlockedPatternCount <= 1)
+            {
+                CurrentPattern = EnemyBrainPattern.Direct;
+                return;
+            }
+
+            patternTimerSeconds -= deltaSeconds;
+            if (patternTimerSeconds > 0f)
+            {
+                return;
+            }
+
+            var index = Mathf.Abs(patternSeed + patternStep * 73 + Mathf.RoundToInt(stats.PatternVariance * 100f))
+                % stats.UnlockedPatternCount;
+            CurrentPattern = (EnemyBrainPattern)index;
+            patternStep++;
+            patternTimerSeconds = Mathf.Lerp(2.2f, 0.85f, stats.PatternVariance);
         }
 
         private void TryAttackTarget()
@@ -173,6 +236,15 @@ namespace KHorrorGame.Migration
         private Vector3 FlattenToSelfHeight(Vector3 position)
         {
             return new Vector3(position.x, transform.position.y, position.z);
+        }
+
+        private static int CreatePatternSeed(EnemyKind kind, EnemyStats stats, Vector3 home)
+        {
+            return Mathf.Abs(
+                Mathf.RoundToInt(home.x * 17f) ^
+                Mathf.RoundToInt(home.z * 31f) ^
+                ((int)kind * 101) ^
+                (stats.DamagePerHit * 7));
         }
     }
 }

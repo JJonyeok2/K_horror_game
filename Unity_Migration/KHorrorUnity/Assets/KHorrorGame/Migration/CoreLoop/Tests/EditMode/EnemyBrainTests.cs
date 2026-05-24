@@ -1,3 +1,4 @@
+using System.Linq;
 using NUnit.Framework;
 using UnityEngine;
 
@@ -91,7 +92,28 @@ namespace KHorrorGame.Migration.Tests
             Assert.Greater(stageFive.MoveSpeed, stageThree.MoveSpeed);
             Assert.Greater(stageFive.AttackRange, stageThree.AttackRange);
             Assert.Greater(stageFive.PatternVariance, stageThree.PatternVariance);
+            Assert.Greater(stageFive.UnlockedPatternCount, stageThree.UnlockedPatternCount);
             Assert.Less(stageFive.AttackIntervalSeconds, stageThree.AttackIntervalSeconds);
+        }
+
+        [Test]
+        public void HighThreatEnemyCyclesDeterministicVariancePatterns()
+        {
+            var target = CreatePlayer(new Vector3(18f, 0f, 0f), withHealth: false);
+            var brain = CreateEnemy(Vector3.zero, EnemyKind.Dokkaebi, ThreatStageProfile.ForStage(5), target);
+            var observedPatterns = new System.Collections.Generic.HashSet<EnemyBrainPattern>();
+
+            for (var i = 0; i < 6; i++)
+            {
+                brain.ManualTick(3f, TerritoryKind.ForestApproach);
+                observedPatterns.Add(brain.CurrentPattern);
+            }
+
+            Assert.Contains(EnemyBrainPattern.Burst, observedPatterns.ToArray());
+            Assert.IsTrue(
+                observedPatterns.Contains(EnemyBrainPattern.FeintRetreat) ||
+                observedPatterns.Contains(EnemyBrainPattern.SideStep),
+                "High threat stages should unlock late-stage movement variance.");
         }
 
         private Transform CreatePlayer(Vector3 position, bool withHealth)

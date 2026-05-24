@@ -28,6 +28,33 @@ namespace KHorrorGame.Migration
         public float AttackIntervalSeconds { get; }
         public int DamagePerHit { get; }
         public float PatternVariance { get; }
+        public int UnlockedPatternCount
+        {
+            get
+            {
+                if (PatternVariance >= 0.6f)
+                {
+                    return 5;
+                }
+
+                if (PatternVariance >= 0.4f)
+                {
+                    return 4;
+                }
+
+                if (PatternVariance >= 0.2f)
+                {
+                    return 3;
+                }
+
+                if (PatternVariance >= 0.1f)
+                {
+                    return 2;
+                }
+
+                return 1;
+            }
+        }
 
         public static EnemyStats FromProfile(EnemyKind enemyKind, ThreatStageProfile profile)
         {
