@@ -187,6 +187,7 @@ namespace KHorrorGame.Editor
             CreateCube("OuterGateThresholdStone", parent, new Vector3(0f, 0.08f, 53f), new Vector3(8f, 0.24f, 1.2f), Materials.Stone);
             CreateCube("OuterGateContinuousUnderfloor", parent, new Vector3(0f, -0.08f, 54.45f), new Vector3(9.2f, 0.42f, 4.6f), Materials.Stone);
             CreateCube("OuterGatePackedEarthBridge", parent, new Vector3(0f, 0f, 55.05f), new Vector3(8.3f, 0.2f, 4.4f), Materials.Courtyard);
+            CreateEstateGroundContinuity(parent);
             var gateInsideSpawn = CreateMarker("EstateGateInsideSpawn", new Vector3(0f, 1f, 59.8f), Quaternion.identity, parent);
             var gateOutsideSpawn = CreateMarker("EstateGateOutsideSpawn", new Vector3(0f, 1f, 51.25f), Quaternion.Euler(0f, 180f, 0f), parent);
 
@@ -207,6 +208,18 @@ namespace KHorrorGame.Editor
             SetObject(shrinePickup, "gameLoop", gameLoop);
 
             CreateEstateReturnBongo(parent, gameLoop);
+        }
+
+        private static void CreateEstateGroundContinuity(Transform parent)
+        {
+            CreateCube("EstateContinuousEarthUnderlay", parent, new Vector3(0f, -0.055f, 54f), new Vector3(24f, 0.11f, 112f), Materials.Courtyard);
+            CreateCube("BongoToForestApron", parent, new Vector3(0f, 0.02f, 8.35f), new Vector3(8.4f, 0.16f, 15.5f), Materials.Road);
+            CreateCube("BongoApronGrassLeft", parent, new Vector3(-5.9f, 0f, 8.35f), new Vector3(3.3f, 0.12f, 15.5f), Materials.Grass);
+            CreateCube("BongoApronGrassRight", parent, new Vector3(5.9f, 0f, 8.35f), new Vector3(3.3f, 0.12f, 15.5f), Materials.Grass);
+            CreateCube("ApproachRoadSeamPatch", parent, new Vector3(0f, 0.045f, 16.15f), new Vector3(7.2f, 0.13f, 1.1f), Materials.Road);
+            CreateCube("InsideGateLandingPad", parent, new Vector3(0f, 0.03f, 58.2f), new Vector3(8.2f, 0.14f, 3.2f), Materials.Courtyard);
+            CreateCube("CourtyardToMainHousePad", parent, new Vector3(0f, 0.04f, 78.2f), new Vector3(8.6f, 0.14f, 2.2f), Materials.Courtyard);
+            CreateCube("ShrineEntryPackedEarthPad", parent, new Vector3(-8f, 0.04f, 96.15f), new Vector3(4.4f, 0.14f, 1.5f), Materials.Road);
         }
 
         private static void CreateSettlementProxy(Transform parent, GameLoopController gameLoop)
@@ -380,8 +393,8 @@ namespace KHorrorGame.Editor
             CreateCube("MainHouseFloor", parent, new Vector3(0f, 0.55f, 83f), new Vector3(14f, 0.35f, 7f), Materials.Wood);
             CreateCube("MainHouseFrontLowStep", parent, new Vector3(0f, 0.16f, 78.55f), new Vector3(6.2f, 0.22f, 0.9f), Materials.Stone);
             CreateCube("MainHouseFrontHighStep", parent, new Vector3(0f, 0.34f, 79.1f), new Vector3(4.4f, 0.22f, 0.75f), Materials.Stone);
-            CreateCube("MainHouseBackWall_Right", parent, new Vector3(0.7f, 2f, 86.6f), new Vector3(12.2f, 3.5f, 0.35f), Materials.Plaster);
-            CreateCube("MainHouseBackWall_LeftStub", parent, new Vector3(-6.78f, 2f, 86.6f), new Vector3(0.44f, 3.5f, 0.35f), Materials.Plaster);
+            CreateCube("MainHouseBackWall_Right", parent, new Vector3(1.0f, 2f, 86.6f), new Vector3(11.6f, 3.5f, 0.35f), Materials.Plaster);
+            CreateCube("MainHouseBackWall_LeftStub", parent, new Vector3(-6.95f, 2f, 86.6f), new Vector3(0.25f, 3.5f, 0.35f), Materials.Plaster);
             CreateCube("MainHouseLeftWall", parent, new Vector3(-7f, 2f, 83f), new Vector3(0.35f, 3.5f, 7f), Materials.Plaster);
             CreateCube("MainHouseRightWall", parent, new Vector3(7f, 2f, 83f), new Vector3(0.35f, 3.5f, 7f), Materials.Plaster);
             CreateCube("MainHouseFrontBeam", parent, new Vector3(0f, 3.25f, 79.7f), new Vector3(14.8f, 0.35f, 0.35f), Materials.DarkWood);
@@ -405,7 +418,10 @@ namespace KHorrorGame.Editor
             CreateCube("MainHouseInteriorLeftRoomWall", parent, new Vector3(-3.1f, 1.85f, 83.2f), new Vector3(0.22f, 2.6f, 5.2f), Materials.Plaster);
             CreateCube("MainHouseInteriorRightRoomWall", parent, new Vector3(3.1f, 1.85f, 83.2f), new Vector3(0.22f, 2.6f, 5.2f), Materials.Plaster);
             CreateCube("MainHouseInnerBackRoomScreen", parent, new Vector3(0f, 1.6f, 84.95f), new Vector3(4.4f, 2.0f, 0.18f), Materials.DoorPaper);
-            CreateCube("MainHouseBackExitConnectorFloor", parent, new Vector3(-6.6f, 0.14f, 88.5f), new Vector3(2.6f, 0.22f, 3.7f), Materials.Road);
+            CreateCube("MainHouseRearLanding", parent, new Vector3(-5.8f, 0.61f, 86.85f), new Vector3(1.8f, 0.18f, 0.7f), Materials.Wood);
+            CreateCube("MainHouseRearMiddleStep", parent, new Vector3(-6.2f, 0.42f, 87.55f), new Vector3(2.3f, 0.18f, 0.9f), Materials.Stone);
+            CreateCube("MainHouseRearLowStep", parent, new Vector3(-7.15f, 0.24f, 88.35f), new Vector3(2.6f, 0.18f, 1.15f), Materials.Stone);
+            CreateCube("MainHouseBackExitConnectorFloor", parent, new Vector3(-6.8f, 0.12f, 89.15f), new Vector3(3.1f, 0.2f, 4.9f), Materials.Road);
 
             CreateCube("MainHouseRoof_LeftSlope", parent, new Vector3(-3.6f, 4.35f, 83f), new Vector3(9.0f, 0.42f, 9.6f), Materials.Roof, Quaternion.Euler(0f, 0f, 11f));
             CreateCube("MainHouseRoof_RightSlope", parent, new Vector3(3.6f, 4.35f, 83f), new Vector3(9.0f, 0.42f, 9.6f), Materials.Roof, Quaternion.Euler(0f, 0f, -11f));

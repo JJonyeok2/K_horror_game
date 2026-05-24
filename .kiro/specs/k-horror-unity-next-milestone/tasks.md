@@ -13,6 +13,13 @@
   - Move shrine pickup onto the accessible shrine floor area.
   - _Requirements: 1.3, 1.4, 4.4, 4.5, 4.6, 6.3_
 
+- [x] H3. Hotfix playable floor continuity
+  - Add regression tests for walkable ground at bongo apron, gate, courtyard, main house, rear route, and shrine connectors.
+  - Fill the bongo-to-forest apron gap and add a continuous underlay to prevent falls through visual seams.
+  - Rebuild the main house rear exit with traversable landing and step heights.
+  - Regenerate `KHorror_Main` and verify the full EditMode suite passes.
+  - _Requirements: 4.1, 4.4, 4.5, 4.6, 9.3_
+
 - [x] 1. Establish territory foundations
   - Add `EnemyKind` and `TerritoryKind` domain enums.
   - Add a testable `EnemyTerritoryRules` service that answers whether a kind can enter a territory.
