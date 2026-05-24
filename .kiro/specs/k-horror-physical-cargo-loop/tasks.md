@@ -1,13 +1,13 @@
 # Implementation Plan
 
-- [ ] C1. 물리 적재 도메인 테스트 작성
+- [x] C1. 물리 적재 도메인 테스트 작성
   - `VanCargoHold`가 cargo item 개수와 총 가치를 계산하는 EditMode 테스트를 추가한다.
   - 밴 밖 물건은 정산 가치에 포함되지 않는 테스트를 추가한다.
   - 정산 완료 시 cargo item 목록이 비워지는 테스트를 추가한다.
   - 이 단계에서는 테스트가 실패해야 정상이다.
   - _Requirements: 1.5, 2.1, 2.2, 2.5, 4.2, 4.3_
 
-- [ ] C2. `VanCargoHold`와 `VanCargoItem` 구현
+- [x] C2. `VanCargoHold`와 `VanCargoItem` 구현
   - `VanCargoHold` 컴포넌트를 추가해 슬롯, 예비 위치, cargo 목록, 총 가치 계산을 담당하게 한다.
   - `VanCargoItem` 컴포넌트를 추가해 원본 회수품 데이터, 가치, 크기, 재픽업 가능 상태를 보존하게 한다.
   - 정산 완료 시 cargo item을 안전하게 제거하는 API를 추가한다.
