@@ -7,7 +7,7 @@
   - Commit and push to `origin/unity-conversion`.
   - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 6.2_
 
-- [ ] H10. ThreatDirector domain model
+- [x] H10. ThreatDirector domain model
   - Add pure C# `ThreatDirector`, `ThreatDirectorContext`, `ThreatDirectorDecision`, `ThreatDirectorAction`, and `ThreatStageProfile`.
   - Add EditMode tests for stage budget, shrine grace suppression, territory-aware ghost/dokkaebi selection, no-op outside estate, and monotonic stage profiles.
   - Keep runtime scene behavior unchanged except for compiled domain availability.
