@@ -122,9 +122,9 @@ namespace KHorrorGame.Editor
             var mounts = new GameObject("HeldItemMounts");
             mounts.transform.SetParent(cameraObject.transform);
             mounts.transform.localPosition = new Vector3(0f, -0.35f, 0.65f);
-            var left = CreateMarker("LeftHandHeldMount", new Vector3(-0.32f, -0.1f, 0.65f), Quaternion.identity, mounts.transform);
-            var right = CreateMarker("RightHandHeldMount", new Vector3(0.32f, -0.1f, 0.65f), Quaternion.identity, mounts.transform);
-            var both = CreateMarker("TwoHandHeldMount", new Vector3(0f, -0.05f, 0.72f), Quaternion.identity, mounts.transform);
+            var left = CreateMarker("LeftHandHeldMount", new Vector3(-0.30f, -0.22f, 0.43f), Quaternion.identity, mounts.transform);
+            var right = CreateMarker("RightHandHeldMount", new Vector3(0.30f, -0.22f, 0.43f), Quaternion.identity, mounts.transform);
+            var both = CreateMarker("TwoHandHeldMount", new Vector3(0f, -0.24f, 0.42f), Quaternion.identity, mounts.transform);
 
             SetObject(controller, "playerCamera", camera);
             SetObject(controller, "leftHandMount", left);

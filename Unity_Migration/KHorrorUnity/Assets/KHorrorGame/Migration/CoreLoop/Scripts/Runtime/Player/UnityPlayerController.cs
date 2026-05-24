@@ -45,6 +45,11 @@ namespace KHorrorGame.Migration
         private float cameraPitch;
         private bool isExhausted;
         private static Material heldArtifactMaterial;
+        private static readonly Vector3 LeftHandHeldLocalPosition = new Vector3(-0.30f, -0.22f, 0.43f);
+        private static readonly Vector3 RightHandHeldLocalPosition = new Vector3(0.30f, -0.22f, 0.43f);
+        private static readonly Vector3 TwoHandHeldLocalPosition = new Vector3(0f, -0.24f, 0.42f);
+        private static readonly Vector3 OneHandHeldScale = new Vector3(0.46f, 0.34f, 0.28f);
+        private static readonly Vector3 TwoHandHeldScale = new Vector3(1.18f, 0.72f, 0.42f);
 
         public Inventory Inventory
         {
@@ -324,18 +329,22 @@ namespace KHorrorGame.Migration
             var parent = playerCamera != null ? playerCamera.transform : transform;
             if (leftHandMount == null)
             {
-                leftHandMount = CreateMount(parent, "LeftHandHeldMount", new Vector3(-0.33f, -0.28f, 0.58f));
+                leftHandMount = CreateMount(parent, "LeftHandHeldMount", LeftHandHeldLocalPosition);
             }
 
             if (rightHandMount == null)
             {
-                rightHandMount = CreateMount(parent, "RightHandHeldMount", new Vector3(0.33f, -0.28f, 0.58f));
+                rightHandMount = CreateMount(parent, "RightHandHeldMount", RightHandHeldLocalPosition);
             }
 
             if (twoHandMount == null)
             {
-                twoHandMount = CreateMount(parent, "TwoHandHeldMount", new Vector3(0f, -0.31f, 0.62f));
+                twoHandMount = CreateMount(parent, "TwoHandHeldMount", TwoHandHeldLocalPosition);
             }
+
+            ApplyMountPose(leftHandMount, LeftHandHeldLocalPosition);
+            ApplyMountPose(rightHandMount, RightHandHeldLocalPosition);
+            ApplyMountPose(twoHandMount, TwoHandHeldLocalPosition);
         }
 
         private static Transform CreateMount(Transform parent, string name, Vector3 localPosition)
@@ -345,6 +354,17 @@ namespace KHorrorGame.Migration
             mount.localPosition = localPosition;
             mount.localRotation = Quaternion.identity;
             return mount;
+        }
+
+        private static void ApplyMountPose(Transform mount, Vector3 localPosition)
+        {
+            if (mount == null)
+            {
+                return;
+            }
+
+            mount.localPosition = localPosition;
+            mount.localRotation = Quaternion.identity;
         }
 
         public void RefreshHeldItemViews()
@@ -362,14 +382,14 @@ namespace KHorrorGame.Migration
 
             if (items[0].HandSlots >= 2)
             {
-                CreateHeldBox(twoHandMount, items[0], new Vector3(0.78f, 0.42f, 0.28f));
+                CreateHeldBox(twoHandMount, items[0], TwoHandHeldScale, Quaternion.identity);
                 return;
             }
 
-            CreateHeldBox(leftHandMount, items[0], new Vector3(0.28f, 0.22f, 0.2f));
+            CreateHeldBox(leftHandMount, items[0], OneHandHeldScale, Quaternion.Euler(0f, -8f, 8f));
             if (items.Count > 1)
             {
-                CreateHeldBox(rightHandMount, items[1], new Vector3(0.28f, 0.22f, 0.2f));
+                CreateHeldBox(rightHandMount, items[1], OneHandHeldScale, Quaternion.Euler(0f, 8f, -8f));
             }
         }
 
@@ -386,7 +406,7 @@ namespace KHorrorGame.Migration
             }
         }
 
-        private static void CreateHeldBox(Transform mount, ArtifactDefinition item, Vector3 scale)
+        private static void CreateHeldBox(Transform mount, ArtifactDefinition item, Vector3 scale, Quaternion localRotation)
         {
             if (mount == null || item == null)
             {
@@ -397,7 +417,7 @@ namespace KHorrorGame.Migration
             held.name = $"Held_{item.DisplayName}";
             held.transform.SetParent(mount, false);
             held.transform.localPosition = Vector3.zero;
-            held.transform.localRotation = Quaternion.identity;
+            held.transform.localRotation = localRotation;
             held.transform.localScale = scale;
 
             var renderer = held.GetComponent<Renderer>();

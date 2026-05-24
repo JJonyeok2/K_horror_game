@@ -153,6 +153,61 @@ namespace KHorrorGame.Migration.Tests
             }
         }
 
+        [Test]
+        public void LargeHeldArtifactObstructsLowerCenterView()
+        {
+            var fixture = new CargoDepositFixture(true);
+
+            try
+            {
+                Assert.IsTrue(fixture.Actor.TryCollectArtifact(new ArtifactDefinition("Jongga Chest", 420, 4.5f, 2, null, 2)));
+
+                var held = GameObject.Find("Held_Jongga Chest");
+                Assert.IsNotNull(held, "Large artifacts should create a two-hand first-person obstruction.");
+
+                var mount = held.transform.parent;
+                Assert.IsNotNull(mount);
+                Assert.AreEqual("TwoHandHeldMount", mount.name);
+                Assert.LessOrEqual(Mathf.Abs(mount.localPosition.x), 0.05f, "Two-hand cargo should sit near the center of the view.");
+                Assert.GreaterOrEqual(mount.localPosition.y, -0.32f, "Two-hand cargo should be high enough to block the lower view.");
+                Assert.LessOrEqual(mount.localPosition.z, 0.5f, "Two-hand cargo should be close to the camera, not floating far ahead.");
+                Assert.GreaterOrEqual(held.transform.localScale.x, 1.05f, "Large cargo needs enough width to visibly cover the center view.");
+                Assert.GreaterOrEqual(held.transform.localScale.y, 0.62f, "Large cargo needs enough height to obscure the lower view.");
+            }
+            finally
+            {
+                fixture.Destroy();
+            }
+        }
+
+        [Test]
+        public void SmallHeldArtifactsOccupyBothSidesOfFirstPersonView()
+        {
+            var fixture = new CargoDepositFixture(true);
+
+            try
+            {
+                Assert.IsTrue(fixture.Actor.TryCollectArtifact(new ArtifactDefinition("Ledger", 230, 1.5f, 1, null, 1)));
+                Assert.IsTrue(fixture.Actor.TryCollectArtifact(new ArtifactDefinition("Brass Bowl", 180, 1.2f, 1, null, 1)));
+
+                var leftHeld = GameObject.Find("Held_Ledger");
+                var rightHeld = GameObject.Find("Held_Brass Bowl");
+
+                Assert.IsNotNull(leftHeld, "First one-hand artifact should be visible in the left hand.");
+                Assert.IsNotNull(rightHeld, "Second one-hand artifact should be visible in the right hand.");
+                Assert.AreEqual("LeftHandHeldMount", leftHeld.transform.parent.name);
+                Assert.AreEqual("RightHandHeldMount", rightHeld.transform.parent.name);
+                Assert.Less(leftHeld.transform.parent.localPosition.x, -0.18f);
+                Assert.Greater(rightHeld.transform.parent.localPosition.x, 0.18f);
+                Assert.GreaterOrEqual(leftHeld.transform.localScale.x, 0.42f, "One-hand cargo should not be a tiny placeholder cube.");
+                Assert.GreaterOrEqual(rightHeld.transform.localScale.x, 0.42f, "One-hand cargo should not be a tiny placeholder cube.");
+            }
+            finally
+            {
+                fixture.Destroy();
+            }
+        }
+
         private sealed class CargoDepositFixture
         {
             public GameObject Root { get; }
