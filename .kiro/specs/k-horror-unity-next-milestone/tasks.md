@@ -1,5 +1,11 @@
 # Implementation Plan
 
+- [x] H1. Hotfix bongo readability and playable brightness
+  - Replace the visible green extraction debug box with an invisible trigger inside a visible estate return bongo.
+  - Brighten moonlight, flashlight, fill lights, exposure, and fog for readable playtesting.
+  - Regenerate `KHorror_Main` and verify EditMode tests still pass.
+  - _Requirements: 6.3, 7.4, 7.6_
+
 - [x] 1. Establish territory foundations
   - Add `EnemyKind` and `TerritoryKind` domain enums.
   - Add a testable `EnemyTerritoryRules` service that answers whether a kind can enter a territory.

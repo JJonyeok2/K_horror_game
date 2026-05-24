@@ -153,11 +153,11 @@ namespace KHorrorGame.Editor
             rig.ApplyProfile();
 
             CreatePostProcessVolume(parent);
-            CreatePointLight("ApproachPathLowFill", parent, new Vector3(0f, 2.8f, 36f), new Color(0.38f, 0.48f, 0.58f), 1.15f, 34f);
-            CreatePointLight("CourtyardMoonBounce", parent, new Vector3(0f, 4.2f, 69f), new Color(0.46f, 0.52f, 0.58f), 0.9f, 30f);
-            CreatePointLight("GateWetLamp_Left", parent, new Vector3(-3.7f, 3.05f, 52.9f), new Color(1f, 0.58f, 0.34f), 1.9f, 10f);
-            CreatePointLight("GateWetLamp_Right", parent, new Vector3(3.7f, 3.05f, 52.9f), new Color(1f, 0.58f, 0.34f), 1.65f, 9f);
-            CreatePointLight("ShrineCandleGlow", parent, new Vector3(-8f, 1.35f, 100f), new Color(1f, 0.46f, 0.25f), 2.1f, 7f);
+            CreatePointLight("ApproachPathLowFill", parent, new Vector3(0f, 3.1f, 36f), new Color(0.45f, 0.55f, 0.68f), 2.25f, 42f);
+            CreatePointLight("CourtyardMoonBounce", parent, new Vector3(0f, 4.4f, 69f), new Color(0.52f, 0.58f, 0.66f), 1.65f, 36f);
+            CreatePointLight("GateWetLamp_Left", parent, new Vector3(-3.7f, 3.05f, 52.9f), new Color(1f, 0.58f, 0.34f), 2.5f, 12f);
+            CreatePointLight("GateWetLamp_Right", parent, new Vector3(3.7f, 3.05f, 52.9f), new Color(1f, 0.58f, 0.34f), 2.25f, 11f);
+            CreatePointLight("ShrineCandleGlow", parent, new Vector3(-8f, 1.35f, 100f), new Color(1f, 0.46f, 0.25f), 2.5f, 8f);
         }
 
         private static void CreateBongoHub(Transform parent, GameLoopController gameLoop)
@@ -205,11 +205,7 @@ namespace KHorrorGame.Editor
             var shrinePickup = shrineArtifact.AddComponent<ArtifactPickup>();
             SetObject(shrinePickup, "gameLoop", gameLoop);
 
-            var extraction = CreateCube("VanInteriorReturnZone", parent, new Vector3(-2f, 0.7f, 20f), new Vector3(2.8f, 1.4f, 2.4f), Materials.Extraction);
-            var collider = extraction.GetComponent<Collider>();
-            collider.isTrigger = true;
-            var extractionZone = extraction.AddComponent<ExtractionZone>();
-            SetObject(extractionZone, "gameLoop", gameLoop);
+            CreateEstateReturnBongo(parent, gameLoop);
         }
 
         private static void CreateSettlementProxy(Transform parent, GameLoopController gameLoop)
@@ -227,6 +223,43 @@ namespace KHorrorGame.Editor
         private static void CreateTravelProxy(Transform parent)
         {
             CreateCube("TravelMotionBackdrop", parent, new Vector3(0f, 1.2f, 8f), new Vector3(8f, 2.5f, 0.2f), Materials.Night);
+        }
+
+        private static void CreateEstateReturnBongo(Transform parent, GameLoopController gameLoop)
+        {
+            var root = new GameObject("EstateReturnBongo");
+            root.transform.SetParent(parent);
+            root.transform.position = new Vector3(-2.2f, 0f, 20.1f);
+            root.transform.rotation = Quaternion.Euler(0f, 180f, 0f);
+
+            CreateCube("ReturnBongoBody", root.transform, new Vector3(0f, 1.15f, 0f), new Vector3(4.2f, 2.05f, 6.2f), Materials.VanPaint);
+            CreateCube("ReturnBongoRoof", root.transform, new Vector3(0f, 2.28f, 0f), new Vector3(4.35f, 0.32f, 6.35f), Materials.VanRoof);
+            CreateCube("ReturnBongoFrontCab", root.transform, new Vector3(0f, 1.35f, -3.55f), new Vector3(4.05f, 1.8f, 1.15f), Materials.VanPaint);
+            CreateCube("ReturnBongoWindshield", root.transform, new Vector3(0f, 1.72f, -4.14f), new Vector3(2.9f, 0.72f, 0.08f), Materials.VanWindow);
+            CreateCube("ReturnBongoSideWindowLeft", root.transform, new Vector3(-2.13f, 1.72f, -2.1f), new Vector3(0.08f, 0.62f, 1.35f), Materials.VanWindow);
+            CreateCube("ReturnBongoSideWindowRight", root.transform, new Vector3(2.13f, 1.72f, -2.1f), new Vector3(0.08f, 0.62f, 1.35f), Materials.VanWindow);
+            CreateCube("ReturnBongoRearFloor", root.transform, new Vector3(0f, 0.18f, 3.35f), new Vector3(3.55f, 0.16f, 1.75f), Materials.VanFloor);
+            CreateCube("ReturnBongoRearDoorLeft", root.transform, new Vector3(-1.25f, 1.15f, 3.48f), new Vector3(1.15f, 1.85f, 0.15f), Materials.VanDoor);
+            CreateCube("ReturnBongoRearDoorRight", root.transform, new Vector3(1.25f, 1.15f, 3.48f), new Vector3(1.15f, 1.85f, 0.15f), Materials.VanDoor);
+            CreateCube("ReturnBongoRearStep", root.transform, new Vector3(0f, 0.18f, 4.28f), new Vector3(3.3f, 0.2f, 0.75f), Materials.Road);
+            CreateCube("ReturnBongoFrontBumper", root.transform, new Vector3(0f, 0.55f, -4.2f), new Vector3(3.7f, 0.32f, 0.18f), Materials.RustedMetal);
+            CreateCube("ReturnBongoRearBumper", root.transform, new Vector3(0f, 0.55f, 4.18f), new Vector3(3.7f, 0.32f, 0.18f), Materials.RustedMetal);
+
+            CreateCylinder("ReturnBongoWheel_FL", root.transform, new Vector3(-2.15f, 0.52f, -2.35f), new Vector3(0.42f, 0.22f, 0.42f), Materials.Tire, Quaternion.Euler(0f, 0f, 90f));
+            CreateCylinder("ReturnBongoWheel_FR", root.transform, new Vector3(2.15f, 0.52f, -2.35f), new Vector3(0.42f, 0.22f, 0.42f), Materials.Tire, Quaternion.Euler(0f, 0f, 90f));
+            CreateCylinder("ReturnBongoWheel_RL", root.transform, new Vector3(-2.15f, 0.52f, 2.35f), new Vector3(0.42f, 0.22f, 0.42f), Materials.Tire, Quaternion.Euler(0f, 0f, 90f));
+            CreateCylinder("ReturnBongoWheel_RR", root.transform, new Vector3(2.15f, 0.52f, 2.35f), new Vector3(0.42f, 0.22f, 0.42f), Materials.Tire, Quaternion.Euler(0f, 0f, 90f));
+
+            var extraction = CreateCube("VanInteriorReturnZone", root.transform, new Vector3(0f, 1.0f, 3.35f), new Vector3(3.1f, 1.65f, 1.45f), Materials.Extraction);
+            extraction.GetComponent<MeshRenderer>().enabled = false;
+            var collider = extraction.GetComponent<Collider>();
+            collider.isTrigger = true;
+            var extractionZone = extraction.AddComponent<ExtractionZone>();
+            SetObject(extractionZone, "gameLoop", gameLoop);
+
+            CreatePointLight("ReturnBongoCabGlow", root.transform, new Vector3(0f, 1.8f, 2.2f), new Color(0.72f, 0.88f, 0.72f), 1.1f, 4.5f);
+            CreatePointLight("ReturnBongoTailLampLeft", root.transform, new Vector3(-1.58f, 0.92f, 4.1f), new Color(1f, 0.08f, 0.035f), 0.95f, 3f);
+            CreatePointLight("ReturnBongoTailLampRight", root.transform, new Vector3(1.58f, 0.92f, 4.1f), new Color(1f, 0.08f, 0.035f), 0.95f, 3f);
         }
 
         private static void CreateForest(Transform parent)
@@ -793,20 +826,20 @@ namespace KHorrorGame.Editor
         {
             var serialized = new SerializedObject(profile);
             SetSerializedBool(serialized, "fogEnabled", true);
-            SetSerializedFloat(serialized, "fogDensity", 0.032f);
-            SetSerializedColor(serialized, "fogColor", new Color(0.033f, 0.04f, 0.038f, 1f));
-            SetSerializedColor(serialized, "ambientColor", new Color(0.032f, 0.035f, 0.031f, 1f));
-            SetSerializedFloat(serialized, "reflectionIntensity", 0.09f);
-            SetSerializedColor(serialized, "moonColor", new Color(0.50f, 0.60f, 0.72f, 1f));
-            SetSerializedFloat(serialized, "moonIntensity", 0.24f);
+            SetSerializedFloat(serialized, "fogDensity", 0.021f);
+            SetSerializedColor(serialized, "fogColor", new Color(0.045f, 0.052f, 0.052f, 1f));
+            SetSerializedColor(serialized, "ambientColor", new Color(0.062f, 0.066f, 0.058f, 1f));
+            SetSerializedFloat(serialized, "reflectionIntensity", 0.16f);
+            SetSerializedColor(serialized, "moonColor", new Color(0.58f, 0.67f, 0.78f, 1f));
+            SetSerializedFloat(serialized, "moonIntensity", 0.42f);
             SetSerializedVector3(serialized, "moonEulerAngles", new Vector3(54f, -41f, 0f));
             SetSerializedColor(serialized, "flashlightColor", new Color(1.0f, 0.94f, 0.76f, 1f));
-            SetSerializedFloat(serialized, "flashlightIntensity", 10.5f);
-            SetSerializedFloat(serialized, "flashlightRange", 26f);
-            SetSerializedFloat(serialized, "flashlightSpotAngle", 48f);
-            SetSerializedFloat(serialized, "exposureCompensation", -0.35f);
-            SetSerializedFloat(serialized, "vignetteIntensity", 0.22f);
-            SetSerializedFloat(serialized, "saturation", -14f);
+            SetSerializedFloat(serialized, "flashlightIntensity", 14f);
+            SetSerializedFloat(serialized, "flashlightRange", 34f);
+            SetSerializedFloat(serialized, "flashlightSpotAngle", 54f);
+            SetSerializedFloat(serialized, "exposureCompensation", 0.35f);
+            SetSerializedFloat(serialized, "vignetteIntensity", 0.16f);
+            SetSerializedFloat(serialized, "saturation", -8f);
             serialized.ApplyModifiedPropertiesWithoutUndo();
             EditorUtility.SetDirty(profile);
         }
@@ -845,28 +878,28 @@ namespace KHorrorGame.Editor
             profile.components.Clear();
 
             var color = AddVolumeComponent<ColorAdjustments>(profile);
-            color.postExposure.Override(-0.15f);
-            color.contrast.Override(12f);
-            color.saturation.Override(-14f);
-            color.colorFilter.Override(new Color(0.94f, 0.98f, 0.90f, 1f));
+            color.postExposure.Override(0.45f);
+            color.contrast.Override(6f);
+            color.saturation.Override(-8f);
+            color.colorFilter.Override(new Color(0.98f, 1.0f, 0.94f, 1f));
 
             var whiteBalance = AddVolumeComponent<WhiteBalance>(profile);
-            whiteBalance.temperature.Override(-8f);
-            whiteBalance.tint.Override(-4f);
+            whiteBalance.temperature.Override(-4f);
+            whiteBalance.tint.Override(-2f);
 
             var vignette = AddVolumeComponent<Vignette>(profile);
-            vignette.intensity.Override(0.24f);
+            vignette.intensity.Override(0.16f);
             vignette.smoothness.Override(0.45f);
             vignette.color.Override(new Color(0f, 0.006f, 0.003f, 1f));
 
             var bloom = AddVolumeComponent<Bloom>(profile);
-            bloom.threshold.Override(1.05f);
-            bloom.intensity.Override(0.28f);
+            bloom.threshold.Override(1.15f);
+            bloom.intensity.Override(0.18f);
             bloom.scatter.Override(0.55f);
 
             var filmGrain = AddVolumeComponent<FilmGrain>(profile);
             filmGrain.type.Override(FilmGrainLookup.Thin1);
-            filmGrain.intensity.Override(0.13f);
+            filmGrain.intensity.Override(0.08f);
             filmGrain.response.Override(0.68f);
 
             EditorUtility.SetDirty(profile);
@@ -1078,7 +1111,7 @@ namespace KHorrorGame.Editor
             public static readonly Material Grass = LoadAmbientMaterial("Grass007", "Mat_DeadGrass_PBR", new Color(0.36f, 0.44f, 0.25f, 1f), new Vector2(7f, 18f), 0.18f);
             public static readonly Material DeadGrassBlade = CreateMaterial("Mat_DryGrassBlade", new Color(0.32f, 0.38f, 0.19f, 1f), 0.18f);
             public static readonly Material Bark = LoadAmbientMaterial("Bark014", "Mat_PineBark_PBR", new Color(0.72f, 0.55f, 0.38f, 1f), new Vector2(1.2f, 5f), 0.24f);
-            public static readonly Material Canopy = CreateMaterial("Mat_WetPineNeedles", new Color(0.018f, 0.074f, 0.036f, 1f), 0.34f);
+            public static readonly Material Canopy = CreateMaterial("Mat_WetPineNeedles", new Color(0.035f, 0.105f, 0.052f, 1f), 0.34f);
             public static readonly Material Bamboo = CreateMaterial("Mat_DarkBamboo", new Color(0.19f, 0.28f, 0.12f, 1f), 0.28f);
             public static readonly Material BambooLeaf = CreateMaterial("Mat_BambooLeaf", new Color(0.035f, 0.15f, 0.055f, 1f), 0.25f);
             public static readonly Material Stone = LoadAmbientMaterial("Rock064", "Mat_WetStone_PBR", new Color(0.48f, 0.48f, 0.42f, 1f), new Vector2(2.2f, 2.2f), 0.36f);
@@ -1102,9 +1135,12 @@ namespace KHorrorGame.Editor
             public static readonly Material ShrineToken = CreateEmissionMaterial("Mat_ShrineToken", new Color(0.85f, 0.72f, 0.38f, 1f), 0.35f);
             public static readonly Material Extraction = CreateEmissionMaterial("Mat_ExtractionZone", new Color(0.03f, 0.28f, 0.12f, 1f), 0.45f);
             public static readonly Material VanFloor = CreateMaterial("Mat_VanRubberFloor", new Color(0.06f, 0.065f, 0.058f, 1f), 0.42f);
-            public static readonly Material VanWall = CreateMaterial("Mat_VanDarkPaint", new Color(0.025f, 0.03f, 0.03f, 1f), 0.32f);
-            public static readonly Material VanRoof = CreateMaterial("Mat_VanRoof", new Color(0.014f, 0.016f, 0.016f, 1f), 0.30f);
-            public static readonly Material VanDoor = CreateMaterial("Mat_VanDoor", new Color(0.09f, 0.105f, 0.085f, 1f), 0.38f);
+            public static readonly Material VanPaint = CreateMaterial("Mat_WeatheredBongoPaint", new Color(0.28f, 0.36f, 0.38f, 1f), 0.38f);
+            public static readonly Material VanWall = CreateMaterial("Mat_VanDarkInteriorPaint", new Color(0.075f, 0.083f, 0.076f, 1f), 0.32f);
+            public static readonly Material VanRoof = CreateMaterial("Mat_VanDullRoof", new Color(0.20f, 0.24f, 0.245f, 1f), 0.30f);
+            public static readonly Material VanDoor = CreateMaterial("Mat_VanRearDoor", new Color(0.24f, 0.31f, 0.31f, 1f), 0.38f);
+            public static readonly Material VanWindow = CreateMaterial("Mat_DirtyVanWindow", new Color(0.055f, 0.085f, 0.095f, 1f), 0.62f);
+            public static readonly Material Tire = CreateMaterial("Mat_WornTireRubber", new Color(0.018f, 0.018f, 0.016f, 1f), 0.34f);
             public static readonly Material Terminal = CreateMaterial("Mat_TerminalCase", new Color(0.012f, 0.045f, 0.036f, 1f), 0.46f);
             public static readonly Material ScreenGlow = CreateEmissionMaterial("Mat_ScreenGlow", new Color(0.1f, 0.85f, 0.55f, 1f), 1.6f);
             public static readonly Material LanternPaper = CreateMaterial("Mat_AgedLanternPaper", new Color(0.86f, 0.50f, 0.28f, 1f), 0.24f);

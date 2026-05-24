@@ -14,18 +14,18 @@ MonoBehaviour:
   m_EditorClassIdentifier: KHorrorGame.Migration.Rendering::KHorrorGame.Migration.Rendering.KHorrorLightingProfile
   fogEnabled: 1
   fogMode: 3
-  fogDensity: 0.032
-  fogColor: {r: 0.033, g: 0.04, b: 0.038, a: 1}
+  fogDensity: 0.021
+  fogColor: {r: 0.045, g: 0.052, b: 0.052, a: 1}
   ambientMode: 3
-  ambientColor: {r: 0.032, g: 0.035, b: 0.031, a: 1}
-  reflectionIntensity: 0.09
-  moonColor: {r: 0.5, g: 0.6, b: 0.72, a: 1}
-  moonIntensity: 0.24
+  ambientColor: {r: 0.062, g: 0.066, b: 0.058, a: 1}
+  reflectionIntensity: 0.16
+  moonColor: {r: 0.58, g: 0.67, b: 0.78, a: 1}
+  moonIntensity: 0.42
   moonEulerAngles: {x: 54, y: -41, z: 0}
   flashlightColor: {r: 1, g: 0.94, b: 0.76, a: 1}
-  flashlightIntensity: 10.5
-  flashlightRange: 26
-  flashlightSpotAngle: 48
-  exposureCompensation: -0.35
-  vignetteIntensity: 0.22
-  saturation: -14
+  flashlightIntensity: 14
+  flashlightRange: 34
+  flashlightSpotAngle: 54
+  exposureCompensation: 0.35
+  vignetteIntensity: 0.16
+  saturation: -8
