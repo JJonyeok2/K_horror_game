@@ -58,6 +58,29 @@ namespace KHorrorGame.Migration.Tests
             }
         }
 
+        [Test]
+        public void OuterGateFlanksDoNotAllowBypassAroundGate()
+        {
+            EditorSceneManager.OpenScene(ScenePath);
+            Physics.SyncTransforms();
+
+            var checks = new[]
+            {
+                new BoundaryCheck("left gate-wall seam", new Vector3(-4.25f, 1.2f, 51.2f), Vector3.forward),
+                new BoundaryCheck("right gate-wall seam", new Vector3(4.25f, 1.2f, 51.2f), Vector3.forward),
+                new BoundaryCheck("left gate-wall upper seam", new Vector3(-4.25f, 2.4f, 51.2f), Vector3.forward),
+                new BoundaryCheck("right gate-wall upper seam", new Vector3(4.25f, 2.4f, 51.2f), Vector3.forward),
+            };
+
+            foreach (var check in checks)
+            {
+                Assert.IsTrue(
+                    TryFindGateFlankBlocker(check.Origin, check.Direction, out var hit),
+                    $"{check.Name} can bypass the front gate without interacting.");
+                Assert.LessOrEqual(hit.distance, 5.5f, $"{check.Name} blocker is too far behind the gate: {hit.collider.name} at {hit.distance:0.00}m.");
+            }
+        }
+
         private static bool TryFindBoundary(Vector3 origin, Vector3 direction, out RaycastHit boundaryHit)
         {
             var hits = Physics.RaycastAll(origin, direction.normalized, 16f)
@@ -74,10 +97,32 @@ namespace KHorrorGame.Migration.Tests
             return false;
         }
 
+        private static bool TryFindGateFlankBlocker(Vector3 origin, Vector3 direction, out RaycastHit boundaryHit)
+        {
+            var hits = Physics.RaycastAll(origin, direction.normalized, 8f)
+                .Where(hit => IsBoundaryName(hit.collider.name) || IsGateFlankBlockerName(hit.collider.name))
+                .OrderBy(hit => hit.distance);
+
+            foreach (var hit in hits)
+            {
+                boundaryHit = hit;
+                return true;
+            }
+
+            boundaryHit = default;
+            return false;
+        }
+
         private static bool IsBoundaryName(string objectName)
         {
             return objectName.Contains("MapBoundary", StringComparison.Ordinal) ||
                    objectName.Contains("EscapeBoundary", StringComparison.Ordinal);
+        }
+
+        private static bool IsGateFlankBlockerName(string objectName)
+        {
+            return objectName.Contains("GateWallConnector", StringComparison.Ordinal) ||
+                   objectName.Contains("GateFlankBlocker", StringComparison.Ordinal);
         }
 
         private readonly struct BoundaryCheck

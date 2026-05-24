@@ -26,6 +26,12 @@
   - Regenerate `KHorror_Main` and verify the full EditMode suite passes.
   - _Requirements: 4.1, 4.3, 4.5, 4.6, 9.3_
 
+- [x] H5. Hotfix front gate wall seams
+  - Add a regression test proving the player cannot bypass the front gate through either gate-wall seam.
+  - Connect the front gate posts to the adjacent stone walls with blocking wall segments.
+  - Regenerate `KHorror_Main` and verify the full EditMode suite passes.
+  - _Requirements: 2.1, 2.2, 4.6, 4.7, 9.3_
+
 - [x] 1. Establish territory foundations
   - Add `EnemyKind` and `TerritoryKind` domain enums.
   - Add a testable `EnemyTerritoryRules` service that answers whether a kind can enter a territory.

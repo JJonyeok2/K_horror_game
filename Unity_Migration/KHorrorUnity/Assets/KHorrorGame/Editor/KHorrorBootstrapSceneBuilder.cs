@@ -352,6 +352,8 @@ namespace KHorrorGame.Editor
             CreateCube("GateIronLockPlate", gatePortal.transform, new Vector3(0f, 1.55f, 53.78f), new Vector3(0.8f, 0.48f, 0.08f), Materials.RustedMetal);
             CreatePaperCharm(gatePortal.transform, new Vector3(-0.52f, 2.7f, 53.72f), "GateCharm_Left");
             CreatePaperCharm(gatePortal.transform, new Vector3(0.55f, 2.55f, 53.72f), "GateCharm_Right");
+            CreateCube("LeftGateWallConnector", parent, new Vector3(-4.35f, 1.7f, 56.15f), new Vector3(0.75f, 3.4f, 4.6f), Materials.StoneWall);
+            CreateCube("RightGateWallConnector", parent, new Vector3(4.35f, 1.7f, 56.15f), new Vector3(0.75f, 3.4f, 4.6f), Materials.StoneWall);
             CreateCube("OuterWallLeft", parent, new Vector3(-10.5f, 1.7f, 58f), new Vector3(12f, 3.4f, 0.35f), Materials.StoneWall);
             CreateCube("OuterWallRight", parent, new Vector3(10.5f, 1.7f, 58f), new Vector3(12f, 3.4f, 0.35f), Materials.StoneWall);
             CreateWallCapStones(parent, -10.5f, 58f, 12f, "LeftWallCap");
