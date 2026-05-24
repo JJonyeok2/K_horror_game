@@ -567,6 +567,32 @@ namespace KHorrorGame.Migration.Tests
         }
 
         [Test]
+        public void BongoHubHasCargoHoldForImmediateSettlement()
+        {
+            EditorSceneManager.OpenScene(ScenePath);
+
+            var gameLoop = UnityEngine.Object.FindObjectOfType<GameLoopController>(true);
+            var hubHoldObject = GameObject.Find("BongoHubCargoHold");
+            var estateBongo = GameObject.Find("EstateReturnBongo");
+
+            Assert.IsNotNull(gameLoop, "GameLoopController should exist.");
+            Assert.IsNotNull(hubHoldObject, "Bongo hub needs a visible cargo hold for settlement after returning.");
+            Assert.IsNotNull(hubHoldObject.GetComponent<VanCargoHold>(), "BongoHubCargoHold should use VanCargoHold.");
+            Assert.IsNotNull(estateBongo, "Estate return bongo should exist.");
+            Assert.IsNotNull(estateBongo.GetComponent<VanCargoHold>(), "Estate return bongo should keep its loading hold.");
+
+            var serialized = new SerializedObject(gameLoop);
+            Assert.AreSame(
+                hubHoldObject.GetComponent<VanCargoHold>(),
+                serialized.FindProperty("hubCargoHold").objectReferenceValue,
+                "GameLoopController should settle from the hub cargo hold.");
+            Assert.AreSame(
+                estateBongo.GetComponent<VanCargoHold>(),
+                serialized.FindProperty("estateCargoHold").objectReferenceValue,
+                "GameLoopController should transfer estate cargo into the hub hold on return.");
+        }
+
+        [Test]
         public void VanCargoDepositZoneManualDepositLoadsCargoWithoutLeavingEstate()
         {
             var depositType = Type.GetType("KHorrorGame.Migration.VanCargoDepositZone, KHorrorGame.Migration");

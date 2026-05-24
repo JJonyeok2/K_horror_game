@@ -46,5 +46,73 @@ namespace KHorrorGame.Migration.Tests
                 2.5f,
                 "Stealing a shrine item should make a stage-five threat visible almost immediately.");
         }
+
+        [Test]
+        public void BongoHubTerminalSettlesLoadedVanCargoImmediately()
+        {
+            var fixture = new GameObject("GameLoopControllerFixture");
+            var holdObject = new GameObject("HubCargoHoldFixture");
+
+            try
+            {
+                var controller = fixture.AddComponent<GameLoopController>();
+                var hold = holdObject.AddComponent<VanCargoHold>();
+                Assert.IsTrue(hold.TryStore(new ArtifactDefinition("Brass Bowl", 400, 2f, 2), out _));
+
+                typeof(GameLoopController)
+                    .GetMethod("Awake", BindingFlags.Instance | BindingFlags.NonPublic)
+                    .Invoke(controller, null);
+                SetPrivateField(controller, "hubCargoHold", hold);
+
+                Assert.IsTrue(controller.OperateBongoTerminal());
+
+                Assert.AreEqual(GameMapId.BongoHub, controller.State.CurrentMap);
+                Assert.AreEqual(400, controller.Quota.RecoveredValue);
+                Assert.AreEqual(0, hold.CargoCount);
+                StringAssert.Contains("+400", controller.FeedbackMessage);
+            }
+            finally
+            {
+                Object.DestroyImmediate(fixture);
+                Object.DestroyImmediate(holdObject);
+            }
+        }
+
+        [Test]
+        public void BongoMonitorTextIncludesPhysicalCargoValueAndQuota()
+        {
+            var fixture = new GameObject("GameLoopControllerFixture");
+            var holdObject = new GameObject("HubCargoHoldFixture");
+
+            try
+            {
+                var controller = fixture.AddComponent<GameLoopController>();
+                var hold = holdObject.AddComponent<VanCargoHold>();
+                Assert.IsTrue(hold.TryStore(new ArtifactDefinition("Ledger", 230, 1.5f, 1), out _));
+
+                typeof(GameLoopController)
+                    .GetMethod("Awake", BindingFlags.Instance | BindingFlags.NonPublic)
+                    .Invoke(controller, null);
+                SetPrivateField(controller, "hubCargoHold", hold);
+
+                Assert.AreEqual("[E]\nSettle Cargo", controller.TerminalScreenText());
+                Assert.AreEqual("Settle loaded cargo", controller.TerminalActionText());
+                StringAssert.Contains("Loaded cargo: 230", controller.MonitorBodyText());
+                StringAssert.Contains("Cargo count: 1", controller.MonitorBodyText());
+                StringAssert.Contains("Quota: 0 / 800", controller.MonitorBodyText());
+            }
+            finally
+            {
+                Object.DestroyImmediate(fixture);
+                Object.DestroyImmediate(holdObject);
+            }
+        }
+
+        private static void SetPrivateField(object target, string fieldName, object value)
+        {
+            target.GetType()
+                .GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic)
+                .SetValue(target, value);
+        }
     }
 }

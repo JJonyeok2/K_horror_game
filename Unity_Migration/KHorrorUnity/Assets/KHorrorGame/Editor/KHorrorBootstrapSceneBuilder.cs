@@ -63,8 +63,10 @@ namespace KHorrorGame.Editor
 
             CreateLighting(systems.transform, player.CameraLight, player.Camera);
             CreateHud(systems.transform, controller, player.Controller, player.Interactor);
-            CreateBongoHub(bongoHub.transform, controller);
-            CreateEstateProxy(estate.transform, controller, player.Controller);
+            var hubCargoHold = CreateBongoHub(bongoHub.transform, controller);
+            var estateCargoHold = CreateEstateProxy(estate.transform, controller, player.Controller);
+            SetObject(controller, "hubCargoHold", hubCargoHold);
+            SetObject(controller, "estateCargoHold", estateCargoHold);
             CreateSettlementProxy(settlement.transform, controller);
             CreateTravelProxy(travel.transform);
 
@@ -164,7 +166,7 @@ namespace KHorrorGame.Editor
             CreatePointLight("ShrineCandleGlow", parent, new Vector3(ShrineX, 1.35f, ShrineZ + 1f), new Color(1f, 0.46f, 0.25f), 2.5f, 8f);
         }
 
-        private static void CreateBongoHub(Transform parent, GameLoopController gameLoop)
+        private static VanCargoHold CreateBongoHub(Transform parent, GameLoopController gameLoop)
         {
             CreateCube("BongoInteriorFloor", parent, new Vector3(0f, 0f, -3f), new Vector3(4.2f, 0.2f, 5.8f), Materials.VanFloor);
             CreateCube("BongoCargoWallLeft", parent, new Vector3(-2.15f, 1.2f, -3f), new Vector3(0.2f, 2.4f, 5.8f), Materials.VanWall);
@@ -181,9 +183,21 @@ namespace KHorrorGame.Editor
 
             var screen = CreateCube("TerminalScreenGlow", parent, new Vector3(0f, 1.15f, -0.525f), new Vector3(1.05f, 0.5f, 0.03f), Materials.ScreenGlow);
             screen.GetComponent<Collider>().enabled = false;
+
+            var cargoRoot = new GameObject("BongoHubCargoHold");
+            cargoRoot.transform.SetParent(parent);
+            cargoRoot.transform.localPosition = Vector3.zero;
+            cargoRoot.transform.localRotation = Quaternion.identity;
+            var cargoHold = cargoRoot.AddComponent<VanCargoHold>();
+            RegisterCargoSlot(cargoRoot.transform, cargoHold, "BongoHubCargoSlot_0", new Vector3(-0.82f, 0.62f, -3.35f));
+            RegisterCargoSlot(cargoRoot.transform, cargoHold, "BongoHubCargoSlot_1", new Vector3(0f, 0.62f, -3.35f));
+            RegisterCargoSlot(cargoRoot.transform, cargoHold, "BongoHubCargoSlot_2", new Vector3(0.82f, 0.62f, -3.35f));
+            RegisterFallbackCargoSlot(cargoRoot.transform, cargoHold, "BongoHubCargoFallback", new Vector3(-0.82f, 0.62f, -2.78f));
+            CreateCube("BongoHubCargoPad", parent, new Vector3(0f, 0.32f, -3.28f), new Vector3(2.8f, 0.08f, 1.25f), Materials.Extraction).GetComponent<Collider>().enabled = false;
+            return cargoHold;
         }
 
-        private static void CreateEstateProxy(Transform parent, GameLoopController gameLoop, UnityPlayerController player)
+        private static VanCargoHold CreateEstateProxy(Transform parent, GameLoopController gameLoop, UnityPlayerController player)
         {
             var forestRoot = CreateZoneRoot(parent, "ForestApproach");
             var gateRoot = CreateZoneRoot(parent, "FrontGateBoundary");
@@ -218,7 +232,7 @@ namespace KHorrorGame.Editor
 
             CreateEstateArtifacts(parent, gameLoop);
             CreateRuntimeThreatSpawner(parent, gameLoop, player);
-            CreateEstateReturnBongo(parent, gameLoop);
+            return CreateEstateReturnBongo(parent, gameLoop);
         }
 
         private static void CreateEstateArtifacts(Transform parent, GameLoopController gameLoop)
@@ -405,7 +419,7 @@ namespace KHorrorGame.Editor
             CreateCube("TravelMotionBackdrop", parent, new Vector3(0f, 1.2f, 8f), new Vector3(8f, 2.5f, 0.2f), Materials.Night);
         }
 
-        private static void CreateEstateReturnBongo(Transform parent, GameLoopController gameLoop)
+        private static VanCargoHold CreateEstateReturnBongo(Transform parent, GameLoopController gameLoop)
         {
             var root = new GameObject("EstateReturnBongo");
             root.transform.SetParent(parent);
@@ -452,6 +466,7 @@ namespace KHorrorGame.Editor
             CreatePointLight("ReturnBongoCabGlow", root.transform, new Vector3(0f, 1.8f, 2.2f), new Color(0.72f, 0.88f, 0.72f), 1.1f, 4.5f);
             CreatePointLight("ReturnBongoTailLampLeft", root.transform, new Vector3(-1.58f, 0.92f, 4.1f), new Color(1f, 0.08f, 0.035f), 0.95f, 3f);
             CreatePointLight("ReturnBongoTailLampRight", root.transform, new Vector3(1.58f, 0.92f, 4.1f), new Color(1f, 0.08f, 0.035f), 0.95f, 3f);
+            return cargoHold;
         }
 
         private static void RegisterCargoSlot(Transform parent, VanCargoHold cargoHold, string name, Vector3 localPosition)

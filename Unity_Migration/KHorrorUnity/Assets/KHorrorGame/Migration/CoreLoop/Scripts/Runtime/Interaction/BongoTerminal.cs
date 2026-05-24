@@ -6,7 +6,7 @@ namespace KHorrorGame.Migration
     {
         [SerializeField] private GameLoopController gameLoop;
 
-        public string InteractionLabel => gameLoop != null ? gameLoop.State.TerminalActionText() + " [E]" : "Use terminal [E]";
+        public string InteractionLabel => gameLoop != null ? gameLoop.TerminalActionText() + " [E]" : "Use terminal [E]";
 
         private void Awake()
         {

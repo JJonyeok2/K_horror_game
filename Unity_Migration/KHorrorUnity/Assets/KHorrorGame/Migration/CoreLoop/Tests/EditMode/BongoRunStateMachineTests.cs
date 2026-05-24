@@ -57,7 +57,7 @@ namespace KHorrorGame.Migration.Tests
         }
 
         [Test]
-        public void CargoSettlementRequiresReturnToHubThenSettlementOffice()
+        public void CargoSettlementHappensImmediatelyInHub()
         {
             var state = CreateState(0f);
             var relic = new ArtifactDefinition("Brass Bowl", 400, 2f, 2, null, 2);
@@ -73,12 +73,29 @@ namespace KHorrorGame.Migration.Tests
             Assert.AreEqual(GameMapId.BongoHub, state.CurrentMap);
 
             Assert.IsTrue(state.OperateBongoTerminal());
-            state.CompleteBongoTravel();
-            Assert.AreEqual(GameMapId.SettlementOffice, state.CurrentMap);
-
-            Assert.IsTrue(state.SettleStoredCargo());
+            Assert.AreEqual(GameMapId.BongoHub, state.CurrentMap);
+            Assert.IsFalse(state.IsTraveling);
             Assert.AreEqual(400, state.Quota.RecoveredValue);
             Assert.AreEqual(0, state.PendingRecoveredValue);
+        }
+
+        [Test]
+        public void TerminalScreenShowsImmediateSettlementWhenCargoIsLoadedInHub()
+        {
+            var state = CreateState(0f);
+            var relic = new ArtifactDefinition("Brass Bowl", 400, 2f, 2, null, 2);
+            state.PlayerInventory.TryAdd(relic);
+
+            Assert.IsTrue(state.OperateBongoTerminal());
+            state.CompleteBongoTravel();
+            Assert.IsTrue(state.ExtractPlayerInventory());
+            Assert.IsTrue(state.ReturnToBongoHub());
+            state.CompleteBongoTravel();
+
+            Assert.AreEqual("[E]\nSettle Cargo", state.TerminalScreenText());
+            Assert.AreEqual("Settle loaded cargo", state.TerminalActionText());
+            StringAssert.Contains("Loaded cargo: 400", state.MonitorBodyText());
+            StringAssert.Contains("Quota: 0 / 800", state.MonitorBodyText());
         }
 
         [Test]

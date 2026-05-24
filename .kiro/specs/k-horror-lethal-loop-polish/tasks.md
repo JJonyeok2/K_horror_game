@@ -1,6 +1,6 @@
 # Implementation Plan
 
-- [ ] Task 1. 봉고차 내부 즉시 정산 및 HUD/모니터 연동
+- [x] Task 1. 봉고차 내부 즉시 정산 및 HUD/모니터 연동
   - `BongoRunStateMachineTests`에 허브 단말기 즉시 정산 실패 테스트를 추가한다.
   - `BongoRunStateMachine`에서 `SettlementOffice` 자동 이동 대신 허브 즉시 정산을 수행한다.
   - `GameLoopController`가 물리 `VanCargoHold` 정산 금액을 상태 머신과 쿼터에 반영하고 HUD 피드백을 표시하게 한다.

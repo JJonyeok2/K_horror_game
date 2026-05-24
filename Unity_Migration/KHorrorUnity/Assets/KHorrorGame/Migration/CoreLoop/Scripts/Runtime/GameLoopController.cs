@@ -17,6 +17,10 @@ namespace KHorrorGame.Migration
         [SerializeField] private GameObject settlementRoot;
         [SerializeField] private GameObject travelRoot;
 
+        [Header("Cargo")]
+        [SerializeField] private VanCargoHold hubCargoHold;
+        [SerializeField] private VanCargoHold estateCargoHold;
+
         [Header("Run Rules")]
         [SerializeField] private int startingQuotaValue = 800;
         [SerializeField] private float travelSeconds = BongoRunStateMachine.DefaultTravelSeconds;
@@ -34,6 +38,8 @@ namespace KHorrorGame.Migration
         public Inventory PlayerInventory => player != null ? player.Inventory : fallbackInventory;
         public QuotaTracker Quota => State.Quota;
         public ResentmentTracker Resentment => State.Resentment;
+        public int LoadedCargoValue => ResolveSettlementCargoHold()?.TotalCargoValue ?? 0;
+        public int LoadedCargoCount => ResolveSettlementCargoHold()?.CargoCount ?? 0;
 
         private void Awake()
         {
@@ -73,6 +79,11 @@ namespace KHorrorGame.Migration
 
         public bool OperateBongoTerminal()
         {
+            if (CanSettleLoadedCargo())
+            {
+                return SettleLoadedCargo();
+            }
+
             return State.OperateBongoTerminal();
         }
 
@@ -89,7 +100,19 @@ namespace KHorrorGame.Migration
 
         public bool SettleStoredCargo()
         {
-            return State.SettleStoredCargo();
+            if (CanSettleLoadedCargo())
+            {
+                return SettleLoadedCargo();
+            }
+
+            var settled = State.PendingRecoveredValue;
+            var succeeded = State.SettleStoredCargo();
+            if (succeeded)
+            {
+                ShowSettlementFeedback(settled);
+            }
+
+            return succeeded;
         }
 
         public bool ReturnToBongoHub()
@@ -116,6 +139,50 @@ namespace KHorrorGame.Migration
             NotifyStateChanged();
         }
 
+        public string TerminalScreenText()
+        {
+            if (State == null)
+            {
+                return "[E]\nUse Terminal";
+            }
+
+            if (!State.IsTraveling && State.CurrentMap == GameMapId.BongoHub && LoadedCargoValue > 0)
+            {
+                return "[E]\nSettle Cargo";
+            }
+
+            return State.TerminalScreenText();
+        }
+
+        public string TerminalActionText()
+        {
+            if (State == null)
+            {
+                return "Use terminal";
+            }
+
+            if (!State.IsTraveling && State.CurrentMap == GameMapId.BongoHub && LoadedCargoValue > 0)
+            {
+                return "Settle loaded cargo";
+            }
+
+            return State.TerminalActionText();
+        }
+
+        public string MonitorBodyText()
+        {
+            if (State == null)
+            {
+                return string.Empty;
+            }
+
+            return string.Format("Action: {0}\n", TerminalActionText()) +
+                   string.Format("Quota: {0} / {1}\n", Quota.RecoveredValue, Quota.RequiredValue) +
+                   string.Format("Loaded cargo: {0}\n", LoadedCargoValue) +
+                   string.Format("Cargo count: {0}\n", LoadedCargoCount) +
+                   State.CurrentMapLabel();
+        }
+
         private int ResentmentGainFor(ArtifactDefinition definition)
         {
             var gain = definition.ResentmentGain;
@@ -140,6 +207,11 @@ namespace KHorrorGame.Migration
 
         private void OnTravelCompleted(object sender, BongoTravelEventArgs args)
         {
+            if (args.Destination == GameMapId.BongoHub)
+            {
+                TransferEstateCargoToHub();
+            }
+
             MovePlayerTo(args.Destination);
 
             if (player != null)
@@ -148,6 +220,71 @@ namespace KHorrorGame.Migration
             }
 
             RefreshWorldScope();
+        }
+
+        private bool CanSettleLoadedCargo()
+        {
+            return State != null
+                   && !State.IsTraveling
+                   && State.CurrentMap == GameMapId.BongoHub
+                   && LoadedCargoValue > 0;
+        }
+
+        private bool SettleLoadedCargo()
+        {
+            var cargoHold = ResolveSettlementCargoHold();
+            if (cargoHold == null)
+            {
+                ShowFeedback("No loaded cargo");
+                return false;
+            }
+
+            var settledValue = cargoHold.ConsumeSettledCargo();
+            if (settledValue <= 0)
+            {
+                ShowFeedback("No loaded cargo");
+                return false;
+            }
+
+            Quota.AddRecoveredValue(settledValue);
+            ShowSettlementFeedback(settledValue);
+            NotifyStateChanged();
+            return true;
+        }
+
+        private void TransferEstateCargoToHub()
+        {
+            if (hubCargoHold == null || estateCargoHold == null || hubCargoHold == estateCargoHold)
+            {
+                return;
+            }
+
+            estateCargoHold.TransferCargoTo(hubCargoHold);
+        }
+
+        private VanCargoHold ResolveSettlementCargoHold()
+        {
+            if (State != null && State.CurrentMap == GameMapId.BongoHub && hubCargoHold != null)
+            {
+                return hubCargoHold;
+            }
+
+            if (hubCargoHold != null && hubCargoHold.CargoCount > 0)
+            {
+                return hubCargoHold;
+            }
+
+            if (estateCargoHold != null && estateCargoHold.CargoCount > 0)
+            {
+                return estateCargoHold;
+            }
+
+            return hubCargoHold != null ? hubCargoHold : estateCargoHold;
+        }
+
+        private void ShowSettlementFeedback(int value)
+        {
+            ShowFeedback(string.Format("Settled +{0}", value));
         }
 
         private void OnCargoStored(object sender, CargoEventArgs args)

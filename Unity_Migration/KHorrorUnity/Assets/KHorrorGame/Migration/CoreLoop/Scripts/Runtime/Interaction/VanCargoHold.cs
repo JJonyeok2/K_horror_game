@@ -96,6 +96,37 @@ namespace KHorrorGame.Migration
             return settledValue;
         }
 
+        public int TransferCargoTo(VanCargoHold destination)
+        {
+            if (destination == null || destination == this)
+            {
+                return 0;
+            }
+
+            RemoveMissingCargoItems();
+            var cargoSnapshot = cargoItems.ToArray();
+            var transferredValue = 0;
+
+            foreach (var cargoItem in cargoSnapshot)
+            {
+                if (cargoItem == null || cargoItem.Definition == null)
+                {
+                    continue;
+                }
+
+                if (!destination.TryStore(cargoItem.Definition, out _))
+                {
+                    continue;
+                }
+
+                transferredValue += cargoItem.Value;
+                cargoItems.Remove(cargoItem);
+                DestroyCargoObject(cargoItem.gameObject);
+            }
+
+            return transferredValue;
+        }
+
         public void RegisterSlot(Transform slot)
         {
             if (slot == null || HasSlot(slot))

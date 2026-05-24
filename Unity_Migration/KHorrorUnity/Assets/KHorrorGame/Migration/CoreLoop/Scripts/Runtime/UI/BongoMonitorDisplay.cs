@@ -49,12 +49,12 @@ namespace KHorrorGame.Migration
 
             if (titleText != null)
             {
-                titleText.text = gameLoop.State.TerminalScreenText();
+                titleText.text = gameLoop.TerminalScreenText();
             }
 
             if (bodyText != null)
             {
-                bodyText.text = gameLoop.State.MonitorBodyText();
+                bodyText.text = gameLoop.MonitorBodyText();
             }
         }
     }

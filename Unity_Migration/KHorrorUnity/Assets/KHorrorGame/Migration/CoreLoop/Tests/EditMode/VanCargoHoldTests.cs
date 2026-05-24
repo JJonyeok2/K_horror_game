@@ -121,6 +121,34 @@ namespace KHorrorGame.Migration.Tests
             }
         }
 
+        [Test]
+        public void TransferCargoToMovesLoadedDefinitionsToDestinationHold()
+        {
+            var source = new CargoHoldFixture();
+            var destination = new CargoHoldFixture();
+
+            try
+            {
+                var brassBowl = new ArtifactDefinition("Brass Bowl", 400, 2f, 2, null, 2);
+                var ledger = new ArtifactDefinition("Ledger", 180, 0.8f, 1);
+
+                Assert.IsTrue(source.Hold.TryStore(brassBowl, out _));
+                Assert.IsTrue(source.Hold.TryStore(ledger, out _));
+
+                var transferredValue = source.Hold.TransferCargoTo(destination.Hold);
+
+                Assert.AreEqual(580, transferredValue);
+                Assert.AreEqual(0, source.Hold.CargoCount);
+                Assert.AreEqual(2, destination.Hold.CargoCount);
+                Assert.AreEqual(580, destination.Hold.TotalCargoValue);
+            }
+            finally
+            {
+                source.Destroy();
+                destination.Destroy();
+            }
+        }
+
         private sealed class CargoHoldFixture
         {
             public GameObject Root { get; }

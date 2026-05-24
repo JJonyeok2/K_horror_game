@@ -94,7 +94,7 @@ namespace KHorrorGame.Migration
             if (CurrentMap == GameMapId.BongoHub)
             {
                 return PendingRecoveredValue > 0
-                    ? TravelToSettlementMap()
+                    ? SettleStoredCargo()
                     : TravelToRetrievalMap(GameMapId.JonggaEstate);
             }
 
@@ -138,7 +138,7 @@ namespace KHorrorGame.Migration
 
         public bool SettleStoredCargo()
         {
-            if (CurrentMap != GameMapId.SettlementOffice || PendingRecoveredValue <= 0)
+            if ((CurrentMap != GameMapId.SettlementOffice && CurrentMap != GameMapId.BongoHub) || PendingRecoveredValue <= 0)
             {
                 return false;
             }
@@ -274,7 +274,7 @@ namespace KHorrorGame.Migration
 
             if (CurrentMap == GameMapId.BongoHub)
             {
-                return PendingRecoveredValue > 0 ? "[E]\nSettlement" : "[E]\nJongga Estate";
+                return PendingRecoveredValue > 0 ? "[E]\nSettle Cargo" : "[E]\nJongga Estate";
             }
 
             if (CurrentMap == GameMapId.JonggaEstate)
@@ -300,7 +300,7 @@ namespace KHorrorGame.Migration
             if (CurrentMap == GameMapId.BongoHub)
             {
                 return PendingRecoveredValue > 0
-                    ? "Drive to settlement office"
+                    ? "Settle loaded cargo"
                     : "Drive to Jongga estate";
             }
 
@@ -335,8 +335,8 @@ namespace KHorrorGame.Migration
         public string MonitorBodyText()
         {
             var cargoLine = PendingRecoveredValue > 0
-                ? string.Format("Pending cargo loaded: {0}", PendingRecoveredValue)
-                : "No pending cargo";
+                ? string.Format("Loaded cargo: {0}", PendingRecoveredValue)
+                : "Loaded cargo: 0";
 
             return string.Format("Action: {0}\n", TerminalActionText()) +
                    string.Format("Quota: {0} / {1}\n", Quota.RecoveredValue, Quota.RequiredValue) +
