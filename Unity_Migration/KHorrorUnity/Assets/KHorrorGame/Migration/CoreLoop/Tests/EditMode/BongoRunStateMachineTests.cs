@@ -21,6 +21,25 @@ namespace KHorrorGame.Migration.Tests
         }
 
         [Test]
+        public void TerminalActionChangesToReturnImmediatelyAfterEstateArrival()
+        {
+            var state = CreateState(0.1f);
+
+            Assert.AreEqual("[E]\nJongga Estate", state.TerminalScreenText());
+            Assert.AreEqual("Drive to Jongga estate", state.TerminalActionText());
+
+            Assert.IsTrue(state.OperateBongoTerminal());
+            Assert.AreEqual("[TRAVELING]\nPlease wait", state.TerminalScreenText());
+            Assert.AreEqual("Traveling", state.TerminalActionText());
+
+            Assert.IsTrue(state.TickTravel(0.1f));
+
+            Assert.AreEqual(GameMapId.JonggaEstate, state.CurrentMap);
+            Assert.AreEqual("[E]\nReturn", state.TerminalScreenText());
+            Assert.AreEqual("Return to the van", state.TerminalActionText());
+        }
+
+        [Test]
         public void ExtractingCargoRequiresEstateAndClearsHands()
         {
             var state = CreateState(0f);
