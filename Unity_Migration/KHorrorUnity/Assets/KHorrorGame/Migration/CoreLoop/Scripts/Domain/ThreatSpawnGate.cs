@@ -15,7 +15,7 @@ namespace KHorrorGame.Migration
 
         public void NotifyArtifactPicked(ArtifactDefinition definition)
         {
-            if (definition != null && definition.HasTag("shrine_item") && definition.ResentmentGain >= 4)
+            if (definition != null && definition.HasTag("shrine_item"))
             {
                 RemainingGraceSeconds = Math.Max(RemainingGraceSeconds, ShrineThreatGraceSeconds);
             }

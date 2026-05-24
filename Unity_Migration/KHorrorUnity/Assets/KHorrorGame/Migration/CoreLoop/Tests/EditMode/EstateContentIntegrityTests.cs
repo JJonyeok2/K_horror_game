@@ -276,6 +276,23 @@ namespace KHorrorGame.Migration.Tests
         }
 
         [Test]
+        public void InteriorGhostSpawnSupportsDeepShrineEncounter()
+        {
+            EditorSceneManager.OpenScene(ScenePath);
+
+            var ghostAnchor = GameObject.Find("GhostSpawnAnchor_AnchaeInterior");
+            var shrineFloor = GameObject.Find("ShrineFloor");
+
+            Assert.IsNotNull(ghostAnchor, "Ghost spawn anchor should exist.");
+            Assert.IsNotNull(shrineFloor, "ShrineFloor should exist.");
+            Assert.GreaterOrEqual(ghostAnchor.transform.position.z, 118f, "Interior ghost should be able to contest the rear shrine objective.");
+            Assert.LessOrEqual(
+                Vector3.Distance(ghostAnchor.transform.position, shrineFloor.transform.position),
+                EnemyStats.FromProfile(EnemyKind.Ghost, ThreatStageProfile.ForStage(5)).DetectionRange,
+                "Stage five shrine theft should place a ghost within detection range of the deep objective.");
+        }
+
+        [Test]
         public void RuntimeThreatSpawnerGraceCueDoesNotActivateActors()
         {
             var root = new GameObject("GraceSpawnerFixture");
@@ -311,6 +328,61 @@ namespace KHorrorGame.Migration.Tests
                 UnityEngine.Object.DestroyImmediate(ghost);
                 UnityEngine.Object.DestroyImmediate(dokkaebi);
                 UnityEngine.Object.DestroyImmediate(cue.gameObject);
+            }
+        }
+
+        [Test]
+        public void SettlementOfficeIsLargeEnoughToTraverseAndHasThreatEncounter()
+        {
+            EditorSceneManager.OpenScene(ScenePath);
+
+            var floor = GameObject.Find("SettlementFloor");
+            var threatZone = GameObject.Find("SettlementCollectorThreatZone");
+            var returnTerminal = GameObject.Find("SettlementReturnTablet");
+            var threatType = Type.GetType("KHorrorGame.Migration.SettlementThreatZone, KHorrorGame.Migration");
+
+            Assert.IsNotNull(floor, "SettlementFloor should exist.");
+            Assert.GreaterOrEqual(floor.transform.localScale.x, 14f, "Settlement office needs more width than the old proxy room.");
+            Assert.GreaterOrEqual(floor.transform.localScale.z, 14f, "Settlement office needs enough depth for a lethal-company-style stop.");
+            Assert.IsNotNull(returnTerminal, "Settlement office needs a bongo terminal so the player can return after settling.");
+            Assert.IsNotNull(returnTerminal.GetComponent<BongoTerminal>(), "SettlementReturnTablet should operate the bongo loop.");
+            Assert.IsNotNull(threatType, "SettlementThreatZone runtime component should exist.");
+            Assert.IsNotNull(threatZone, "Settlement office should contain a visible threat trigger.");
+            Assert.IsNotNull(threatZone.GetComponent(threatType), "SettlementCollectorThreatZone should use SettlementThreatZone.");
+
+            var trigger = threatZone.GetComponent<Collider>();
+            Assert.IsNotNull(trigger, "SettlementCollectorThreatZone should have a collider.");
+            Assert.IsTrue(trigger.isTrigger, "Settlement threat must be trigger-based so it can hurt without blocking the room.");
+        }
+
+        [Test]
+        public void SettlementThreatZoneCanDamageThePlayer()
+        {
+            var threatType = Type.GetType("KHorrorGame.Migration.SettlementThreatZone, KHorrorGame.Migration");
+            Assert.IsNotNull(threatType, "SettlementThreatZone runtime component should exist.");
+
+            var zoneObject = new GameObject("SettlementThreatZoneFixture");
+            var playerObject = new GameObject("SettlementPlayerFixture");
+
+            try
+            {
+                var zone = zoneObject.AddComponent(threatType);
+                var player = playerObject.AddComponent<UnityPlayerController>();
+                var health = playerObject.AddComponent<PlayerDamageReceiver>();
+                health.ResetHealth(100);
+
+                var manualTick = threatType.GetMethod("ManualTick");
+                Assert.IsNotNull(manualTick, "SettlementThreatZone should expose ManualTick for deterministic tests.");
+
+                var damaged = (bool)manualTick.Invoke(zone, new object[] { player, 0.1f });
+
+                Assert.IsTrue(damaged, "Settlement threat should damage immediately when the player enters it.");
+                Assert.Less(health.CurrentHealth, 100);
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(zoneObject);
+                UnityEngine.Object.DestroyImmediate(playerObject);
             }
         }
 

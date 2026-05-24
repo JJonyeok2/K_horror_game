@@ -265,7 +265,7 @@ namespace KHorrorGame.Editor
 
             var ghostAnchor = CreateMarker(
                 "GhostSpawnAnchor_AnchaeInterior",
-                new Vector3(-1.2f, 0.95f, 84.7f),
+                new Vector3(-8.15f, 0.95f, 128.8f),
                 Quaternion.Euler(0f, 180f, 0f),
                 root.transform);
             var dokkaebiAnchor = CreateMarker(
@@ -277,7 +277,7 @@ namespace KHorrorGame.Editor
             var ghost = CreateGhostActor(root.transform, ghostAnchor.position, ghostAnchor.rotation, player.transform);
             var dokkaebi = CreateDokkaebiActor(root.transform, dokkaebiAnchor.position, dokkaebiAnchor.rotation, player.transform);
 
-            var cue = CreatePointLight("ThreatSpawnCueLight", root.transform, new Vector3(-1.2f, 2.3f, 84.7f), new Color(1f, 0.2f, 0.1f), 2.4f, 8f);
+            var cue = CreatePointLight("ThreatSpawnCueLight", root.transform, new Vector3(-8.15f, 2.3f, 128.8f), new Color(1f, 0.2f, 0.1f), 2.4f, 11f);
             cue.enabled = false;
 
             SetObject(spawner, "ghostActor", ghost);
@@ -352,14 +352,36 @@ namespace KHorrorGame.Editor
 
         private static void CreateSettlementProxy(Transform parent, GameLoopController gameLoop)
         {
-            CreateCube("SettlementFloor", parent, new Vector3(0f, 0f, -34f), new Vector3(8f, 0.2f, 8f), Materials.OfficeFloor);
-            CreateCube("SettlementBackWall", parent, new Vector3(0f, 1.8f, -30.2f), new Vector3(8f, 3.6f, 0.25f), Materials.Plaster);
-            CreateCube("SettlementLeftWall", parent, new Vector3(-4.1f, 1.8f, -34f), new Vector3(0.25f, 3.6f, 8f), Materials.Plaster);
-            CreateCube("SettlementRightWall", parent, new Vector3(4.1f, 1.8f, -34f), new Vector3(0.25f, 3.6f, 8f), Materials.Plaster);
-            CreateCube("SettlementCeiling", parent, new Vector3(0f, 3.6f, -34f), new Vector3(8.4f, 0.25f, 8.4f), Materials.Wood);
-            var station = CreateCube("SettlementStation", parent, new Vector3(0f, 1.0f, -31.5f), new Vector3(1.4f, 1f, 0.45f), Materials.Terminal);
+            CreateCube("SettlementFloor", parent, new Vector3(0f, 0f, -34f), new Vector3(16f, 0.2f, 18f), Materials.OfficeFloor);
+            CreateCube("SettlementBackWall", parent, new Vector3(0f, 1.8f, -25.1f), new Vector3(16f, 3.6f, 0.25f), Materials.Plaster);
+            CreateCube("SettlementFrontWall_Left", parent, new Vector3(-5.4f, 1.8f, -42.9f), new Vector3(5.2f, 3.6f, 0.25f), Materials.Plaster);
+            CreateCube("SettlementFrontWall_Right", parent, new Vector3(5.4f, 1.8f, -42.9f), new Vector3(5.2f, 3.6f, 0.25f), Materials.Plaster);
+            CreateCube("SettlementLeftWall", parent, new Vector3(-8.1f, 1.8f, -34f), new Vector3(0.25f, 3.6f, 18f), Materials.Plaster);
+            CreateCube("SettlementRightWall", parent, new Vector3(8.1f, 1.8f, -34f), new Vector3(0.25f, 3.6f, 18f), Materials.Plaster);
+            CreateCube("SettlementCeiling", parent, new Vector3(0f, 3.6f, -34f), new Vector3(16.4f, 0.25f, 18.4f), Materials.Wood);
+            CreateCube("SettlementServiceCounter", parent, new Vector3(0f, 0.78f, -28.3f), new Vector3(8.8f, 1.2f, 1.05f), Materials.DarkWood);
+            CreateCube("SettlementCounterGrate", parent, new Vector3(0f, 1.92f, -28.05f), new Vector3(8.4f, 1.45f, 0.08f), Materials.RustedMetal);
+            CreateCube("SettlementQueueRail_Left", parent, new Vector3(-2.3f, 0.75f, -35.2f), new Vector3(0.16f, 0.9f, 7.8f), Materials.RustedMetal);
+            CreateCube("SettlementQueueRail_Right", parent, new Vector3(2.3f, 0.75f, -35.2f), new Vector3(0.16f, 0.9f, 7.8f), Materials.RustedMetal);
+            CreateCube("SettlementCargoScale", parent, new Vector3(-3.5f, 1.22f, -27.45f), new Vector3(1.55f, 0.25f, 1.0f), Materials.RustedMetal);
+            CreateCube("SettlementWarningBoard", parent, new Vector3(5.2f, 1.65f, -25.35f), new Vector3(2.1f, 1.1f, 0.08f), Materials.TalismanPaper);
+
+            var station = CreateCube("SettlementStation", parent, new Vector3(0f, 1.15f, -27.45f), new Vector3(1.6f, 1.1f, 0.5f), Materials.Terminal);
             var settlementStation = station.AddComponent<SettlementStation>();
             SetObject(settlementStation, "gameLoop", gameLoop);
+
+            var returnTablet = CreateCube("SettlementReturnTablet", parent, new Vector3(0f, 1.2f, -40.15f), new Vector3(1.45f, 0.78f, 0.12f), Materials.Terminal);
+            var terminal = returnTablet.AddComponent<BongoTerminal>();
+            SetObject(terminal, "gameLoop", gameLoop);
+            CreateCube("SettlementReturnScreenGlow", parent, new Vector3(0f, 1.2f, -40.08f), new Vector3(1.18f, 0.52f, 0.03f), Materials.ScreenGlow).GetComponent<Collider>().enabled = false;
+
+            CreateCube("SettlementCollectorShadow", parent, new Vector3(-5.2f, 1.25f, -28.85f), new Vector3(1.0f, 2.25f, 0.55f), Materials.Night).GetComponent<Collider>().enabled = false;
+            CreateCube("SettlementCollectorHead", parent, new Vector3(-5.2f, 2.65f, -28.85f), new Vector3(0.72f, 0.55f, 0.45f), Materials.GhostBody).GetComponent<Collider>().enabled = false;
+            var threatZone = CreateCube("SettlementCollectorThreatZone", parent, new Vector3(-4.7f, 1.05f, -31.35f), new Vector3(3.2f, 2.1f, 4.2f), Materials.Night);
+            threatZone.GetComponent<Collider>().isTrigger = true;
+            threatZone.AddComponent<SettlementThreatZone>();
+            CreatePointLight("SettlementCollectorWarningGlow", parent, new Vector3(-4.7f, 2.2f, -30.7f), new Color(1f, 0.05f, 0.03f), 1.4f, 7f);
+            CreatePointLight("SettlementOfficeDimFill", parent, new Vector3(1.2f, 2.8f, -36.5f), new Color(0.46f, 0.54f, 0.48f), 1.2f, 10f);
         }
 
         private static void CreateTravelProxy(Transform parent)

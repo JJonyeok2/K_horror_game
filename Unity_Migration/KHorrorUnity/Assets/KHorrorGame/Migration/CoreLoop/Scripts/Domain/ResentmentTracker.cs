@@ -30,6 +30,36 @@ namespace KHorrorGame.Migration
             get { return _history; }
         }
 
+        public static int MinimumValueForStage(int stage)
+        {
+            if (stage <= 0)
+            {
+                return 0;
+            }
+
+            if (stage == 1)
+            {
+                return 1;
+            }
+
+            if (stage == 2)
+            {
+                return 3;
+            }
+
+            if (stage == 3)
+            {
+                return 5;
+            }
+
+            if (stage == 4)
+            {
+                return 8;
+            }
+
+            return 11;
+        }
+
         public void AddResentment(int amount, string reason)
         {
             CurrentValue += Math.Max(amount, 0);

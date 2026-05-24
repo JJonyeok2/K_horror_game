@@ -221,6 +221,11 @@ namespace KHorrorGame.Migration
             ThreatDirectorContext context,
             ThreatStageProfile profile)
         {
+            if (context.ActiveGhostCount > 0)
+            {
+                return Cue(profile, "interior_ghost_active");
+            }
+
             if (profile.Stage >= 4
                 && territoryRules.CanEnter(EnemyKind.Ghost, context.PlayerTerritory))
             {

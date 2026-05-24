@@ -81,6 +81,25 @@ namespace KHorrorGame.Migration.Tests
         }
 
         [Test]
+        public void EstateDoesNotRespawnGhostWhenGhostAlreadyActive()
+        {
+            var director = new ThreatDirector();
+
+            var decision = director.Evaluate(new ThreatDirectorContext(
+                GameMapId.JonggaEstate,
+                TerritoryKind.EstateInterior,
+                5,
+                true,
+                1,
+                0,
+                23));
+
+            Assert.AreEqual(ThreatDirectorAction.CueOnly, decision.Action);
+            Assert.IsNull(decision.EnemyKind);
+            Assert.AreEqual("interior_ghost_active", decision.Reason);
+        }
+
+        [Test]
         public void FullStageBudgetBlocksAdditionalSpawns()
         {
             var director = new ThreatDirector();

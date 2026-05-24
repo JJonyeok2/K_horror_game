@@ -95,8 +95,20 @@ namespace KHorrorGame.Migration
             }
 
             ThreatGate.NotifyArtifactPicked(definition);
-            State.Resentment.AddResentment(definition.ResentmentGain, definition.DisplayName);
+            State.Resentment.AddResentment(ResentmentGainFor(definition), definition.DisplayName);
             NotifyStateChanged();
+        }
+
+        private int ResentmentGainFor(ArtifactDefinition definition)
+        {
+            var gain = definition.ResentmentGain;
+            if (!definition.HasTag("shrine_item"))
+            {
+                return gain;
+            }
+
+            var maxStageValue = ResentmentTracker.MinimumValueForStage(ThreatStageProfile.MaxStage);
+            return Math.Max(gain, maxStageValue - State.Resentment.CurrentValue);
         }
 
         private void OnTravelStarted(object sender, BongoTravelEventArgs args)
