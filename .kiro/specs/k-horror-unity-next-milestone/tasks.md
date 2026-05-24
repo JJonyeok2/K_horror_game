@@ -32,6 +32,14 @@
   - Regenerate `KHorror_Main` and verify the full EditMode suite passes.
   - _Requirements: 2.1, 2.2, 4.6, 4.7, 9.3_
 
+- [x] H6. Hotfix shrine access, loot density, and visible threat spawn
+  - Make shrine entrance cloth and rope decorations visual-only so they do not block the player capsule.
+  - Increase estate pickup artifacts from two to seven across courtyard, main house, sarangchae, kitchen shed, and shrine.
+  - Add visible ghost and dokkaebi threat proxies driven by the threat gate and resentment stage.
+  - Add regression tests for shrine decoration collision, artifact count, and threat proxy activation.
+  - Regenerate `KHorror_Main` and verify the full EditMode suite passes.
+  - _Requirements: 3.6, 4.5, 4.6, 5.1, 8.1, 8.2, 8.3, 9.3_
+
 - [x] 1. Establish territory foundations
   - Add `EnemyKind` and `TerritoryKind` domain enums.
   - Add a testable `EnemyTerritoryRules` service that answers whether a kind can enter a territory.

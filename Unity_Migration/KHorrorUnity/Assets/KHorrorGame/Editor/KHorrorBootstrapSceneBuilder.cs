@@ -199,15 +199,71 @@ namespace KHorrorGame.Editor
             CreateSarangchae(parent);
             CreateShrineLoop(parent);
 
-            var artifact = CreateCube("Artifact_BrassBowl", parent, new Vector3(2.2f, 0.5f, 70f), new Vector3(0.45f, 0.3f, 0.45f), Materials.Artifact);
-            var pickup = artifact.AddComponent<ArtifactPickup>();
-            SetObject(pickup, "gameLoop", gameLoop);
-
-            var shrineArtifact = CreateCube("Artifact_ShrineToken", parent, new Vector3(-7.8f, 0.88f, 98.25f), new Vector3(0.36f, 0.28f, 0.36f), Materials.ShrineToken);
-            var shrinePickup = shrineArtifact.AddComponent<ArtifactPickup>();
-            SetObject(shrinePickup, "gameLoop", gameLoop);
-
+            CreateEstateArtifacts(parent, gameLoop);
+            CreateThreatProxySpawner(parent, gameLoop);
             CreateEstateReturnBongo(parent, gameLoop);
+        }
+
+        private static void CreateEstateArtifacts(Transform parent, GameLoopController gameLoop)
+        {
+            CreateArtifact("Artifact_BrassBowl", parent, gameLoop, new Vector3(2.2f, 0.5f, 70f), new Vector3(0.45f, 0.3f, 0.45f), Materials.Artifact, "Brass bowl", 260, 2.1f, 1, 2);
+            CreateArtifact("Artifact_CourtyardLedger", parent, gameLoop, new Vector3(-4.7f, 0.48f, 63.05f), new Vector3(0.46f, 0.12f, 0.34f), Materials.TalismanPaper, "Family ledger", 180, 0.8f, 1, 1);
+            CreateArtifact("Artifact_MainHouseScroll", parent, gameLoop, new Vector3(-1.6f, 0.85f, 82.35f), new Vector3(0.22f, 0.22f, 0.64f), Materials.Rope, "Ancestral scroll", 320, 1.0f, 2, 1);
+            CreateArtifact("Artifact_SarangchaeComb", parent, gameLoop, new Vector3(8.85f, 0.72f, 76.7f), new Vector3(0.36f, 0.08f, 0.22f), Materials.Artifact, "Horn comb", 140, 0.4f, 1, 1);
+            CreateArtifact("Artifact_KitchenCharm", parent, gameLoop, new Vector3(-3.4f, 0.72f, 90.4f), new Vector3(0.28f, 0.38f, 0.06f), Materials.TalismanPaper, "Kitchen talisman", 120, 0.2f, 1, 1);
+            CreateArtifact("Artifact_ShrineBell", parent, gameLoop, new Vector3(-8.65f, 0.88f, 98.2f), new Vector3(0.28f, 0.32f, 0.28f), Materials.ShrineToken, "Shrine bell", 420, 0.7f, 3, 1, new[] { "shrine_item" });
+            CreateArtifact("Artifact_ShrineToken", parent, gameLoop, new Vector3(-7.55f, 0.88f, 98.25f), new Vector3(0.36f, 0.28f, 0.36f), Materials.ShrineToken, "Shrine token", 500, 1.0f, 4, 1, new[] { "shrine_item" });
+        }
+
+        private static void CreateArtifact(
+            string name,
+            Transform parent,
+            GameLoopController gameLoop,
+            Vector3 position,
+            Vector3 scale,
+            Material material,
+            string displayName,
+            int value,
+            float weight,
+            int resentmentGain,
+            int handSlots,
+            string[] tags = null)
+        {
+            var artifact = CreateCube(name, parent, position, scale, material);
+            var pickup = artifact.AddComponent<ArtifactPickup>();
+            pickup.ApplyDefinition(new ArtifactDefinition(displayName, value, weight, resentmentGain, tags, handSlots));
+            SetObject(pickup, "gameLoop", gameLoop);
+            EditorUtility.SetDirty(pickup);
+        }
+
+        private static void CreateThreatProxySpawner(Transform parent, GameLoopController gameLoop)
+        {
+            var root = new GameObject("ThreatProxySpawner");
+            root.transform.SetParent(parent);
+            var spawner = root.AddComponent<ThreatProxySpawner>();
+            SetObject(spawner, "gameLoop", gameLoop);
+
+            var ghost = new GameObject("GhostThreatProxy");
+            ghost.transform.SetParent(root.transform);
+            CreateCylinder("GhostThreatProxy_Body", ghost.transform, new Vector3(-7.7f, 1.15f, 97.1f), new Vector3(0.34f, 0.75f, 0.34f), Materials.GhostBody);
+            CreateSphere("GhostThreatProxy_Head", ghost.transform, new Vector3(-7.7f, 2.05f, 97.1f), new Vector3(0.46f, 0.52f, 0.46f), Materials.GhostBody);
+            CreateCube("GhostThreatProxy_HairVeil", ghost.transform, new Vector3(-7.7f, 1.8f, 96.82f), new Vector3(0.82f, 1.4f, 0.08f), Materials.Night);
+            CreatePointLight("GhostThreatProxy_Glow", ghost.transform, new Vector3(-7.7f, 1.8f, 97.25f), new Color(0.62f, 0.9f, 0.85f), 1.15f, 5.5f);
+
+            var dokkaebi = new GameObject("DokkaebiThreatProxy");
+            dokkaebi.transform.SetParent(root.transform);
+            CreateCylinder("DokkaebiThreatProxy_Body", dokkaebi.transform, new Vector3(4.2f, 0.9f, 34.5f), new Vector3(0.42f, 0.55f, 0.42f), Materials.DokkaebiBody);
+            CreateSphere("DokkaebiThreatProxy_Head", dokkaebi.transform, new Vector3(4.2f, 1.62f, 34.5f), new Vector3(0.54f, 0.48f, 0.54f), Materials.DokkaebiBody);
+            CreateCylinderBetween("DokkaebiThreatProxy_HornLeft", dokkaebi.transform, new Vector3(4.02f, 1.95f, 34.5f), new Vector3(3.85f, 2.25f, 34.5f), 0.06f, Materials.RustedMetal);
+            CreateCylinderBetween("DokkaebiThreatProxy_HornRight", dokkaebi.transform, new Vector3(4.38f, 1.95f, 34.5f), new Vector3(4.55f, 2.25f, 34.5f), 0.06f, Materials.RustedMetal);
+            CreatePointLight("DokkaebiThreatProxy_Glow", dokkaebi.transform, new Vector3(4.2f, 1.35f, 34.5f), new Color(0.9f, 0.24f, 0.15f), 1.0f, 4.5f);
+
+            var cue = CreatePointLight("ThreatSpawnCueLight", root.transform, new Vector3(-7.7f, 2.2f, 97.1f), new Color(1f, 0.2f, 0.1f), 2.4f, 8f);
+            cue.enabled = false;
+
+            SetObject(spawner, "ghostProxy", ghost);
+            SetObject(spawner, "dokkaebiProxy", dokkaebi);
+            SetObject(spawner, "spawnCueLight", cue);
         }
 
         private static void CreateEstateGroundContinuity(Transform parent)
@@ -489,11 +545,13 @@ namespace KHorrorGame.Editor
             CreateCube("ShrineRoof_RightSlope", parent, new Vector3(-6.6f, 3.75f, 99f), new Vector3(3.7f, 0.35f, 5.6f), Materials.Roof, Quaternion.Euler(0f, 0f, -10f));
             CreateCube("ShrineRoofRidge", parent, new Vector3(-8f, 4.2f, 99f), new Vector3(0.3f, 0.24f, 5.9f), Materials.RoofRidge);
             CreateCube("ShrineAltar", parent, new Vector3(-8f, 0.8f, 100.4f), new Vector3(2f, 1.0f, 0.7f), Materials.Altar);
-            CreateCube("ShrineHangingRope", parent, new Vector3(-8f, 2.75f, 97.05f), new Vector3(4.8f, 0.08f, 0.08f), Materials.Rope);
+            var shrineRope = CreateCube("ShrineHangingRope", parent, new Vector3(-8f, 2.75f, 97.05f), new Vector3(4.8f, 0.08f, 0.08f), Materials.Rope);
+            shrineRope.GetComponent<Collider>().enabled = false;
             for (var i = 0; i < 7; i++)
             {
                 var x = -10.1f + i * 0.7f;
-                CreateCube("ShrineClothStrip_" + i, parent, new Vector3(x, 2.35f - (i % 2) * 0.15f, 96.95f), new Vector3(0.18f, 0.72f, 0.04f), i % 2 == 0 ? Materials.FadedRedCloth : Materials.FadedWhiteCloth);
+                var strip = CreateCube("ShrineClothStrip_" + i, parent, new Vector3(x, 2.35f - (i % 2) * 0.15f, 96.95f), new Vector3(0.18f, 0.72f, 0.04f), i % 2 == 0 ? Materials.FadedRedCloth : Materials.FadedWhiteCloth);
+                strip.GetComponent<Collider>().enabled = false;
             }
 
             CreateCylinder("ShrineCandle_A", parent, new Vector3(-8.45f, 1.45f, 99.9f), new Vector3(0.08f, 0.22f, 0.08f), Materials.CandleWax);
@@ -1219,6 +1277,8 @@ namespace KHorrorGame.Editor
             public static readonly Material Altar = LoadAmbientMaterial("Wood095", "Mat_DarkAltarWood_PBR", new Color(0.25f, 0.095f, 0.055f, 1f), new Vector2(1.8f, 1.2f), 0.32f);
             public static readonly Material Night = CreateMaterial("Mat_TravelNight", new Color(0.012f, 0.018f, 0.016f, 1f), 0.2f);
             public static readonly Material DistantHill = CreateMaterial("Mat_DistantTreeSilhouette", new Color(0.006f, 0.017f, 0.011f, 1f), 0.22f);
+            public static readonly Material GhostBody = CreateEmissionMaterial("Mat_ThreatGhostProxy", new Color(0.46f, 0.9f, 0.78f, 0.82f), 0.55f);
+            public static readonly Material DokkaebiBody = CreateEmissionMaterial("Mat_ThreatDokkaebiProxy", new Color(0.78f, 0.13f, 0.09f, 1f), 0.45f);
         }
     }
 }
