@@ -408,6 +408,10 @@ namespace KHorrorGame.Editor
             CreateCube("ReturnBongoRearDoorLeft", root.transform, new Vector3(-1.25f, 1.15f, 3.48f), new Vector3(1.15f, 1.85f, 0.15f), Materials.VanDoor);
             CreateCube("ReturnBongoRearDoorRight", root.transform, new Vector3(1.25f, 1.15f, 3.48f), new Vector3(1.15f, 1.85f, 0.15f), Materials.VanDoor);
             CreateCube("ReturnBongoRearStep", root.transform, new Vector3(0f, 0.18f, 4.28f), new Vector3(3.3f, 0.2f, 0.75f), Materials.Road);
+            var cargoDepositZone = CreateColliderOnlyBox("ReturnBongoCargoDepositZone", root.transform, new Vector3(0f, 1.05f, 3.25f), new Vector3(3.35f, 2.15f, 2.15f), true);
+            var cargoDeposit = cargoDepositZone.AddComponent<VanCargoDepositZone>();
+            SetObject(cargoDeposit, "gameLoop", gameLoop);
+            CreateCube("ReturnBongoCargoPad_G", root.transform, new Vector3(0f, 0.32f, 3.38f), new Vector3(2.8f, 0.08f, 1.25f), Materials.Extraction).GetComponent<Collider>().enabled = false;
             CreateCube("ReturnBongoFrontBumper", root.transform, new Vector3(0f, 0.55f, -4.2f), new Vector3(3.7f, 0.32f, 0.18f), Materials.RustedMetal);
             CreateCube("ReturnBongoRearBumper", root.transform, new Vector3(0f, 0.55f, 4.18f), new Vector3(3.7f, 0.32f, 0.18f), Materials.RustedMetal);
 

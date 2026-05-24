@@ -74,7 +74,13 @@ namespace KHorrorGame.Migration
 
         public bool ExtractPlayerInventory()
         {
-            return State.ExtractPlayerInventory();
+            var extracted = State.ExtractPlayerInventory();
+            if (extracted && player != null)
+            {
+                player.RefreshHeldItemViews();
+            }
+
+            return extracted;
         }
 
         public bool SettleStoredCargo()

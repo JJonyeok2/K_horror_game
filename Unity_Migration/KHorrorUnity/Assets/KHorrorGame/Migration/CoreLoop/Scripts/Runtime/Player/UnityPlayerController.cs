@@ -346,7 +346,7 @@ namespace KHorrorGame.Migration
             return mount;
         }
 
-        private void RefreshHeldItemViews()
+        public void RefreshHeldItemViews()
         {
             EnsureHandMounts();
             ClearMount(leftHandMount);
@@ -381,7 +381,7 @@ namespace KHorrorGame.Migration
 
             for (var i = mount.childCount - 1; i >= 0; i--)
             {
-                Destroy(mount.GetChild(i).gameObject);
+                DestroyHeldObject(mount.GetChild(i).gameObject);
             }
         }
 
@@ -402,8 +402,24 @@ namespace KHorrorGame.Migration
             var collider = held.GetComponent<Collider>();
             if (collider != null)
             {
-                Destroy(collider);
+                DestroyHeldObject(collider);
             }
+        }
+
+        private static void DestroyHeldObject(Object target)
+        {
+            if (target == null)
+            {
+                return;
+            }
+
+            if (Application.isPlaying)
+            {
+                Destroy(target);
+                return;
+            }
+
+            DestroyImmediate(target);
         }
     }
 }

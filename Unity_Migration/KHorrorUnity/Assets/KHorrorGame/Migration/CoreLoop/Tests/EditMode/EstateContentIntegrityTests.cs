@@ -436,6 +436,68 @@ namespace KHorrorGame.Migration.Tests
         }
 
         [Test]
+        public void ReturnBongoHasGCargoDepositZone()
+        {
+            EditorSceneManager.OpenScene(ScenePath);
+
+            var depositType = Type.GetType("KHorrorGame.Migration.VanCargoDepositZone, KHorrorGame.Migration");
+            var depositZone = GameObject.Find("ReturnBongoCargoDepositZone");
+
+            Assert.IsNotNull(depositType, "VanCargoDepositZone runtime component should exist.");
+            Assert.IsNotNull(depositZone, "Return bongo needs a cargo zone for loading items with G before returning.");
+            Assert.IsNotNull(depositZone.GetComponent(depositType), "ReturnBongoCargoDepositZone should use VanCargoDepositZone.");
+
+            var trigger = depositZone.GetComponent<Collider>();
+            Assert.IsNotNull(trigger, "ReturnBongoCargoDepositZone should have a collider.");
+            Assert.IsTrue(trigger.isTrigger, "The cargo deposit zone should detect entry without blocking the van.");
+        }
+
+        [Test]
+        public void VanCargoDepositZoneManualDepositLoadsCargoWithoutLeavingEstate()
+        {
+            var depositType = Type.GetType("KHorrorGame.Migration.VanCargoDepositZone, KHorrorGame.Migration");
+            Assert.IsNotNull(depositType, "VanCargoDepositZone runtime component should exist.");
+
+            var playerObject = new GameObject("DepositPlayerFixture");
+            var controllerObject = new GameObject("DepositGameLoopFixture");
+            var zoneObject = new GameObject("DepositZoneFixture");
+
+            try
+            {
+                var player = playerObject.AddComponent<UnityPlayerController>();
+                var gameLoop = controllerObject.AddComponent<GameLoopController>();
+                InvokeAwake(gameLoop);
+                Assert.IsTrue(gameLoop.State.TravelToRetrievalMap(GameMapId.JonggaEstate));
+                gameLoop.State.CompleteBongoTravel();
+                Assert.AreEqual(GameMapId.JonggaEstate, gameLoop.State.CurrentMap);
+
+                var artifact = new ArtifactDefinition("Brass bowl", 260, 2.1f, 1, null, 2);
+                Assert.IsTrue(player.TryCollectArtifact(artifact));
+
+                zoneObject.AddComponent<BoxCollider>();
+                var zone = zoneObject.AddComponent(depositType);
+                SetObject((UnityEngine.Object)zone, "gameLoop", gameLoop);
+
+                var manualDeposit = depositType.GetMethod("ManualDeposit");
+                Assert.IsNotNull(manualDeposit, "VanCargoDepositZone should expose ManualDeposit for deterministic tests.");
+
+                var deposited = (bool)manualDeposit.Invoke(zone, new object[] { player });
+
+                Assert.IsTrue(deposited, "G cargo deposit should accept the held item.");
+                Assert.AreEqual(0, player.Inventory.Items.Count, "Hands should be empty so the player can leave the van again.");
+                Assert.AreEqual(260, gameLoop.State.PendingRecoveredValue, "Deposited cargo should stay loaded in the van.");
+                Assert.AreEqual(GameMapId.JonggaEstate, gameLoop.State.CurrentMap, "Depositing with G must not return to hub.");
+                Assert.IsFalse(gameLoop.State.IsTraveling, "Depositing with G should not start travel.");
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(playerObject);
+                UnityEngine.Object.DestroyImmediate(controllerObject);
+                UnityEngine.Object.DestroyImmediate(zoneObject);
+            }
+        }
+
+        [Test]
         public void ShrineEntranceOnlyAllowsApproachFromBackRoute()
         {
             EditorSceneManager.OpenScene(ScenePath);
@@ -492,6 +554,13 @@ namespace KHorrorGame.Migration.Tests
             var serialized = new SerializedObject(target);
             serialized.FindProperty(propertyName).objectReferenceValue = value;
             serialized.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        private static void InvokeAwake(UnityEngine.Object target)
+        {
+            target.GetType()
+                .GetMethod("Awake", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)
+                .Invoke(target, null);
         }
 
         private static bool TryFindShrineRouteBoundary(Vector3 origin, Vector3 direction, out RaycastHit boundaryHit)

@@ -31,7 +31,7 @@ namespace KHorrorGame.Migration
             }
 
             currentLabel = actor.Inventory.Items.Count > 0
-                ? "Load cargo and return [E]"
+                ? "Store cargo [G] / Return [E]"
                 : "Return to bongo [E]";
             return true;
         }
