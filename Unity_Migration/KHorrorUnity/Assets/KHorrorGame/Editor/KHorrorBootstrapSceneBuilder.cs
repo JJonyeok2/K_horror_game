@@ -63,7 +63,7 @@ namespace KHorrorGame.Editor
             CreateLighting(systems.transform, player.CameraLight, player.Camera);
             CreateHud(systems.transform, controller, player.Controller, player.Interactor);
             CreateBongoHub(bongoHub.transform, controller);
-            CreateEstateProxy(estate.transform, controller);
+            CreateEstateProxy(estate.transform, controller, player.Controller);
             CreateSettlementProxy(settlement.transform, controller);
             CreateTravelProxy(travel.transform);
 
@@ -85,6 +85,7 @@ namespace KHorrorGame.Editor
             characterController.center = new Vector3(0f, 0.9f, 0f);
 
             var controller = player.AddComponent<UnityPlayerController>();
+            player.AddComponent<PlayerDamageReceiver>();
 
             var cameraObject = new GameObject("MainCamera");
             cameraObject.transform.SetParent(player.transform);
@@ -181,7 +182,7 @@ namespace KHorrorGame.Editor
             screen.GetComponent<Collider>().enabled = false;
         }
 
-        private static void CreateEstateProxy(Transform parent, GameLoopController gameLoop)
+        private static void CreateEstateProxy(Transform parent, GameLoopController gameLoop, UnityPlayerController player)
         {
             CreateCube("ApproachRoad_MuddyCenter", parent, new Vector3(0f, 0f, 34f), new Vector3(7f, 0.2f, 36f), Materials.Road);
             CreateCube("ApproachRoad_GrassLeft", parent, new Vector3(-5.5f, 0.02f, 34f), new Vector3(4f, 0.16f, 36f), Materials.Grass);
@@ -203,7 +204,7 @@ namespace KHorrorGame.Editor
             CreateShrineLoop(parent);
 
             CreateEstateArtifacts(parent, gameLoop);
-            CreateThreatProxySpawner(parent, gameLoop);
+            CreateRuntimeThreatSpawner(parent, gameLoop, player);
             CreateEstateReturnBongo(parent, gameLoop);
         }
 
@@ -241,34 +242,82 @@ namespace KHorrorGame.Editor
             EditorUtility.SetDirty(pickup);
         }
 
-        private static void CreateThreatProxySpawner(Transform parent, GameLoopController gameLoop)
+        private static void CreateRuntimeThreatSpawner(Transform parent, GameLoopController gameLoop, UnityPlayerController player)
         {
-            var root = new GameObject("ThreatProxySpawner");
+            var root = new GameObject("RuntimeThreatSpawner");
             root.transform.SetParent(parent);
-            var spawner = root.AddComponent<ThreatProxySpawner>();
+            var spawner = root.AddComponent<RuntimeThreatSpawner>();
             SetObject(spawner, "gameLoop", gameLoop);
+            SetObject(spawner, "playerTarget", player.transform);
 
-            var ghost = new GameObject("GhostThreatProxy");
-            ghost.transform.SetParent(root.transform);
-            CreateCylinder("GhostThreatProxy_Body", ghost.transform, new Vector3(ShrineX + 0.3f, 1.15f, ShrineZ - 1.9f), new Vector3(0.34f, 0.75f, 0.34f), Materials.GhostBody);
-            CreateSphere("GhostThreatProxy_Head", ghost.transform, new Vector3(ShrineX + 0.3f, 2.05f, ShrineZ - 1.9f), new Vector3(0.46f, 0.52f, 0.46f), Materials.GhostBody);
-            CreateCube("GhostThreatProxy_HairVeil", ghost.transform, new Vector3(ShrineX + 0.3f, 1.8f, ShrineZ - 2.18f), new Vector3(0.82f, 1.4f, 0.08f), Materials.Night);
-            CreatePointLight("GhostThreatProxy_Glow", ghost.transform, new Vector3(ShrineX + 0.3f, 1.8f, ShrineZ - 1.75f), new Color(0.62f, 0.9f, 0.85f), 1.15f, 5.5f);
+            var ghostAnchor = CreateMarker(
+                "GhostSpawnAnchor_AnchaeInterior",
+                new Vector3(-1.2f, 0.95f, 84.7f),
+                Quaternion.Euler(0f, 180f, 0f),
+                root.transform);
+            var dokkaebiAnchor = CreateMarker(
+                "DokkaebiSpawnAnchor_ForestApproach",
+                new Vector3(4.3f, 0.92f, 36.5f),
+                Quaternion.Euler(0f, -35f, 0f),
+                root.transform);
 
-            var dokkaebi = new GameObject("DokkaebiThreatProxy");
-            dokkaebi.transform.SetParent(root.transform);
-            CreateCylinder("DokkaebiThreatProxy_Body", dokkaebi.transform, new Vector3(4.2f, 0.9f, 34.5f), new Vector3(0.42f, 0.55f, 0.42f), Materials.DokkaebiBody);
-            CreateSphere("DokkaebiThreatProxy_Head", dokkaebi.transform, new Vector3(4.2f, 1.62f, 34.5f), new Vector3(0.54f, 0.48f, 0.54f), Materials.DokkaebiBody);
-            CreateCylinderBetween("DokkaebiThreatProxy_HornLeft", dokkaebi.transform, new Vector3(4.02f, 1.95f, 34.5f), new Vector3(3.85f, 2.25f, 34.5f), 0.06f, Materials.RustedMetal);
-            CreateCylinderBetween("DokkaebiThreatProxy_HornRight", dokkaebi.transform, new Vector3(4.38f, 1.95f, 34.5f), new Vector3(4.55f, 2.25f, 34.5f), 0.06f, Materials.RustedMetal);
-            CreatePointLight("DokkaebiThreatProxy_Glow", dokkaebi.transform, new Vector3(4.2f, 1.35f, 34.5f), new Color(0.9f, 0.24f, 0.15f), 1.0f, 4.5f);
+            var ghost = CreateGhostActor(root.transform, ghostAnchor.position, ghostAnchor.rotation, player.transform);
+            var dokkaebi = CreateDokkaebiActor(root.transform, dokkaebiAnchor.position, dokkaebiAnchor.rotation, player.transform);
 
-            var cue = CreatePointLight("ThreatSpawnCueLight", root.transform, new Vector3(ShrineX + 0.3f, 2.2f, ShrineZ - 1.9f), new Color(1f, 0.2f, 0.1f), 2.4f, 8f);
+            var cue = CreatePointLight("ThreatSpawnCueLight", root.transform, new Vector3(-1.2f, 2.3f, 84.7f), new Color(1f, 0.2f, 0.1f), 2.4f, 8f);
             cue.enabled = false;
 
-            SetObject(spawner, "ghostProxy", ghost);
-            SetObject(spawner, "dokkaebiProxy", dokkaebi);
+            SetObject(spawner, "ghostActor", ghost);
+            SetObject(spawner, "dokkaebiActor", dokkaebi);
+            SetObject(spawner, "ghostSpawnAnchor", ghostAnchor);
+            SetObject(spawner, "dokkaebiSpawnAnchor", dokkaebiAnchor);
             SetObject(spawner, "spawnCueLight", cue);
+        }
+
+        private static EnemyBrain CreateGhostActor(
+            Transform parent,
+            Vector3 position,
+            Quaternion rotation,
+            Transform playerTarget)
+        {
+            var actor = new GameObject("RuntimeGhostActor");
+            actor.transform.SetParent(parent);
+            actor.transform.SetPositionAndRotation(position, rotation);
+            var brain = actor.AddComponent<EnemyBrain>();
+            brain.Configure(EnemyKind.Ghost, ThreatStageProfile.ForStage(4), playerTarget, TerritoryKind.EstateInterior, position);
+            brain.SetAutomaticTick(false);
+
+            CreateLocalPrimitive(PrimitiveType.Cylinder, "RuntimeGhostActor_Body", actor.transform, new Vector3(0f, 0.68f, 0f), new Vector3(0.33f, 0.68f, 0.33f), Materials.GhostBody);
+            CreateLocalPrimitive(PrimitiveType.Sphere, "RuntimeGhostActor_Head", actor.transform, new Vector3(0f, 1.5f, 0f), new Vector3(0.48f, 0.52f, 0.48f), Materials.GhostBody);
+            CreateLocalPrimitive(PrimitiveType.Cube, "RuntimeGhostActor_HairVeil", actor.transform, new Vector3(0f, 1.22f, -0.2f), new Vector3(0.78f, 1.25f, 0.055f), Materials.Night);
+            CreateLocalPrimitive(PrimitiveType.Cube, "RuntimeGhostActor_SleeveLeft", actor.transform, new Vector3(-0.42f, 0.96f, 0.02f), new Vector3(0.12f, 0.7f, 0.12f), Materials.GhostBody);
+            CreateLocalPrimitive(PrimitiveType.Cube, "RuntimeGhostActor_SleeveRight", actor.transform, new Vector3(0.42f, 0.96f, 0.02f), new Vector3(0.12f, 0.7f, 0.12f), Materials.GhostBody);
+
+            actor.SetActive(false);
+            return brain;
+        }
+
+        private static EnemyBrain CreateDokkaebiActor(
+            Transform parent,
+            Vector3 position,
+            Quaternion rotation,
+            Transform playerTarget)
+        {
+            var actor = new GameObject("RuntimeDokkaebiActor");
+            actor.transform.SetParent(parent);
+            actor.transform.SetPositionAndRotation(position, rotation);
+            var brain = actor.AddComponent<EnemyBrain>();
+            brain.Configure(EnemyKind.Dokkaebi, ThreatStageProfile.ForStage(3), playerTarget, TerritoryKind.ForestApproach, position);
+            brain.SetAutomaticTick(false);
+
+            CreateLocalPrimitive(PrimitiveType.Cylinder, "RuntimeDokkaebiActor_Body", actor.transform, new Vector3(0f, 0.58f, 0f), new Vector3(0.42f, 0.58f, 0.42f), Materials.DokkaebiBody);
+            CreateLocalPrimitive(PrimitiveType.Sphere, "RuntimeDokkaebiActor_Head", actor.transform, new Vector3(0f, 1.34f, 0f), new Vector3(0.58f, 0.5f, 0.58f), Materials.DokkaebiBody);
+            CreateLocalPrimitive(PrimitiveType.Cube, "RuntimeDokkaebiActor_HornLeft", actor.transform, new Vector3(-0.26f, 1.77f, 0f), new Vector3(0.09f, 0.42f, 0.09f), Materials.RustedMetal, Quaternion.Euler(0f, 0f, -25f));
+            CreateLocalPrimitive(PrimitiveType.Cube, "RuntimeDokkaebiActor_HornRight", actor.transform, new Vector3(0.26f, 1.77f, 0f), new Vector3(0.09f, 0.42f, 0.09f), Materials.RustedMetal, Quaternion.Euler(0f, 0f, 25f));
+            CreateLocalPrimitive(PrimitiveType.Cube, "RuntimeDokkaebiActor_Club", actor.transform, new Vector3(0.5f, 0.76f, -0.12f), new Vector3(0.16f, 0.9f, 0.16f), Materials.DarkWood, Quaternion.Euler(0f, 0f, -18f));
+
+            actor.SetActive(false);
+            return brain;
         }
 
         private static void CreateEstateGroundContinuity(Transform parent)
@@ -850,6 +899,32 @@ namespace KHorrorGame.Editor
             var renderer = cube.GetComponent<MeshRenderer>();
             renderer.sharedMaterial = material;
             return cube;
+        }
+
+        private static GameObject CreateLocalPrimitive(
+            PrimitiveType primitiveType,
+            string name,
+            Transform parent,
+            Vector3 localPosition,
+            Vector3 localScale,
+            Material material,
+            Quaternion? localRotation = null)
+        {
+            var primitive = GameObject.CreatePrimitive(primitiveType);
+            primitive.name = name;
+            primitive.transform.SetParent(parent, false);
+            primitive.transform.localPosition = localPosition;
+            primitive.transform.localRotation = localRotation ?? Quaternion.identity;
+            primitive.transform.localScale = localScale;
+            primitive.GetComponent<MeshRenderer>().sharedMaterial = material;
+
+            var collider = primitive.GetComponent<Collider>();
+            if (collider != null)
+            {
+                collider.enabled = false;
+            }
+
+            return primitive;
         }
 
         private static GameObject CreateCylinder(string name, Transform parent, Vector3 position, Vector3 scale, Material material)

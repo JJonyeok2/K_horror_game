@@ -21,7 +21,7 @@
   - Commit and push to `origin/unity-conversion`.
   - _Requirements: 4.1, 4.2, 4.3, 4.4, 4.5, 5.1, 5.2, 5.3, 5.4_
 
-- [ ] H12. Runtime threat scene integration
+- [x] H12. Runtime threat scene integration
   - Add `RuntimeThreatSpawner` that reads `GameLoopController`, evaluates `ThreatDirector`, activates hidden generated actors, and assigns their `EnemyBrain` target/home data.
   - Add generated ghost and dokkaebi spawn anchors in valid territories.
   - Replace `ThreatProxySpawner` usage or wrap it so spawned actors are real AI actors instead of static reveal props.

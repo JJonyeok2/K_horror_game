@@ -9,6 +9,7 @@ namespace KHorrorGame.Migration
         [SerializeField] private TerritoryKind homeTerritory = TerritoryKind.EstateInterior;
         [SerializeField] private Transform target;
         [SerializeField] private float returnArrivalDistance = 0.25f;
+        [SerializeField] private bool automaticTick = true;
 
         private readonly EnemyTerritoryRules territoryRules = EnemyTerritoryRules.Default;
         private EnemyStats stats;
@@ -43,7 +44,15 @@ namespace KHorrorGame.Migration
 
         private void Update()
         {
-            ManualTick(Time.deltaTime, homeTerritory);
+            if (automaticTick)
+            {
+                ManualTick(Time.deltaTime, homeTerritory);
+            }
+        }
+
+        public void SetAutomaticTick(bool enabled)
+        {
+            automaticTick = enabled;
         }
 
         public void Configure(
