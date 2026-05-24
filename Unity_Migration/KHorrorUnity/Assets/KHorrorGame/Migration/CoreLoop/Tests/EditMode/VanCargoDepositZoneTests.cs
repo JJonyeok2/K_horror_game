@@ -110,6 +110,49 @@ namespace KHorrorGame.Migration.Tests
             }
         }
 
+        [Test]
+        public void ResolveCurrentActorUsesCharacterControllerBoundsInsideCargoZone()
+        {
+            var fixture = new CargoDepositFixture(true);
+
+            try
+            {
+                var zoneCollider = fixture.DepositZone.GetComponent<BoxCollider>();
+                zoneCollider.size = new Vector3(2f, 2f, 2f);
+                fixture.Actor.transform.position = new Vector3(1.15f, 0f, 0f);
+                Physics.SyncTransforms();
+
+                var resolvedActor = InvokePrivate<UnityPlayerController>(fixture.DepositZone, "ResolveCurrentActor");
+
+                Assert.AreSame(fixture.Actor, resolvedActor);
+            }
+            finally
+            {
+                fixture.Destroy();
+            }
+        }
+
+        [Test]
+        public void CollectedArtifactCreatesVisibleHeldView()
+        {
+            var fixture = new CargoDepositFixture(true);
+
+            try
+            {
+                Assert.IsTrue(fixture.Actor.TryCollectArtifact(new ArtifactDefinition("Ledger", 230, 1.5f, 1)));
+
+                var held = GameObject.Find("Held_Ledger");
+
+                Assert.IsNotNull(held, "Collected artifact should create a first-person held view.");
+                Assert.IsNotNull(held.GetComponent<Renderer>(), "Held view should have a renderer.");
+                Assert.IsNotNull(held.GetComponent<Renderer>().sharedMaterial, "Held view should use a visible material.");
+            }
+            finally
+            {
+                fixture.Destroy();
+            }
+        }
+
         private sealed class CargoDepositFixture
         {
             public GameObject Root { get; }
@@ -179,6 +222,13 @@ namespace KHorrorGame.Migration.Tests
         private static void InvokePrivate(object target, string methodName)
         {
             target.GetType()
+                .GetMethod(methodName, BindingFlags.Instance | BindingFlags.NonPublic)
+                .Invoke(target, null);
+        }
+
+        private static T InvokePrivate<T>(object target, string methodName)
+        {
+            return (T)target.GetType()
                 .GetMethod(methodName, BindingFlags.Instance | BindingFlags.NonPublic)
                 .Invoke(target, null);
         }

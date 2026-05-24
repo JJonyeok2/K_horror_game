@@ -37,5 +37,14 @@ namespace KHorrorGame.Migration.Tests
                 Object.DestroyImmediate(fixture);
             }
         }
+
+        [Test]
+        public void ShrineArtifactGraceWindowIsShortEnoughForVisibleRetaliation()
+        {
+            Assert.LessOrEqual(
+                ThreatSpawnGate.ShrineThreatGraceSeconds,
+                2.5f,
+                "Stealing a shrine item should make a stage-five threat visible almost immediately.");
+        }
     }
 }

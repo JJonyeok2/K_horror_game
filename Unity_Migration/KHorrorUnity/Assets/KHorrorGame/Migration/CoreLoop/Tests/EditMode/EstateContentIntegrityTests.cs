@@ -412,6 +412,36 @@ namespace KHorrorGame.Migration.Tests
         }
 
         [Test]
+        public void MaximumThreatPrioritizesShrineThresholdGhostAnchor()
+        {
+            EditorSceneManager.OpenScene(ScenePath);
+
+            var spawner = UnityEngine.Object.FindObjectOfType<RuntimeThreatSpawner>(true);
+            var shrineFloor = GameObject.Find("ShrineFloor");
+
+            Assert.IsNotNull(spawner, "RuntimeThreatSpawner scene object should exist.");
+            Assert.IsNotNull(shrineFloor, "ShrineFloor should exist.");
+
+            var serialized = new SerializedObject(spawner);
+            var anchors = serialized.FindProperty("ghostSpawnAnchors");
+
+            Assert.IsNotNull(anchors, "RuntimeThreatSpawner should expose ghostSpawnAnchors.");
+            Assert.GreaterOrEqual(anchors.arraySize, 1, "RuntimeThreatSpawner should have at least one ghost anchor.");
+
+            var firstAnchor = anchors.GetArrayElementAtIndex(0).objectReferenceValue as Transform;
+
+            Assert.IsNotNull(firstAnchor, "First ghost anchor should be assigned.");
+            Assert.AreEqual(
+                "GhostSpawnAnchor_ShrineThreshold",
+                firstAnchor.name,
+                "The first stage-five ghost should appear from the shrine threshold, not from a distant hidden interior point.");
+            Assert.LessOrEqual(
+                Vector3.Distance(firstAnchor.position, shrineFloor.transform.position),
+                8f,
+                "Shrine theft retaliation should be visible near the stolen objective.");
+        }
+
+        [Test]
         public void RuntimeThreatSpawnerGraceCueDoesNotActivateActors()
         {
             var root = new GameObject("GraceSpawnerFixture");
@@ -520,6 +550,16 @@ namespace KHorrorGame.Migration.Tests
             var returnBongo = GameObject.Find("EstateReturnBongo");
             Assert.IsNotNull(returnBongo, "Estate return bongo should exist.");
             Assert.IsNotNull(returnBongo.GetComponent<VanCargoHold>(), "Estate return bongo should own a physical cargo hold.");
+            Assert.IsNull(returnBongo.GetComponent<BongoReturnTerminal>(), "The whole bongo body should not be an interaction target.");
+            Assert.IsNotNull(GameObject.Find("ReturnBongoReturnLever"), "Return action should live on a small terminal inside the open van.");
+            Assert.IsNotNull(GameObject.Find("ReturnBongoReturnLever").GetComponent<BongoReturnTerminal>(), "Return lever should own the return interaction.");
+
+            var leftDoor = GameObject.Find("ReturnBongoRearDoorLeft");
+            var rightDoor = GameObject.Find("ReturnBongoRearDoorRight");
+            Assert.IsNotNull(leftDoor, "Open rear door visual should exist.");
+            Assert.IsNotNull(rightDoor, "Open rear door visual should exist.");
+            Assert.IsFalse(leftDoor.GetComponent<Collider>().enabled, "Open rear doors should not block the cargo bay.");
+            Assert.IsFalse(rightDoor.GetComponent<Collider>().enabled, "Open rear doors should not block the cargo bay.");
 
             var trigger = depositZone.GetComponent<Collider>();
             Assert.IsNotNull(trigger, "ReturnBongoCargoDepositZone should have a collider.");

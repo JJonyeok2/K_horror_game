@@ -44,6 +44,7 @@ namespace KHorrorGame.Migration
         private float verticalVelocity;
         private float cameraPitch;
         private bool isExhausted;
+        private static Material heldArtifactMaterial;
 
         public Inventory Inventory
         {
@@ -399,11 +400,31 @@ namespace KHorrorGame.Migration
             held.transform.localRotation = Quaternion.identity;
             held.transform.localScale = scale;
 
+            var renderer = held.GetComponent<Renderer>();
+            if (renderer != null)
+            {
+                renderer.sharedMaterial = HeldArtifactMaterial();
+            }
+
             var collider = held.GetComponent<Collider>();
             if (collider != null)
             {
                 DestroyHeldObject(collider);
             }
+        }
+
+        private static Material HeldArtifactMaterial()
+        {
+            if (heldArtifactMaterial == null)
+            {
+                heldArtifactMaterial = new Material(Shader.Find("Universal Render Pipeline/Lit"));
+                heldArtifactMaterial.name = "RuntimeHeldArtifactMaterial";
+                heldArtifactMaterial.color = new Color(0.86f, 0.76f, 0.52f, 1f);
+                heldArtifactMaterial.SetColor("_EmissionColor", new Color(0.22f, 0.18f, 0.08f, 1f));
+                heldArtifactMaterial.EnableKeyword("_EMISSION");
+            }
+
+            return heldArtifactMaterial;
         }
 
         private static void DestroyHeldObject(Object target)

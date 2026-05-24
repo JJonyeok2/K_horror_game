@@ -265,9 +265,9 @@ namespace KHorrorGame.Editor
 
             var ghostAnchors = new[]
             {
+                CreateMarker("GhostSpawnAnchor_ShrineThreshold", new Vector3(-4.9f, 0.95f, 136.2f), Quaternion.Euler(0f, 150f, 0f), root.transform),
                 CreateMarker("GhostSpawnAnchor_AnchaeInterior", new Vector3(-8.15f, 0.95f, 128.8f), Quaternion.Euler(0f, 180f, 0f), root.transform),
                 CreateMarker("GhostSpawnAnchor_BackStorehouse", new Vector3(3.4f, 0.95f, 116.8f), Quaternion.Euler(0f, -165f, 0f), root.transform),
-                CreateMarker("GhostSpawnAnchor_ShrineThreshold", new Vector3(-4.9f, 0.95f, 136.2f), Quaternion.Euler(0f, 150f, 0f), root.transform),
             };
             var dokkaebiAnchors = new[]
             {
@@ -287,7 +287,7 @@ namespace KHorrorGame.Editor
                 CreateDokkaebiActor(root.transform, "RuntimeDokkaebiActor_02", dokkaebiAnchors[1].position, dokkaebiAnchors[1].rotation, player.transform),
             };
 
-            var cue = CreatePointLight("ThreatSpawnCueLight", root.transform, new Vector3(-8.15f, 2.3f, 128.8f), new Color(1f, 0.2f, 0.1f), 2.4f, 11f);
+            var cue = CreatePointLight("ThreatSpawnCueLight", root.transform, new Vector3(-4.9f, 2.3f, 136.2f), new Color(1f, 0.2f, 0.1f), 2.4f, 11f);
             cue.enabled = false;
 
             SetObject(spawner, "ghostActor", ghosts[0]);
@@ -411,24 +411,31 @@ namespace KHorrorGame.Editor
             root.transform.SetParent(parent);
             root.transform.position = new Vector3(-2.2f, 0f, 20.1f);
             root.transform.rotation = Quaternion.Euler(0f, 180f, 0f);
-            var returnTerminal = root.AddComponent<BongoReturnTerminal>();
-            SetObject(returnTerminal, "gameLoop", gameLoop);
             var cargoHold = root.AddComponent<VanCargoHold>();
             RegisterCargoSlot(root.transform, cargoHold, "ReturnBongoCargoSlot_0", new Vector3(-0.82f, 0.62f, 3.25f));
             RegisterCargoSlot(root.transform, cargoHold, "ReturnBongoCargoSlot_1", new Vector3(0f, 0.62f, 3.25f));
             RegisterCargoSlot(root.transform, cargoHold, "ReturnBongoCargoSlot_2", new Vector3(0.82f, 0.62f, 3.25f));
             RegisterFallbackCargoSlot(root.transform, cargoHold, "ReturnBongoCargoFallback", new Vector3(-0.82f, 0.62f, 2.68f));
 
-            CreateCube("ReturnBongoBody", root.transform, new Vector3(0f, 1.15f, 0f), new Vector3(4.2f, 2.05f, 6.2f), Materials.VanPaint);
+            CreateCube("ReturnBongoSideWallLeft", root.transform, new Vector3(-2.08f, 1.16f, 0.36f), new Vector3(0.22f, 1.95f, 5.72f), Materials.VanPaint);
+            CreateCube("ReturnBongoSideWallRight", root.transform, new Vector3(2.08f, 1.16f, 0.36f), new Vector3(0.22f, 1.95f, 5.72f), Materials.VanPaint);
+            CreateCube("ReturnBongoFrontBulkhead", root.transform, new Vector3(0f, 1.28f, -2.68f), new Vector3(3.95f, 1.85f, 0.22f), Materials.VanPaint);
             CreateCube("ReturnBongoRoof", root.transform, new Vector3(0f, 2.28f, 0f), new Vector3(4.35f, 0.32f, 6.35f), Materials.VanRoof);
             CreateCube("ReturnBongoFrontCab", root.transform, new Vector3(0f, 1.35f, -3.55f), new Vector3(4.05f, 1.8f, 1.15f), Materials.VanPaint);
             CreateCube("ReturnBongoWindshield", root.transform, new Vector3(0f, 1.72f, -4.14f), new Vector3(2.9f, 0.72f, 0.08f), Materials.VanWindow);
             CreateCube("ReturnBongoSideWindowLeft", root.transform, new Vector3(-2.13f, 1.72f, -2.1f), new Vector3(0.08f, 0.62f, 1.35f), Materials.VanWindow);
             CreateCube("ReturnBongoSideWindowRight", root.transform, new Vector3(2.13f, 1.72f, -2.1f), new Vector3(0.08f, 0.62f, 1.35f), Materials.VanWindow);
             CreateCube("ReturnBongoRearFloor", root.transform, new Vector3(0f, 0.18f, 3.35f), new Vector3(3.55f, 0.16f, 1.75f), Materials.VanFloor);
-            CreateCube("ReturnBongoRearDoorLeft", root.transform, new Vector3(-1.25f, 1.15f, 3.48f), new Vector3(1.15f, 1.85f, 0.15f), Materials.VanDoor);
-            CreateCube("ReturnBongoRearDoorRight", root.transform, new Vector3(1.25f, 1.15f, 3.48f), new Vector3(1.15f, 1.85f, 0.15f), Materials.VanDoor);
+            var rearDoorLeft = CreateCube("ReturnBongoRearDoorLeft", root.transform, new Vector3(-2.32f, 1.12f, 3.28f), new Vector3(0.14f, 1.82f, 1.12f), Materials.VanDoor);
+            rearDoorLeft.GetComponent<Collider>().enabled = false;
+            rearDoorLeft.transform.rotation = Quaternion.Euler(0f, -22f, 0f);
+            var rearDoorRight = CreateCube("ReturnBongoRearDoorRight", root.transform, new Vector3(2.32f, 1.12f, 3.28f), new Vector3(0.14f, 1.82f, 1.12f), Materials.VanDoor);
+            rearDoorRight.GetComponent<Collider>().enabled = false;
+            rearDoorRight.transform.rotation = Quaternion.Euler(0f, 22f, 0f);
             CreateCube("ReturnBongoRearStep", root.transform, new Vector3(0f, 0.18f, 4.28f), new Vector3(3.3f, 0.2f, 0.75f), Materials.Road);
+            var returnLever = CreateCube("ReturnBongoReturnLever", root.transform, new Vector3(-1.42f, 0.92f, 2.52f), new Vector3(0.42f, 0.62f, 0.28f), Materials.Terminal);
+            var returnTerminal = returnLever.AddComponent<BongoReturnTerminal>();
+            SetObject(returnTerminal, "gameLoop", gameLoop);
             var cargoDepositZone = CreateColliderOnlyBox("ReturnBongoCargoDepositZone", root.transform, new Vector3(0f, 1.05f, 3.25f), new Vector3(3.35f, 2.15f, 2.15f), true);
             var cargoDeposit = cargoDepositZone.AddComponent<VanCargoDepositZone>();
             SetObject(cargoDeposit, "gameLoop", gameLoop);

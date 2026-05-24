@@ -132,7 +132,18 @@ namespace KHorrorGame.Migration
         private bool IsInsideZone(UnityPlayerController actor)
         {
             var zoneCollider = GetComponent<Collider>();
-            return actor != null && zoneCollider != null && zoneCollider.bounds.Contains(actor.transform.position);
+            if (actor == null || zoneCollider == null)
+            {
+                return false;
+            }
+
+            var characterController = actor.GetComponent<CharacterController>();
+            if (characterController != null)
+            {
+                return zoneCollider.bounds.Intersects(characterController.bounds);
+            }
+
+            return zoneCollider.bounds.Contains(actor.transform.position);
         }
 
         private void SetFeedback(string message)
