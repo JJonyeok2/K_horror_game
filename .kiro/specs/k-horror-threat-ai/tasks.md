@@ -14,7 +14,7 @@
   - Commit and push to `origin/unity-conversion`.
   - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 3.1, 3.2, 3.4, 3.5, 5.1, 5.2_
 
-- [ ] H11. Simple enemy AI and damage loop
+- [x] H11. Simple enemy AI and damage loop
   - Add `EnemyBrain`, `EnemyBrainState`, `EnemyStats`, and `PlayerDamageReceiver`.
   - Add EditMode tests for idle, detection, chase, attack damage, target territory fallback, and stage-scaled stats.
   - Use simple vector steering and deterministic pattern selection; do not add NavMesh dependency yet.
