@@ -1,6 +1,6 @@
 # Implementation Plan
 
-- [ ] 1. Establish territory foundations
+- [x] 1. Establish territory foundations
   - Add `EnemyKind` and `TerritoryKind` domain enums.
   - Add a testable `EnemyTerritoryRules` service that answers whether a kind can enter a territory.
   - Add EditMode tests for ghost-only estate territory and dokkaebi-only forest territory.
