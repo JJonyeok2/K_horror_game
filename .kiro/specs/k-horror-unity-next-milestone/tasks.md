@@ -100,9 +100,10 @@
   - _Requirements: 1.1, 1.2, 6.1, 6.2, 6.4, 6.5, 8.4_
 
 - [ ] 8. Complete return, cargo, and settlement flow polish
-  - Make estate return happen from a clear bongo return area or cargo trigger.
-  - Add success and failure feedback for cargo loading.
-  - Verify pending recovered value, quota update, and cargo clearing through tests.
+  - Implement the Korean Kiro sub-spec in `.kiro/specs/k-horror-physical-cargo-loop`.
+  - Replace value-only cargo extraction with visible physical cargo placed inside the return bongo.
+  - Make settlement calculate from physical cargo in the bongo hold, not from an invisible pending value deposit.
+  - Add success and failure feedback for cargo loading, repickup, and settlement.
   - _Requirements: 1.3, 1.4, 1.5, 5.7, 6.3_
 
 - [ ] 9. Refine interaction prompt presentation
@@ -114,7 +115,8 @@
 - [ ] 10. Strengthen inventory and dropped item handling
   - Add held-item view definitions for small and large artifacts.
   - Ensure one large item uses both hands and two small items use left/right hands.
-  - Ensure dropped items restore pickup definitions and do not spawn under the floor.
+  - Ensure dropped items and bongo cargo items restore pickup definitions and do not spawn under the floor.
+  - Keep hand-held, dropped, and bongo-loaded states mutually exclusive for each artifact.
   - _Requirements: 5.3, 5.4, 5.5, 5.6_
 
 - [ ] 11. Expand the forest approach route
