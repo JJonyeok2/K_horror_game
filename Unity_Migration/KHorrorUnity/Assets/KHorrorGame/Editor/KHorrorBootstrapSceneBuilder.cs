@@ -559,6 +559,7 @@ namespace KHorrorGame.Editor
             CreateCube("RearRouteScreen_FirstTurn", parent, new Vector3(-0.4f, 1.45f, 99.5f), new Vector3(14.8f, 2.9f, 0.34f), Materials.StoneWall);
             CreateCube("RearRouteScreen_SecondTurn", parent, new Vector3(-4.1f, 1.45f, 112.6f), new Vector3(14.2f, 2.9f, 0.34f), Materials.StoneWall);
             CreateCube("RearRouteScreen_ThirdTurn", parent, new Vector3(2.2f, 1.45f, 125.8f), new Vector3(14.2f, 2.9f, 0.34f), Materials.StoneWall);
+            CreateRearRouteHanokAtmosphere(parent);
 
             CreateCube("JonggaStorehouseFoundation", parent, new Vector3(5.2f, 0.18f, 103.6f), new Vector3(4.8f, 0.36f, 5.2f), Materials.Stone);
             CreateCube("JonggaStorehouseFloor", parent, new Vector3(5.2f, 0.5f, 103.6f), new Vector3(4.4f, 0.26f, 4.8f), Materials.Wood);
@@ -588,6 +589,51 @@ namespace KHorrorGame.Editor
             CreatePaperLantern(parent, new Vector3(-10.9f, 2.35f, 111.2f), "RearCompoundLantern_West");
             CreatePaperLantern(parent, new Vector3(10.8f, 2.35f, 122.5f), "RearCompoundLantern_East");
             CreatePointLight("RearGardenColdLamp", parent, new Vector3(3.4f, 2.1f, 121.2f), new Color(0.55f, 0.68f, 0.75f), 0.9f, 8f);
+        }
+
+        private static void CreateRearRouteHanokAtmosphere(Transform parent)
+        {
+            CreateRearHanokGate(parent, "First", new Vector3(-8.9f, 0f, 100.3f));
+            CreateRearHanokGate(parent, "Second", new Vector3(4.0f, 0f, 116.6f));
+            CreateRearHanokGate(parent, "Third", new Vector3(-8.0f, 0f, 133.4f));
+
+            CreateCube("RearRouteSightlineBreak_First", parent, new Vector3(-0.4f, 1.65f, 102.2f), new Vector3(12.6f, 3.3f, 0.32f), Materials.StoneWall);
+            CreateCube("RearRouteSightlineBreak_Second", parent, new Vector3(-4.1f, 1.65f, 116.0f), new Vector3(11.4f, 3.3f, 0.32f), Materials.StoneWall);
+            CreateCube("RearRouteSightlineBreak_Third", parent, new Vector3(1.4f, 1.65f, 129.1f), new Vector3(12.4f, 3.3f, 0.32f), Materials.StoneWall);
+
+            CreateCube("RearRouteEaves_First", parent, new Vector3(-8.9f, 3.45f, 100.3f), new Vector3(4.4f, 0.28f, 1.4f), Materials.Roof, Quaternion.Euler(0f, 0f, 5f));
+            CreateCube("RearRouteEaves_Second", parent, new Vector3(4.0f, 3.45f, 116.6f), new Vector3(4.4f, 0.28f, 1.4f), Materials.Roof, Quaternion.Euler(0f, 0f, -5f));
+            CreateCube("RearRouteEaves_Third", parent, new Vector3(-8.0f, 3.45f, 133.4f), new Vector3(4.4f, 0.28f, 1.4f), Materials.Roof, Quaternion.Euler(0f, 0f, 5f));
+
+            CreatePaperLantern(parent, new Vector3(-10.2f, 2.25f, 100.9f), "RearRouteLantern_First");
+            CreatePaperLantern(parent, new Vector3(2.65f, 2.25f, 116.0f), "RearRouteLantern_Second");
+            CreatePaperLantern(parent, new Vector3(-9.35f, 2.25f, 134.0f), "RearRouteLantern_Third");
+            CreatePointLight("RearRouteLanternPool_First", parent, new Vector3(-8.9f, 1.75f, 101.0f), new Color(0.95f, 0.46f, 0.24f), 1.25f, 7.2f);
+            CreatePointLight("RearRouteLanternPool_Second", parent, new Vector3(4.0f, 1.75f, 116.0f), new Color(0.9f, 0.42f, 0.22f), 1.1f, 6.8f);
+            CreatePointLight("RearRouteLanternPool_Third", parent, new Vector3(-8.0f, 1.75f, 134.0f), new Color(0.86f, 0.38f, 0.2f), 1.15f, 7.4f);
+
+            CreateNonBlockingPaperCharm(parent, new Vector3(-8.9f, 2.25f, 99.55f), "RearHanokGateCharm_First");
+            CreateNonBlockingPaperCharm(parent, new Vector3(4.0f, 2.25f, 115.85f), "RearHanokGateCharm_Second");
+            CreateNonBlockingPaperCharm(parent, new Vector3(-8.0f, 2.25f, 132.65f), "RearHanokGateCharm_Third");
+            CreateNonBlockingPaperCharm(parent, new Vector3(-0.2f, 2.05f, 102.0f), "RearRoutePaperCharm_FirstTurn");
+            CreateNonBlockingPaperCharm(parent, new Vector3(-4.2f, 2.05f, 115.8f), "RearRoutePaperCharm_SecondTurn");
+            CreateNonBlockingPaperCharm(parent, new Vector3(1.5f, 2.05f, 128.9f), "RearRoutePaperCharm_ThirdTurn");
+        }
+
+        private static void CreateRearHanokGate(Transform parent, string suffix, Vector3 basePosition)
+        {
+            var root = new GameObject("RearHanokGate_" + suffix);
+            root.transform.SetParent(parent);
+            root.transform.position = basePosition;
+
+            CreateCube("RearHanokGate_" + suffix + "_LeftPost", parent, basePosition + new Vector3(-1.7f, 1.45f, 0f), new Vector3(0.34f, 2.9f, 0.34f), Materials.DarkWood);
+            CreateCube("RearHanokGate_" + suffix + "_RightPost", parent, basePosition + new Vector3(1.7f, 1.45f, 0f), new Vector3(0.34f, 2.9f, 0.34f), Materials.DarkWood);
+            CreateCube("RearHanokGate_" + suffix + "_Lintel", parent, basePosition + new Vector3(0f, 3.0f, 0f), new Vector3(3.9f, 0.32f, 0.36f), Materials.DarkWood);
+            CreateCube("RearHanokGate_" + suffix + "_PaperSideLeft", parent, basePosition + new Vector3(-2.05f, 1.6f, -0.08f), new Vector3(0.42f, 2.2f, 0.08f), Materials.DoorPaper);
+            CreateCube("RearHanokGate_" + suffix + "_PaperSideRight", parent, basePosition + new Vector3(2.05f, 1.6f, -0.08f), new Vector3(0.42f, 2.2f, 0.08f), Materials.DoorPaper);
+            CreateCube("RearHanokGate_" + suffix + "_RoofLeft", parent, basePosition + new Vector3(-0.85f, 3.38f, 0f), new Vector3(2.4f, 0.28f, 1.3f), Materials.Roof, Quaternion.Euler(0f, 0f, 8f));
+            CreateCube("RearHanokGate_" + suffix + "_RoofRight", parent, basePosition + new Vector3(0.85f, 3.38f, 0f), new Vector3(2.4f, 0.28f, 1.3f), Materials.Roof, Quaternion.Euler(0f, 0f, -8f));
+            CreateCube("RearHanokGate_" + suffix + "_RoofRidge", parent, basePosition + new Vector3(0f, 3.76f, 0f), new Vector3(0.24f, 0.22f, 1.45f), Materials.RoofRidge);
         }
 
         private static void CreateShrineLoop(Transform parent)
@@ -727,6 +773,23 @@ namespace KHorrorGame.Editor
             CreateCube(name + "_InkTop", parent, position + new Vector3(0f, 0.16f, -0.035f), new Vector3(0.19f, 0.035f, 0.025f), Materials.TalismanInk);
             CreateCube(name + "_InkMid", parent, position + new Vector3(0f, -0.02f, -0.035f), new Vector3(0.13f, 0.035f, 0.025f), Materials.TalismanInk);
             CreateCube(name + "_InkLow", parent, position + new Vector3(0f, -0.18f, -0.035f), new Vector3(0.21f, 0.035f, 0.025f), Materials.TalismanInk);
+        }
+
+        private static void CreateNonBlockingPaperCharm(Transform parent, Vector3 position, string name)
+        {
+            DisableCollider(CreateCube(name + "_Paper", parent, position, new Vector3(0.28f, 0.74f, 0.035f), Materials.TalismanPaper));
+            DisableCollider(CreateCube(name + "_InkTop", parent, position + new Vector3(0f, 0.16f, -0.035f), new Vector3(0.19f, 0.035f, 0.025f), Materials.TalismanInk));
+            DisableCollider(CreateCube(name + "_InkMid", parent, position + new Vector3(0f, -0.02f, -0.035f), new Vector3(0.13f, 0.035f, 0.025f), Materials.TalismanInk));
+            DisableCollider(CreateCube(name + "_InkLow", parent, position + new Vector3(0f, -0.18f, -0.035f), new Vector3(0.21f, 0.035f, 0.025f), Materials.TalismanInk));
+        }
+
+        private static void DisableCollider(GameObject target)
+        {
+            var collider = target.GetComponent<Collider>();
+            if (collider != null)
+            {
+                collider.enabled = false;
+            }
         }
 
         private static void CreatePaperLantern(Transform parent, Vector3 position, string name)

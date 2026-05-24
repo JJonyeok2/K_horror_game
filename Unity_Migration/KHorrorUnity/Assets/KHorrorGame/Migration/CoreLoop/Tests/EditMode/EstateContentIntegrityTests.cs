@@ -101,6 +101,61 @@ namespace KHorrorGame.Migration.Tests
         }
 
         [Test]
+        public void RearShrineRouteHasDarkHanokAtmosphereAnchors()
+        {
+            EditorSceneManager.OpenScene(ScenePath);
+
+            var requiredObjects = new[]
+            {
+                "RearHanokGate_First",
+                "RearHanokGate_Second",
+                "RearHanokGate_Third",
+                "RearRouteEaves_First",
+                "RearRouteEaves_Second",
+                "RearRouteEaves_Third",
+                "RearRouteLanternPool_First",
+                "RearRouteLanternPool_Second",
+                "RearRouteLanternPool_Third",
+            };
+
+            foreach (var objectName in requiredObjects)
+            {
+                Assert.IsNotNull(GameObject.Find(objectName), objectName + " should exist on the dark hanok shrine route.");
+            }
+
+            var sightlineBreakers = UnityEngine.Object.FindObjectsOfType<Transform>()
+                .Where(transform => transform.gameObject.scene.IsValid())
+                .Select(transform => transform.name)
+                .Where(name => name.StartsWith("RearRouteSightlineBreak_", StringComparison.Ordinal))
+                .Distinct()
+                .ToArray();
+            Assert.GreaterOrEqual(sightlineBreakers.Length, 3, "Shrine route needs at least three sightline-breaking turns.");
+
+            var lanternLights = UnityEngine.Object.FindObjectsOfType<Light>()
+                .Where(light => light.gameObject.scene.IsValid())
+                .Where(light => light.name.StartsWith("RearRouteLanternPool_", StringComparison.Ordinal))
+                .Where(light => light.transform.position.z >= 96f && light.transform.position.z <= 139f)
+                .ToArray();
+            Assert.GreaterOrEqual(lanternLights.Length, 3, "Rear route needs at least three readable light pools before the shrine.");
+        }
+
+        [Test]
+        public void RearShrineRouteDecorativePaperDoesNotBlockPlayerCapsule()
+        {
+            EditorSceneManager.OpenScene(ScenePath);
+            Physics.SyncTransforms();
+
+            var blockers = UnityEngine.Object.FindObjectsOfType<Collider>()
+                .Where(collider => collider.enabled && !collider.isTrigger)
+                .Where(collider => collider.name.StartsWith("RearRoutePaperCharm", StringComparison.Ordinal) ||
+                                   collider.name.StartsWith("RearHanokGateCharm", StringComparison.Ordinal))
+                .Select(collider => collider.name)
+                .ToArray();
+
+            Assert.IsEmpty(blockers, "Rear route paper charms should be visual-only: " + string.Join(", ", blockers));
+        }
+
+        [Test]
         public void EstateHasRuntimeThreatProxySpawner()
         {
             EditorSceneManager.OpenScene(ScenePath);

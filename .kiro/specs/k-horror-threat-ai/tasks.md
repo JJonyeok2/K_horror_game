@@ -1,6 +1,6 @@
 # Implementation Plan
 
-- [ ] H9. Dark hanok shrine approach pass
+- [x] H9. Dark hanok shrine approach pass
   - Add scene integrity tests for hanok-style rear route anchors, three sightline-breaking turns, and readable light anchors.
   - Extend `KHorrorBootstrapSceneBuilder` with roofed rear gates, wall caps, paper charms, dark eaves, lantern pools, and denser Korean props along the main-house-to-shrine route.
   - Regenerate `KHorror_Main` and verify full EditMode tests pass.
