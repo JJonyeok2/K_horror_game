@@ -204,14 +204,14 @@ namespace KHorrorGame.Migration
             ThreatStageProfile profile)
         {
             if (profile.Stage >= 3
-                && context.ActiveDokkaebiCount == 0
+                && context.ActiveDokkaebiCount < profile.MaxActiveThreats
                 && territoryRules.CanEnter(EnemyKind.Dokkaebi, context.PlayerTerritory))
             {
                 return new ThreatDirectorDecision(
                     ThreatDirectorAction.SpawnDokkaebi,
                     EnemyKind.Dokkaebi,
                     profile,
-                    "forest_dokkaebi");
+                    context.ActiveDokkaebiCount == 0 ? "forest_dokkaebi" : "forest_dokkaebi_reinforcement");
             }
 
             return Cue(profile, "forest_pressure_cue");
@@ -221,19 +221,15 @@ namespace KHorrorGame.Migration
             ThreatDirectorContext context,
             ThreatStageProfile profile)
         {
-            if (context.ActiveGhostCount > 0)
-            {
-                return Cue(profile, "interior_ghost_active");
-            }
-
             if (profile.Stage >= 4
+                && context.ActiveGhostCount < profile.MaxActiveThreats
                 && territoryRules.CanEnter(EnemyKind.Ghost, context.PlayerTerritory))
             {
                 return new ThreatDirectorDecision(
                     ThreatDirectorAction.SpawnGhost,
                     EnemyKind.Ghost,
                     profile,
-                    "interior_ghost");
+                    context.ActiveGhostCount == 0 ? "interior_ghost" : "interior_ghost_reinforcement");
             }
 
             return Cue(profile, "interior_pressure_cue");

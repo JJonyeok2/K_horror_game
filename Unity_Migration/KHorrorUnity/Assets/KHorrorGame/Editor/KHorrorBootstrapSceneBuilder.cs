@@ -263,37 +263,52 @@ namespace KHorrorGame.Editor
             SetObject(spawner, "gameLoop", gameLoop);
             SetObject(spawner, "playerTarget", player.transform);
 
-            var ghostAnchor = CreateMarker(
-                "GhostSpawnAnchor_AnchaeInterior",
-                new Vector3(-8.15f, 0.95f, 128.8f),
-                Quaternion.Euler(0f, 180f, 0f),
-                root.transform);
-            var dokkaebiAnchor = CreateMarker(
-                "DokkaebiSpawnAnchor_ForestApproach",
-                new Vector3(4.3f, 0.92f, 36.5f),
-                Quaternion.Euler(0f, -35f, 0f),
-                root.transform);
+            var ghostAnchors = new[]
+            {
+                CreateMarker("GhostSpawnAnchor_AnchaeInterior", new Vector3(-8.15f, 0.95f, 128.8f), Quaternion.Euler(0f, 180f, 0f), root.transform),
+                CreateMarker("GhostSpawnAnchor_BackStorehouse", new Vector3(3.4f, 0.95f, 116.8f), Quaternion.Euler(0f, -165f, 0f), root.transform),
+                CreateMarker("GhostSpawnAnchor_ShrineThreshold", new Vector3(-4.9f, 0.95f, 136.2f), Quaternion.Euler(0f, 150f, 0f), root.transform),
+            };
+            var dokkaebiAnchors = new[]
+            {
+                CreateMarker("DokkaebiSpawnAnchor_ForestApproach", new Vector3(4.3f, 0.92f, 36.5f), Quaternion.Euler(0f, -35f, 0f), root.transform),
+                CreateMarker("DokkaebiSpawnAnchor_ForestJangseung", new Vector3(-4.8f, 0.92f, 44.2f), Quaternion.Euler(0f, 40f, 0f), root.transform),
+            };
 
-            var ghost = CreateGhostActor(root.transform, ghostAnchor.position, ghostAnchor.rotation, player.transform);
-            var dokkaebi = CreateDokkaebiActor(root.transform, dokkaebiAnchor.position, dokkaebiAnchor.rotation, player.transform);
+            var ghosts = new[]
+            {
+                CreateGhostActor(root.transform, "RuntimeGhostActor", ghostAnchors[0].position, ghostAnchors[0].rotation, player.transform),
+                CreateGhostActor(root.transform, "RuntimeGhostActor_02", ghostAnchors[1].position, ghostAnchors[1].rotation, player.transform),
+                CreateGhostActor(root.transform, "RuntimeGhostActor_03", ghostAnchors[2].position, ghostAnchors[2].rotation, player.transform),
+            };
+            var dokkaebi = new[]
+            {
+                CreateDokkaebiActor(root.transform, "RuntimeDokkaebiActor", dokkaebiAnchors[0].position, dokkaebiAnchors[0].rotation, player.transform),
+                CreateDokkaebiActor(root.transform, "RuntimeDokkaebiActor_02", dokkaebiAnchors[1].position, dokkaebiAnchors[1].rotation, player.transform),
+            };
 
             var cue = CreatePointLight("ThreatSpawnCueLight", root.transform, new Vector3(-8.15f, 2.3f, 128.8f), new Color(1f, 0.2f, 0.1f), 2.4f, 11f);
             cue.enabled = false;
 
-            SetObject(spawner, "ghostActor", ghost);
-            SetObject(spawner, "dokkaebiActor", dokkaebi);
-            SetObject(spawner, "ghostSpawnAnchor", ghostAnchor);
-            SetObject(spawner, "dokkaebiSpawnAnchor", dokkaebiAnchor);
+            SetObject(spawner, "ghostActor", ghosts[0]);
+            SetObject(spawner, "dokkaebiActor", dokkaebi[0]);
+            SetObject(spawner, "ghostSpawnAnchor", ghostAnchors[0]);
+            SetObject(spawner, "dokkaebiSpawnAnchor", dokkaebiAnchors[0]);
+            SetObjectArray(spawner, "ghostActors", ghosts);
+            SetObjectArray(spawner, "dokkaebiActors", dokkaebi);
+            SetObjectArray(spawner, "ghostSpawnAnchors", ghostAnchors);
+            SetObjectArray(spawner, "dokkaebiSpawnAnchors", dokkaebiAnchors);
             SetObject(spawner, "spawnCueLight", cue);
         }
 
         private static EnemyBrain CreateGhostActor(
             Transform parent,
+            string actorName,
             Vector3 position,
             Quaternion rotation,
             Transform playerTarget)
         {
-            var actor = new GameObject("RuntimeGhostActor");
+            var actor = new GameObject(actorName);
             actor.transform.SetParent(parent);
             actor.transform.SetPositionAndRotation(position, rotation);
             var brain = actor.AddComponent<EnemyBrain>();
@@ -312,11 +327,12 @@ namespace KHorrorGame.Editor
 
         private static EnemyBrain CreateDokkaebiActor(
             Transform parent,
+            string actorName,
             Vector3 position,
             Quaternion rotation,
             Transform playerTarget)
         {
-            var actor = new GameObject("RuntimeDokkaebiActor");
+            var actor = new GameObject(actorName);
             actor.transform.SetParent(parent);
             actor.transform.SetPositionAndRotation(position, rotation);
             var brain = actor.AddComponent<EnemyBrain>();
@@ -1424,6 +1440,19 @@ namespace KHorrorGame.Editor
         {
             var serialized = new SerializedObject(target);
             serialized.FindProperty(propertyName).objectReferenceValue = value;
+            serialized.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        private static void SetObjectArray(Object target, string propertyName, params Object[] values)
+        {
+            var serialized = new SerializedObject(target);
+            var property = serialized.FindProperty(propertyName);
+            property.arraySize = values.Length;
+            for (var i = 0; i < values.Length; i++)
+            {
+                property.GetArrayElementAtIndex(i).objectReferenceValue = values[i];
+            }
+
             serialized.ApplyModifiedPropertiesWithoutUndo();
         }
 

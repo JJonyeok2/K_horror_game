@@ -35,3 +35,10 @@
   - Add tests proving higher stages unlock more variance without immediate attack during shrine grace.
   - Commit and push to `origin/unity-conversion`.
   - _Requirements: 5.3, 5.4, 5.5_
+
+- [x] H14. Stage-scaled runtime threat pools
+  - Add regression tests proving stage-five budgets request additional ghost and dokkaebi actors while budget remains.
+  - Expand `RuntimeThreatSpawner` from one ghost and one dokkaebi into serialized actor and anchor pools.
+  - Regenerate `KHorror_Main` with three interior ghost actors and two forest dokkaebi actors, all hidden until activated.
+  - Verify full EditMode tests pass and push to `origin/unity-conversion`.
+  - _Requirements: 2.3, 2.4, 3.1, 3.2, 4.1, 5.1, 5.3, 6.1, 6.3, 6.4_

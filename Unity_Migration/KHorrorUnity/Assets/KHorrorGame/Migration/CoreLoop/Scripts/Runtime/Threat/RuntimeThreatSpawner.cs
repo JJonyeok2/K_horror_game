@@ -8,8 +8,12 @@ namespace KHorrorGame.Migration
         [SerializeField] private Transform playerTarget;
         [SerializeField] private EnemyBrain ghostActor;
         [SerializeField] private EnemyBrain dokkaebiActor;
+        [SerializeField] private EnemyBrain[] ghostActors;
+        [SerializeField] private EnemyBrain[] dokkaebiActors;
         [SerializeField] private Transform ghostSpawnAnchor;
         [SerializeField] private Transform dokkaebiSpawnAnchor;
+        [SerializeField] private Transform[] ghostSpawnAnchors;
+        [SerializeField] private Transform[] dokkaebiSpawnAnchors;
         [SerializeField] private Light spawnCueLight;
         [SerializeField] private float evaluationIntervalSeconds = 0.45f;
         [SerializeField] private float gatePlaneZ = 54f;
@@ -20,8 +24,8 @@ namespace KHorrorGame.Migration
         private void Awake()
         {
             EnsureReferences();
-            HideActor(ghostActor);
-            HideActor(dokkaebiActor);
+            HideActors(GetGhostActors());
+            HideActors(GetDokkaebiActors());
             SetCueVisible(false);
         }
 
@@ -37,8 +41,8 @@ namespace KHorrorGame.Migration
                 evaluationTimer = Mathf.Max(0.05f, evaluationIntervalSeconds);
             }
 
-            TickActor(ghostActor, targetTerritory);
-            TickActor(dokkaebiActor, targetTerritory);
+            TickActors(GetGhostActors(), targetTerritory);
+            TickActors(GetDokkaebiActors(), targetTerritory);
         }
 
         public ThreatDirectorDecision EvaluateThreats(
@@ -52,8 +56,8 @@ namespace KHorrorGame.Migration
                 playerTerritory,
                 resentmentStage,
                 canSpawnThreats,
-                IsActorActive(ghostActor) ? 1 : 0,
-                IsActorActive(dokkaebiActor) ? 1 : 0,
+                CountActive(GetGhostActors()),
+                CountActive(GetDokkaebiActors()),
                 resentmentStage * 31));
 
             ApplyDecision(decision);
@@ -85,14 +89,26 @@ namespace KHorrorGame.Migration
 
             if (decision.Action == ThreatDirectorAction.SpawnGhost)
             {
-                ActivateActor(ghostActor, ghostSpawnAnchor, EnemyKind.Ghost, TerritoryKind.EstateInterior, decision.Profile);
+                ActivateNextActor(
+                    GetGhostActors(),
+                    GetGhostSpawnAnchors(),
+                    ghostSpawnAnchor,
+                    EnemyKind.Ghost,
+                    TerritoryKind.EstateInterior,
+                    decision.Profile);
                 SetCueVisible(true);
                 return;
             }
 
             if (decision.Action == ThreatDirectorAction.SpawnDokkaebi)
             {
-                ActivateActor(dokkaebiActor, dokkaebiSpawnAnchor, EnemyKind.Dokkaebi, TerritoryKind.ForestApproach, decision.Profile);
+                ActivateNextActor(
+                    GetDokkaebiActors(),
+                    GetDokkaebiSpawnAnchors(),
+                    dokkaebiSpawnAnchor,
+                    EnemyKind.Dokkaebi,
+                    TerritoryKind.ForestApproach,
+                    decision.Profile);
                 SetCueVisible(true);
                 return;
             }
@@ -123,13 +139,14 @@ namespace KHorrorGame.Migration
             if (!canSpawnThreats
                 || currentMap != GameMapId.JonggaEstate
                 || resentmentStage < ThreatStageProfile.MaxStage
-                || IsActorActive(ghostActor))
+                || CountActive(GetGhostActors()) > 0)
             {
                 return;
             }
 
-            ActivateActor(
-                ghostActor,
+            ActivateNextActor(
+                GetGhostActors(),
+                GetGhostSpawnAnchors(),
                 ghostSpawnAnchor,
                 EnemyKind.Ghost,
                 TerritoryKind.EstateInterior,
@@ -144,6 +161,14 @@ namespace KHorrorGame.Migration
             }
 
             actor.ManualTick(Time.deltaTime, targetTerritory);
+        }
+
+        private void TickActors(EnemyBrain[] actors, TerritoryKind targetTerritory)
+        {
+            foreach (var actor in actors)
+            {
+                TickActor(actor, targetTerritory);
+            }
         }
 
         private TerritoryKind ResolvePlayerTerritory()
@@ -188,6 +213,60 @@ namespace KHorrorGame.Migration
             return actor != null && actor.gameObject.activeSelf;
         }
 
+        private EnemyBrain[] GetGhostActors()
+        {
+            return ResolveActors(ghostActors, ghostActor);
+        }
+
+        private EnemyBrain[] GetDokkaebiActors()
+        {
+            return ResolveActors(dokkaebiActors, dokkaebiActor);
+        }
+
+        private Transform[] GetGhostSpawnAnchors()
+        {
+            return ResolveAnchors(ghostSpawnAnchors, ghostSpawnAnchor);
+        }
+
+        private Transform[] GetDokkaebiSpawnAnchors()
+        {
+            return ResolveAnchors(dokkaebiSpawnAnchors, dokkaebiSpawnAnchor);
+        }
+
+        private static EnemyBrain[] ResolveActors(EnemyBrain[] pool, EnemyBrain fallback)
+        {
+            if (pool != null && pool.Length > 0)
+            {
+                return pool;
+            }
+
+            return fallback != null ? new[] { fallback } : new EnemyBrain[0];
+        }
+
+        private static Transform[] ResolveAnchors(Transform[] pool, Transform fallback)
+        {
+            if (pool != null && pool.Length > 0)
+            {
+                return pool;
+            }
+
+            return fallback != null ? new[] { fallback } : new Transform[0];
+        }
+
+        private static int CountActive(EnemyBrain[] actors)
+        {
+            var active = 0;
+            foreach (var actor in actors)
+            {
+                if (IsActorActive(actor))
+                {
+                    active++;
+                }
+            }
+
+            return active;
+        }
+
         private static void HideActor(EnemyBrain actor)
         {
             if (actor != null)
@@ -195,6 +274,45 @@ namespace KHorrorGame.Migration
                 actor.gameObject.SetActive(false);
                 actor.SetAutomaticTick(false);
             }
+        }
+
+        private static void HideActors(EnemyBrain[] actors)
+        {
+            foreach (var actor in actors)
+            {
+                HideActor(actor);
+            }
+        }
+
+        private void ActivateNextActor(
+            EnemyBrain[] actors,
+            Transform[] anchors,
+            Transform fallbackAnchor,
+            EnemyKind enemyKind,
+            TerritoryKind homeTerritory,
+            ThreatStageProfile profile)
+        {
+            for (var i = 0; i < actors.Length; i++)
+            {
+                var actor = actors[i];
+                if (IsActorActive(actor))
+                {
+                    continue;
+                }
+
+                ActivateActor(actor, SelectAnchor(anchors, fallbackAnchor, i), enemyKind, homeTerritory, profile);
+                return;
+            }
+        }
+
+        private static Transform SelectAnchor(Transform[] anchors, Transform fallbackAnchor, int actorIndex)
+        {
+            if (anchors != null && anchors.Length > 0)
+            {
+                return anchors[Mathf.Clamp(actorIndex, 0, anchors.Length - 1)];
+            }
+
+            return fallbackAnchor;
         }
 
         private void SetCueVisible(bool visible)

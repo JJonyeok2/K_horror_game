@@ -81,7 +81,7 @@ namespace KHorrorGame.Migration.Tests
         }
 
         [Test]
-        public void EstateDoesNotRespawnGhostWhenGhostAlreadyActive()
+        public void EstateStageFiveRequestsAdditionalGhostsWhileBudgetRemains()
         {
             var director = new ThreatDirector();
 
@@ -91,12 +91,31 @@ namespace KHorrorGame.Migration.Tests
                 5,
                 true,
                 1,
-                0,
+                1,
                 23));
 
-            Assert.AreEqual(ThreatDirectorAction.CueOnly, decision.Action);
-            Assert.IsNull(decision.EnemyKind);
-            Assert.AreEqual("interior_ghost_active", decision.Reason);
+            Assert.AreEqual(ThreatDirectorAction.SpawnGhost, decision.Action);
+            Assert.AreEqual(EnemyKind.Ghost, decision.EnemyKind);
+            Assert.AreEqual("interior_ghost_reinforcement", decision.Reason);
+        }
+
+        [Test]
+        public void ForestStageFiveRequestsAdditionalDokkaebiWhileBudgetRemains()
+        {
+            var director = new ThreatDirector();
+
+            var decision = director.Evaluate(new ThreatDirectorContext(
+                GameMapId.JonggaEstate,
+                TerritoryKind.ForestApproach,
+                5,
+                true,
+                1,
+                1,
+                41));
+
+            Assert.AreEqual(ThreatDirectorAction.SpawnDokkaebi, decision.Action);
+            Assert.AreEqual(EnemyKind.Dokkaebi, decision.EnemyKind);
+            Assert.AreEqual("forest_dokkaebi_reinforcement", decision.Reason);
         }
 
         [Test]

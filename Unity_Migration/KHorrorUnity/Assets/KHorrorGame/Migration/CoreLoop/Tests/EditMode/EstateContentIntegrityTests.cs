@@ -176,14 +176,26 @@ namespace KHorrorGame.Migration.Tests
             var brains = Resources.FindObjectsOfTypeAll<EnemyBrain>()
                 .Where(brain => brain.gameObject.scene.IsValid())
                 .ToArray();
-            var ghost = brains.SingleOrDefault(brain => brain.name == "RuntimeGhostActor");
-            var dokkaebi = brains.SingleOrDefault(brain => brain.name == "RuntimeDokkaebiActor");
-            Assert.IsNotNull(ghost, "RuntimeGhostActor should exist.");
-            Assert.IsNotNull(dokkaebi, "RuntimeDokkaebiActor should exist.");
-            Assert.IsFalse(ghost.gameObject.activeSelf, "Ghost actor should start hidden until the director requests it.");
-            Assert.IsFalse(dokkaebi.gameObject.activeSelf, "Dokkaebi actor should start hidden until the director requests it.");
-            Assert.AreEqual(EnemyKind.Ghost, ghost.EnemyKind);
-            Assert.AreEqual(EnemyKind.Dokkaebi, dokkaebi.EnemyKind);
+            var ghosts = brains
+                .Where(brain => brain.name.StartsWith("RuntimeGhostActor", StringComparison.Ordinal))
+                .ToArray();
+            var dokkaebi = brains
+                .Where(brain => brain.name.StartsWith("RuntimeDokkaebiActor", StringComparison.Ordinal))
+                .ToArray();
+            Assert.GreaterOrEqual(ghosts.Length, 3, "Runtime ghost pool should support stage-scaled interior threat count.");
+            Assert.GreaterOrEqual(dokkaebi.Length, 2, "Runtime dokkaebi pool should support stage-scaled forest threat count.");
+
+            foreach (var ghost in ghosts)
+            {
+                Assert.IsFalse(ghost.gameObject.activeSelf, ghost.name + " should start hidden until the director requests it.");
+                Assert.AreEqual(EnemyKind.Ghost, ghost.EnemyKind);
+            }
+
+            foreach (var forestActor in dokkaebi)
+            {
+                Assert.IsFalse(forestActor.gameObject.activeSelf, forestActor.name + " should start hidden until the director requests it.");
+                Assert.AreEqual(EnemyKind.Dokkaebi, forestActor.EnemyKind);
+            }
         }
 
         [Test]
@@ -319,6 +331,64 @@ namespace KHorrorGame.Migration.Tests
                 UnityEngine.Object.DestroyImmediate(ghost);
                 UnityEngine.Object.DestroyImmediate(dokkaebi);
                 UnityEngine.Object.DestroyImmediate(ghostAnchor);
+                UnityEngine.Object.DestroyImmediate(dokkaebiAnchor);
+                UnityEngine.Object.DestroyImmediate(cue.gameObject);
+            }
+        }
+
+        [Test]
+        public void RuntimeThreatSpawnerUsesStageBudgetToActivateMultipleInteriorGhosts()
+        {
+            var root = new GameObject("MultiGhostSpawnerFixture");
+            var player = new GameObject("PlayerFixture");
+            var ghostA = new GameObject("GhostActorFixture_A");
+            var ghostB = new GameObject("GhostActorFixture_B");
+            var dokkaebi = new GameObject("DokkaebiActorFixture");
+            var ghostAnchorA = new GameObject("GhostAnchorFixture_A");
+            var ghostAnchorB = new GameObject("GhostAnchorFixture_B");
+            var dokkaebiAnchor = new GameObject("DokkaebiAnchorFixture");
+            var cue = new GameObject("CueFixture").AddComponent<Light>();
+            var spawner = root.AddComponent<RuntimeThreatSpawner>();
+
+            try
+            {
+                player.AddComponent<PlayerDamageReceiver>();
+                var ghostBrainA = ghostA.AddComponent<EnemyBrain>();
+                var ghostBrainB = ghostB.AddComponent<EnemyBrain>();
+                var dokkaebiBrain = dokkaebi.AddComponent<EnemyBrain>();
+                ghostA.SetActive(false);
+                ghostB.SetActive(false);
+                dokkaebi.SetActive(false);
+                ghostAnchorA.transform.position = new Vector3(-8f, 0f, 128f);
+                ghostAnchorB.transform.position = new Vector3(-2f, 0f, 118f);
+                dokkaebiAnchor.transform.position = new Vector3(4f, 0f, 36f);
+
+                SetObject(spawner, "playerTarget", player.transform);
+                SetObjectArray(spawner, "ghostActors", ghostBrainA, ghostBrainB);
+                SetObjectArray(spawner, "dokkaebiActors", dokkaebiBrain);
+                SetObjectArray(spawner, "ghostSpawnAnchors", ghostAnchorA.transform, ghostAnchorB.transform);
+                SetObjectArray(spawner, "dokkaebiSpawnAnchors", dokkaebiAnchor.transform);
+                SetObject(spawner, "spawnCueLight", cue);
+
+                var firstDecision = spawner.EvaluateThreats(true, 5, GameMapId.JonggaEstate, TerritoryKind.EstateInterior);
+                var secondDecision = spawner.EvaluateThreats(true, 5, GameMapId.JonggaEstate, TerritoryKind.EstateInterior);
+
+                Assert.AreEqual(ThreatDirectorAction.SpawnGhost, firstDecision.Action);
+                Assert.AreEqual(ThreatDirectorAction.SpawnGhost, secondDecision.Action);
+                Assert.IsTrue(ghostA.activeSelf, "First stage-five interior evaluation should activate a ghost.");
+                Assert.IsTrue(ghostB.activeSelf, "Second stage-five interior evaluation should activate another ghost while budget remains.");
+                Assert.AreEqual(ghostAnchorA.transform.position, ghostA.transform.position);
+                Assert.AreEqual(ghostAnchorB.transform.position, ghostB.transform.position);
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(root);
+                UnityEngine.Object.DestroyImmediate(player);
+                UnityEngine.Object.DestroyImmediate(ghostA);
+                UnityEngine.Object.DestroyImmediate(ghostB);
+                UnityEngine.Object.DestroyImmediate(dokkaebi);
+                UnityEngine.Object.DestroyImmediate(ghostAnchorA);
+                UnityEngine.Object.DestroyImmediate(ghostAnchorB);
                 UnityEngine.Object.DestroyImmediate(dokkaebiAnchor);
                 UnityEngine.Object.DestroyImmediate(cue.gameObject);
             }
@@ -553,6 +623,20 @@ namespace KHorrorGame.Migration.Tests
         {
             var serialized = new SerializedObject(target);
             serialized.FindProperty(propertyName).objectReferenceValue = value;
+            serialized.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        private static void SetObjectArray(UnityEngine.Object target, string propertyName, params UnityEngine.Object[] values)
+        {
+            var serialized = new SerializedObject(target);
+            var property = serialized.FindProperty(propertyName);
+            Assert.IsNotNull(property, "Missing serialized array " + propertyName + ".");
+            property.arraySize = values.Length;
+            for (var i = 0; i < values.Length; i++)
+            {
+                property.GetArrayElementAtIndex(i).objectReferenceValue = values[i];
+            }
+
             serialized.ApplyModifiedPropertiesWithoutUndo();
         }
 
