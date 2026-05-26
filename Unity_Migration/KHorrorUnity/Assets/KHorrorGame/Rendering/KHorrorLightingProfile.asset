@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e57ec2687462e614e8c45e049b32466e, type: 3}
+  m_Name: KHorrorLightingProfile
+  m_EditorClassIdentifier: KHorrorGame.Migration.Rendering::KHorrorGame.Migration.Rendering.KHorrorLightingProfile
+  fogEnabled: 1
+  fogMode: 3
+  fogDensity: 0.021
+  fogColor: {r: 0.045, g: 0.052, b: 0.052, a: 1}
+  ambientMode: 3
+  ambientColor: {r: 0.062, g: 0.066, b: 0.058, a: 1}
+  reflectionIntensity: 0.16
+  moonColor: {r: 0.58, g: 0.67, b: 0.78, a: 1}
+  moonIntensity: 0.42
+  moonEulerAngles: {x: 54, y: -41, z: 0}
+  flashlightColor: {r: 1, g: 0.94, b: 0.76, a: 1}
+  flashlightIntensity: 14
+  flashlightRange: 34
+  flashlightSpotAngle: 54
+  exposureCompensation: 0.35
+  vignetteIntensity: 0.16
+  saturation: -8

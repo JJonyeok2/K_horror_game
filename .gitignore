@@ -1,0 +1,4 @@
+.godot/
+assets/external/ambientcg/downloads/
+Unity_Migration/*.log
+Unity_Migration/*test-results*.xml
