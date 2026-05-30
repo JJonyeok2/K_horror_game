@@ -944,6 +944,8 @@ namespace KHorrorGame.Editor
             CreateCube("MainHouseBackWall_LeftStub", parent, new Vector3(-6.95f, 2f, 86.6f), new Vector3(0.25f, 3.5f, 0.35f), Materials.Plaster);
             CreateCube("MainHouseLeftWall", parent, new Vector3(-7f, 2f, 83f), new Vector3(0.35f, 3.5f, 7f), Materials.Plaster);
             CreateCube("MainHouseRightWall", parent, new Vector3(7f, 2f, 83f), new Vector3(0.35f, 3.5f, 7f), Materials.Plaster);
+            CreateWornPlasterPatchRow(parent, "MainHouseBackWall", new Vector3(-4.8f, 2.2f, 86.41f), true);
+            CreateWornPlasterPatchRow(parent, "MainHouseRightWall", new Vector3(6.81f, 2.1f, 81.0f), false);
             CreateCube("MainHouseFrontBeam", parent, new Vector3(0f, 3.25f, 79.7f), new Vector3(14.8f, 0.35f, 0.35f), Materials.DarkWood);
             CreateCube("MainHouseBackBeam", parent, new Vector3(0f, 3.25f, 86.7f), new Vector3(14.8f, 0.35f, 0.35f), Materials.DarkWood);
             for (var i = 0; i < 7; i++)
@@ -1076,6 +1078,8 @@ namespace KHorrorGame.Editor
             CreateCube("SarangchaeBackWall", parent, new Vector3(11.05f, 1.85f, 75.5f), new Vector3(0.28f, 2.9f, 7.8f), Materials.Plaster);
             CreateCube("SarangchaeNorthWall", parent, new Vector3(9.2f, 1.85f, 79.5f), new Vector3(3.65f, 2.9f, 0.28f), Materials.Plaster);
             CreateCube("SarangchaeSouthWall", parent, new Vector3(9.2f, 1.85f, 71.5f), new Vector3(3.65f, 2.9f, 0.28f), Materials.Plaster);
+            CreateWornPlasterPatchRow(parent, "SarangchaeBackWall", new Vector3(10.86f, 2.0f, 72.9f), false);
+            CreateWornPlasterPatchRow(parent, "SarangchaeNorthWall", new Vector3(8.1f, 2.0f, 79.31f), true);
 
             for (var i = 0; i < 4; i++)
             {
@@ -1101,6 +1105,7 @@ namespace KHorrorGame.Editor
             CreateCube("KitchenShedBackWall", parent, new Vector3(-3.0f, 1.65f, 93.25f), new Vector3(5.4f, 2.4f, 0.24f), Materials.Plaster);
             CreateCube("KitchenShedLeftWall", parent, new Vector3(-5.8f, 1.65f, 91.5f), new Vector3(0.24f, 2.4f, 3.4f), Materials.Plaster);
             CreateCube("KitchenShedRightWall", parent, new Vector3(-0.2f, 1.65f, 91.5f), new Vector3(0.24f, 2.4f, 3.4f), Materials.Plaster);
+            CreateWornPlasterPatchRow(parent, "KitchenShedBackWall", new Vector3(-4.8f, 1.7f, 93.08f), true);
             CreateCube("KitchenShedRoof", parent, new Vector3(-3.0f, 3.0f, 91.5f), new Vector3(6.1f, 0.35f, 4.1f), Materials.Roof, Quaternion.Euler(0f, 0f, -4f));
             CreateCylinder("KitchenOnggiJar", parent, new Vector3(-4.3f, 0.75f, 89.9f), new Vector3(0.55f, 0.6f, 0.55f), Materials.Jar);
         }
@@ -1217,6 +1222,7 @@ namespace KHorrorGame.Editor
             CreateCube("ShrineAltar", parent, new Vector3(ShrineX, 0.8f, ShrineZ + 1.4f), new Vector3(2f, 1.0f, 0.7f), Materials.Altar);
             var shrineRope = CreateCube("ShrineHangingRope", parent, new Vector3(ShrineX, 2.75f, ShrineZ - 1.95f), new Vector3(4.8f, 0.08f, 0.08f), Materials.Rope);
             shrineRope.GetComponent<Collider>().enabled = false;
+            CreateShrineRopeTwists(parent);
             for (var i = 0; i < 7; i++)
             {
                 var x = ShrineX - 2.1f + i * 0.7f;
@@ -1266,6 +1272,7 @@ namespace KHorrorGame.Editor
             CreateCube(name + "_Brow", parent, basePosition + new Vector3(0f, 3.08f, -0.23f), new Vector3(0.55f, 0.08f, 0.08f), Materials.RustedMetal);
             CreateCube(name + "_Mouth", parent, basePosition + new Vector3(0f, 2.72f, -0.23f), new Vector3(0.42f, 0.07f, 0.08f), Materials.RustedMetal);
             CreateCube(name + "_Hat", parent, basePosition + new Vector3(0f, 3.38f, -0.05f), new Vector3(0.9f, 0.22f, 0.38f), Materials.Roof);
+            CreateJangseungFaceDetails(parent, basePosition, name);
         }
 
         private static void CreateDistantSilhouette(Transform parent)
@@ -1339,6 +1346,7 @@ namespace KHorrorGame.Editor
             CreateCube(name + "_InkTop", parent, position + new Vector3(0f, 0.16f, -0.035f), new Vector3(0.19f, 0.035f, 0.025f), Materials.TalismanInk);
             CreateCube(name + "_InkMid", parent, position + new Vector3(0f, -0.02f, -0.035f), new Vector3(0.13f, 0.035f, 0.025f), Materials.TalismanInk);
             CreateCube(name + "_InkLow", parent, position + new Vector3(0f, -0.18f, -0.035f), new Vector3(0.21f, 0.035f, 0.025f), Materials.TalismanInk);
+            CreateTalismanClusterMarker(parent, position, name);
         }
 
         private static void CreateNonBlockingPaperCharm(Transform parent, Vector3 position, string name)
@@ -1347,6 +1355,7 @@ namespace KHorrorGame.Editor
             DisableCollider(CreateCube(name + "_InkTop", parent, position + new Vector3(0f, 0.16f, -0.035f), new Vector3(0.19f, 0.035f, 0.025f), Materials.TalismanInk));
             DisableCollider(CreateCube(name + "_InkMid", parent, position + new Vector3(0f, -0.02f, -0.035f), new Vector3(0.13f, 0.035f, 0.025f), Materials.TalismanInk));
             DisableCollider(CreateCube(name + "_InkLow", parent, position + new Vector3(0f, -0.18f, -0.035f), new Vector3(0.21f, 0.035f, 0.025f), Materials.TalismanInk));
+            CreateTalismanClusterMarker(parent, position, name);
         }
 
         private static void DisableCollider(GameObject target)
@@ -1372,6 +1381,43 @@ namespace KHorrorGame.Editor
             {
                 var x = -width * 0.46f + i * (width * 0.92f / 11f);
                 CreateCube(prefix + "_" + i, parent, center + new Vector3(x, 0.15f, 0f), new Vector3(0.07f, 0.13f, depth), Materials.RoofRidge);
+                DisableCollider(CreateCube("RoofEaveTileDetail_" + prefix + "_" + i.ToString("00") + "_Front", parent, center + new Vector3(x, -0.02f, -depth * 0.52f), new Vector3(0.12f, 0.16f, 0.22f), Materials.RoofRidge));
+                DisableCollider(CreateCube("RoofEaveTileDetail_" + prefix + "_" + i.ToString("00") + "_Back", parent, center + new Vector3(x, -0.02f, depth * 0.52f), new Vector3(0.12f, 0.16f, 0.22f), Materials.RoofRidge));
+            }
+        }
+
+        private static void CreateJangseungFaceDetails(Transform parent, Vector3 basePosition, string name)
+        {
+            DisableCollider(CreateCube("JangseungFaceDetail_" + name + "_LeftEye", parent, basePosition + new Vector3(-0.16f, 2.98f, -0.25f), new Vector3(0.09f, 0.09f, 0.045f), Materials.RustedMetal));
+            DisableCollider(CreateCube("JangseungFaceDetail_" + name + "_RightEye", parent, basePosition + new Vector3(0.16f, 2.98f, -0.25f), new Vector3(0.09f, 0.09f, 0.045f), Materials.RustedMetal));
+            DisableCollider(CreateCube("JangseungFaceDetail_" + name + "_NoseBridge", parent, basePosition + new Vector3(0f, 2.88f, -0.25f), new Vector3(0.08f, 0.24f, 0.045f), Materials.RustedMetal));
+            DisableCollider(CreateCube("JangseungFaceDetail_" + name + "_LeftTooth", parent, basePosition + new Vector3(-0.08f, 2.61f, -0.25f), new Vector3(0.055f, 0.13f, 0.04f), Materials.DoorPaper));
+            DisableCollider(CreateCube("JangseungFaceDetail_" + name + "_RightTooth", parent, basePosition + new Vector3(0.08f, 2.61f, -0.25f), new Vector3(0.055f, 0.13f, 0.04f), Materials.DoorPaper));
+        }
+
+        private static void CreateTalismanClusterMarker(Transform parent, Vector3 position, string name)
+        {
+            DisableCollider(CreateCube("KoreanTalismanCluster_" + name + "_Pin", parent, position + new Vector3(0f, 0.36f, -0.055f), new Vector3(0.09f, 0.055f, 0.035f), Materials.RustedMetal));
+        }
+
+        private static void CreateWornPlasterPatchRow(Transform parent, string prefix, Vector3 start, bool alongX)
+        {
+            for (var i = 0; i < 3; i++)
+            {
+                var offset = alongX ? new Vector3(i * 1.8f, (i % 2) * -0.42f, 0f) : new Vector3(0f, (i % 2) * -0.42f, i * 1.75f);
+                var rotation = alongX ? Quaternion.identity : Quaternion.Euler(0f, 90f, 0f);
+                var scale = new Vector3(0.9f - i * 0.12f, 0.45f + i * 0.09f, 0.035f);
+                DisableCollider(CreateCube("WornPlasterPatch_" + prefix + "_" + i.ToString("00"), parent, start + offset, scale, Materials.WetMud, rotation));
+            }
+        }
+
+        private static void CreateShrineRopeTwists(Transform parent)
+        {
+            for (var i = 0; i < 8; i++)
+            {
+                var x = ShrineX - 2.1f + i * 0.6f;
+                var rotation = Quaternion.Euler(0f, 0f, i % 2 == 0 ? 28f : -28f);
+                DisableCollider(CreateCube("ShrineRopeTwist_" + i.ToString("00"), parent, new Vector3(x, 2.75f, ShrineZ - 2.02f), new Vector3(0.08f, 0.28f, 0.08f), Materials.Rope, rotation));
             }
         }
 
