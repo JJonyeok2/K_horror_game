@@ -142,6 +142,14 @@ namespace KHorrorGame.Migration.Tests
 
         private static bool IsWalkableName(string objectName)
         {
+            if (objectName.StartsWith("RiskySidePathBlocker_", StringComparison.Ordinal) ||
+                objectName.StartsWith("RiskySidePathOccluder_", StringComparison.Ordinal) ||
+                objectName.StartsWith("RiskySidePathOutsideBlocker_", StringComparison.Ordinal) ||
+                objectName.StartsWith("RiskySidePathSoundCue_", StringComparison.Ordinal))
+            {
+                return false;
+            }
+
             return objectName.Contains("Courtyard", StringComparison.Ordinal) ||
                    objectName.Contains("Floor", StringComparison.Ordinal) ||
                    objectName.Contains("Landing", StringComparison.Ordinal) ||
