@@ -764,10 +764,61 @@ namespace KHorrorGame.Editor
             CreateCube("OuterWallRight", parent, new Vector3(10.5f, 1.7f, 58f), new Vector3(12f, 3.4f, 0.35f), Materials.StoneWall);
             CreateWallCapStones(parent, -10.5f, 58f, 12f, "LeftWallCap");
             CreateWallCapStones(parent, 10.5f, 58f, 12f, "RightWallCap");
-            CreateCube("RiskySidePassage", parent, new Vector3(7.1f, 0.1f, 58.3f), new Vector3(1.5f, 0.2f, 8.5f), Materials.Road);
-            CreateCube("SidePassageLowBeam", parent, new Vector3(7.1f, 1.35f, 60f), new Vector3(1.6f, 0.3f, 2.3f), Materials.DarkWood);
-            CreateBambooCluster(parent, new Vector3(8.9f, 0f, 60.5f), "SidePassageBamboo_A");
-            CreateBambooCluster(parent, new Vector3(5.7f, 0f, 62.8f), "SidePassageBamboo_B");
+            CreateRiskySidePath(parent);
+        }
+
+        private static void CreateRiskySidePath(Transform parent)
+        {
+            CreateCube("RiskySidePathOutsideBlocker_Lower", parent, new Vector3(7.2f, 1.55f, 55.0f), new Vector3(2.15f, 3.1f, 0.48f), Materials.StoneWall);
+            CreateCube("RiskySidePathOutsideBlocker_Upper", parent, new Vector3(8.15f, 1.55f, 56.35f), new Vector3(0.5f, 3.1f, 2.4f), Materials.StoneWall);
+
+            CreateCube("RiskySidePathFloor_00", parent, new Vector3(8.55f, 0.1f, 60.8f), new Vector3(1.35f, 0.2f, 2.8f), Materials.Road);
+            CreateCube("RiskySidePathFloor_01", parent, new Vector3(8.9f, 0.1f, 64.1f), new Vector3(1.3f, 0.2f, 3.3f), Materials.Road);
+            CreateCube("RiskySidePathFloor_02", parent, new Vector3(8.2f, 0.1f, 68.0f), new Vector3(1.25f, 0.2f, 3.4f), Materials.Road);
+            CreateCube("RiskySidePathFloor_03", parent, new Vector3(8.75f, 0.1f, 72.0f), new Vector3(1.25f, 0.2f, 3.8f), Materials.Road);
+            CreateCube("RiskySidePathFloor_04", parent, new Vector3(8.55f, 0.1f, 75.3f), new Vector3(1.35f, 0.2f, 2.6f), Materials.Road);
+
+            var waypoints = new[]
+            {
+                new Vector3(8.55f, 0.22f, 59.8f),
+                new Vector3(8.72f, 0.22f, 62.2f),
+                new Vector3(8.9f, 0.22f, 65.4f),
+                new Vector3(8.2f, 0.22f, 68.2f),
+                new Vector3(8.75f, 0.22f, 71.5f),
+                new Vector3(6.95f, 0.32f, 75.0f),
+            };
+            for (var i = 0; i < waypoints.Length; i++)
+            {
+                CreateMarker("RiskySidePathInteriorWaypoint_" + i.ToString("00"), waypoints[i], Quaternion.identity, parent);
+            }
+
+            CreateCube("RiskySidePathBlocker_West_00", parent, new Vector3(7.25f, 0.72f, 62.2f), new Vector3(0.34f, 1.25f, 3.2f), Materials.StoneWall);
+            CreateCube("RiskySidePathBlocker_West_01", parent, new Vector3(7.05f, 0.72f, 68.2f), new Vector3(0.34f, 1.25f, 3.2f), Materials.StoneWall);
+            CreateCube("RiskySidePathBlocker_East_00", parent, new Vector3(10.05f, 0.72f, 64.0f), new Vector3(0.34f, 1.25f, 3.4f), Materials.StoneWall);
+            CreateCube("RiskySidePathBlocker_East_01", parent, new Vector3(10.0f, 0.72f, 72.2f), new Vector3(0.34f, 1.25f, 4.2f), Materials.StoneWall);
+
+            CreateCube("RiskySidePathOccluder_BambooScreen_00", parent, new Vector3(7.55f, 1.55f, 65.3f), new Vector3(0.22f, 2.2f, 1.6f), Materials.DarkWood);
+            CreateCube("RiskySidePathOccluder_BambooScreen_01", parent, new Vector3(9.75f, 1.55f, 69.4f), new Vector3(0.22f, 2.2f, 1.9f), Materials.DarkWood);
+            CreateCube("RiskySidePathOccluder_LowBeam", parent, new Vector3(8.55f, 1.42f, 73.8f), new Vector3(1.65f, 0.26f, 1.7f), Materials.DarkWood);
+
+            CreateRiskySidePathSoundCue(parent, "RiskySidePathSoundCue_00_DryLeaves", new Vector3(8.65f, 1.0f, 63.2f), new Vector3(1.9f, 1.8f, 1.7f));
+            CreateRiskySidePathSoundCue(parent, "RiskySidePathSoundCue_01_BambooKnock", new Vector3(8.45f, 1.0f, 70.4f), new Vector3(1.9f, 1.8f, 1.7f));
+
+            CreateMarker("RiskySidePathDokkaebiExposure_00_GateFlank", new Vector3(8.0f, 0.92f, 59.9f), Quaternion.Euler(0f, -25f, 0f), parent);
+            CreateMarker("RiskySidePathDokkaebiExposure_01_BambooLure", new Vector3(9.45f, 0.92f, 61.8f), Quaternion.Euler(0f, 35f, 0f), parent);
+            CreateBambooCluster(parent, new Vector3(9.55f, 0f, 61.2f), "RiskySidePathBamboo_A");
+            CreateBambooCluster(parent, new Vector3(6.8f, 0f, 67.4f), "RiskySidePathBamboo_B");
+            CreateJangseung(parent, new Vector3(9.9f, 0f, 75.8f), "RiskySidePathJangseung_Warning");
+        }
+
+        private static void CreateRiskySidePathSoundCue(Transform parent, string name, Vector3 position, Vector3 scale)
+        {
+            var cue = CreateCube(name, parent, position, scale, Materials.Night);
+            var collider = cue.GetComponent<Collider>();
+            if (collider != null)
+            {
+                collider.isTrigger = true;
+            }
         }
 
         private static void CreateCourtyard(Transform parent)
@@ -877,7 +928,8 @@ namespace KHorrorGame.Editor
         {
             CreateCube("CourtyardSideShed_Foundation", parent, basePosition + new Vector3(0f, 0.12f, 0f), new Vector3(2.4f, 0.24f, 2.8f), Materials.Stone);
             CreateCube("CourtyardSideShed_BackWall", parent, basePosition + new Vector3(0.9f, 1.25f, 0f), new Vector3(0.24f, 2.3f, 2.65f), Materials.Plaster);
-            CreateCube("CourtyardSideShed_Roof", parent, basePosition + new Vector3(0f, 2.55f, 0f), new Vector3(2.7f, 0.28f, 3.1f), Materials.Roof, Quaternion.Euler(0f, 0f, -5f));
+            var roof = CreateCube("CourtyardSideShed_Roof", parent, basePosition + new Vector3(0f, 2.55f, 0f), new Vector3(2.7f, 0.28f, 3.1f), Materials.Roof, Quaternion.Euler(0f, 0f, -5f));
+            roof.GetComponent<Collider>().enabled = false;
             CreateCube("CourtyardSideShed_WoodRack", parent, basePosition + new Vector3(-0.82f, 0.65f, -0.7f), new Vector3(0.38f, 0.9f, 1.05f), Materials.DarkWood);
         }
 
