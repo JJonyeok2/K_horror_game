@@ -73,7 +73,7 @@
   - Keep the front gate portal player-only and block AI traversal by default.
   - _Requirements: 2.1, 2.2, 2.6, 3.1, 3.4_
 
-- [ ] 4. Build the ThreatDirector
+- [x] 4. Build the ThreatDirector
   - Add `ThreatDirector` that reads current map, player territory, resentment, grace timer, and active enemy count.
   - Preserve `ThreatSpawnGate` shrine grace behavior.
   - Add tests for no spawn during grace, ghost spawn inside estate, and dokkaebi spawn in forest.
@@ -138,7 +138,7 @@
   - Add path constraints and line-of-sight blockers without creating dead-end traps.
   - _Requirements: 4.4, 4.6, 7.3_
 
-- [ ] 14. Build the shrine and back route
+- [x] 14. Build the shrine and back route
   - Add a readable route from main house or courtyard to shrine.
   - Ensure shrine artifacts sit above the floor and have valid pickup colliders.
   - Preserve shrine threat grace before immediate aggressive spawning.
@@ -168,7 +168,7 @@
   - Prevent aggressive attack cues when grace or territory rules block spawning.
   - _Requirements: 8.1, 8.2, 8.3, 8.4, 8.5_
 
-- [ ] 19. Add scene integrity tests
+- [x] 19. Add scene integrity tests
   - Add checks for required roots, spawn markers, gate portal references, sightline blockers, and core floors.
   - Add known hole-zone checks around gate, courtyard, house, shrine, and return route.
   - Run these checks in batchmode before committing scene generation changes.

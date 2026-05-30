@@ -16,7 +16,7 @@
   - 커밋하고 `origin/unity-conversion`으로 푸시한다.
   - _Requirements: 3.1, 3.2, 3.3, 4.1, 4.2, 4.3, 4.4_
 
-- [ ] Task 3. 다음 미완료 스펙 상태 정리
+- [x] Task 3. 다음 미완료 스펙 상태 정리
   - `k-horror-unity-next-milestone`, `k-horror-threat-ai`, `k-horror-physical-cargo-loop`, `k-horror-lethal-loop-polish`의 체크 상태와 실제 코드 증거를 대조한다.
   - 이미 다른 스펙에서 완료된 중복 task는 근거 커밋/테스트를 남기고 체크 상태를 정리한다.
   - 아직 실제로 미완료인 task는 다음 Kiro 작업 단위 후보로 남긴다.
