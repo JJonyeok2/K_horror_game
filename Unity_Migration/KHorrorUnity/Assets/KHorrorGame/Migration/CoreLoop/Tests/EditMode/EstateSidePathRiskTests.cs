@@ -60,6 +60,12 @@ namespace KHorrorGame.Migration.Tests
                 var collider = cue.GetComponent<Collider>();
                 Assert.IsNotNull(collider, cue.name + " should have a trigger collider.");
                 Assert.IsTrue(collider.isTrigger, cue.name + " should be a trigger, not a blocking wall.");
+                Assert.GreaterOrEqual(cue.position.z, 59.2f, cue.name + " should stay inside the gate boundary.");
+            }
+
+            foreach (var exposure in FindOrderedTransforms("RiskySidePathDokkaebiExposure_"))
+            {
+                Assert.GreaterOrEqual(exposure.position.z, 59.2f, exposure.name + " should describe risk after mandatory gate entry.");
             }
         }
 
