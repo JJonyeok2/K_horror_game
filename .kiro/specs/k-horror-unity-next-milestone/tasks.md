@@ -151,10 +151,11 @@
   - Prevent side path collision gaps from bypassing the intended gate boundary.
   - _Requirements: 4.7, 2.6, 3.4_
 
-- [ ] 16. Upgrade Korean horror visual identity
+- [x] 16. Upgrade Korean horror visual identity
   - Apply ambientCG PBR materials to ground, bark, stone, plaster, roof, and wood.
   - Add Korean details: roof eaves, paper doors, jangseung faces, sotdae, talismans, jangdok, shrine rope, and worn plaster.
   - Replace clay-like primitives where feasible with higher fidelity composed meshes or prefabs.
+  - Verified with Task 16 RED/GREEN visual identity tests and the full EditMode suite (`147 total / 147 passed / 0 failed`).
   - _Requirements: 7.1, 7.2, 7.3_
 
 - [ ] 17. Tune lighting and visibility
