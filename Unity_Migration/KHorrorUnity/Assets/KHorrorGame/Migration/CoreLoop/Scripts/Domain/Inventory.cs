@@ -56,6 +56,29 @@ namespace KHorrorGame.Migration
             return item;
         }
 
+        public bool TryRemoveFirstByTag(string tag, out ArtifactDefinition removed)
+        {
+            removed = null;
+            if (string.IsNullOrEmpty(tag))
+            {
+                return false;
+            }
+
+            for (var i = 0; i < _items.Count; i++)
+            {
+                if (!_items[i].HasTag(tag))
+                {
+                    continue;
+                }
+
+                removed = _items[i];
+                _items.RemoveAt(i);
+                return true;
+            }
+
+            return false;
+        }
+
         public int TotalValue()
         {
             return _items.Sum(item => item.Value);

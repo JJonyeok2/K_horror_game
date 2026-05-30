@@ -156,6 +156,21 @@ namespace KHorrorGame.Migration.Tests
         }
 
         [Test]
+        public void EstateHasInteractivePaperDoorAndTalismanSamples()
+        {
+            EditorSceneManager.OpenScene(ScenePath);
+
+            AssertInteractivePaperDoor("MainHousePaperDoor_2");
+            AssertInteractivePaperDoor("SarangchaeOpenPaperDoor_A");
+
+            var talisman = GameObject.Find("Artifact_KitchenCharm");
+            Assert.IsNotNull(talisman, "A talisman pickup should exist so the paper-door seal loop can be tested in the estate.");
+            var pickup = talisman.GetComponent<ArtifactPickup>();
+            Assert.IsNotNull(pickup, "Artifact_KitchenCharm should remain collectible.");
+            AssertSerializedStringArrayContains(pickup, "tags", PaperDoorInteraction.TalismanTag);
+        }
+
+        [Test]
         public void EstateHasRuntimeThreatSpawnerWithTerritoryActors()
         {
             EditorSceneManager.OpenScene(ScenePath);
@@ -698,6 +713,37 @@ namespace KHorrorGame.Migration.Tests
                 TryFindShortcutBlocker(origin, direction, out var hit),
                 failureMessage);
             Assert.LessOrEqual(hit.distance, 4f, "Main house side shortcut blocker is too far away: " + hit.collider.name);
+        }
+
+        private static void AssertInteractivePaperDoor(string objectName)
+        {
+            var doorObject = GameObject.Find(objectName);
+            Assert.IsNotNull(doorObject, objectName + " should exist.");
+
+            var door = doorObject.GetComponent<PaperDoorInteraction>();
+            Assert.IsNotNull(door, objectName + " should have PaperDoorInteraction.");
+            Assert.IsInstanceOf<IInteractable>(door, objectName + " should be targetable through PlayerInteractor.");
+
+            var collider = doorObject.GetComponent<Collider>();
+            Assert.IsNotNull(collider, objectName + " should keep a collider for interaction and AI blocking.");
+            Assert.IsTrue(collider.enabled, objectName + " collider should start enabled.");
+        }
+
+        private static void AssertSerializedStringArrayContains(UnityEngine.Object target, string propertyName, string expectedValue)
+        {
+            var serialized = new SerializedObject(target);
+            var property = serialized.FindProperty(propertyName);
+            Assert.IsNotNull(property, "Missing serialized array " + propertyName + ".");
+
+            for (var i = 0; i < property.arraySize; i++)
+            {
+                if (property.GetArrayElementAtIndex(i).stringValue == expectedValue)
+                {
+                    return;
+                }
+            }
+
+            Assert.Fail(target.name + " should contain tag " + expectedValue + ".");
         }
 
         private static int SerializedValue(UnityEngine.Object target, string propertyName)
