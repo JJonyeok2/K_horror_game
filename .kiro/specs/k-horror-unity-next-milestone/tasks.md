@@ -133,7 +133,7 @@
   - Keep route readability from gate to main house and optional side routes.
   - _Requirements: 4.3, 4.6, 7.3_
 
-- [ ] 13. Build the main house interior route
+- [x] 13. Build the main house interior route
   - Add floors, ceilings, rooms, door frames, paper doors, beams, and collision.
   - Make at least one artifact route inside the house.
   - Add path constraints and line-of-sight blockers without creating dead-end traps.
