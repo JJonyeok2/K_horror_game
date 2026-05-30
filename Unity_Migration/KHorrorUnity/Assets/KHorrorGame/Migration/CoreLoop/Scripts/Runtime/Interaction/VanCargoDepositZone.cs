@@ -7,6 +7,7 @@ namespace KHorrorGame.Migration
     {
         [SerializeField] private GameLoopController gameLoop;
         [SerializeField] private VanCargoHold cargoHold;
+        [SerializeField] private KoreanHorrorAudioCueBus audioCueBus;
 
         private UnityPlayerController currentActor;
 
@@ -28,6 +29,8 @@ namespace KHorrorGame.Migration
             {
                 cargoHold = GetComponentInChildren<VanCargoHold>();
             }
+
+            ResolveAudioCueBus();
 
             var zoneCollider = GetComponent<Collider>();
             if (zoneCollider != null)
@@ -97,6 +100,7 @@ namespace KHorrorGame.Migration
 
             actor.RefreshHeldItemViews();
             SetFeedback("Cargo loaded");
+            RequestAudioCue(KoreanHorrorAudioCueBus.CargoLoaded);
             return true;
         }
 
@@ -148,6 +152,23 @@ namespace KHorrorGame.Migration
             if (gameLoop != null)
             {
                 gameLoop.ShowFeedback(LastFeedbackMessage);
+            }
+        }
+
+        private void ResolveAudioCueBus()
+        {
+            if (audioCueBus == null)
+            {
+                audioCueBus = FindObjectOfType<KoreanHorrorAudioCueBus>();
+            }
+        }
+
+        private void RequestAudioCue(string cueKey)
+        {
+            ResolveAudioCueBus();
+            if (audioCueBus != null)
+            {
+                audioCueBus.RequestCue(cueKey);
             }
         }
     }

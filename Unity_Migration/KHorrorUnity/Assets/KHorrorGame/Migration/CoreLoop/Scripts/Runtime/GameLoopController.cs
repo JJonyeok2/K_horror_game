@@ -26,6 +26,9 @@ namespace KHorrorGame.Migration
         [SerializeField] private float travelSeconds = BongoRunStateMachine.DefaultTravelSeconds;
         [SerializeField] private float feedbackSeconds = 2f;
 
+        [Header("Audio")]
+        [SerializeField] private KoreanHorrorAudioCueBus audioCueBus;
+
         private Inventory fallbackInventory;
         private float feedbackRemainingSeconds;
 
@@ -47,6 +50,8 @@ namespace KHorrorGame.Migration
             {
                 player = FindObjectOfType<UnityPlayerController>();
             }
+
+            ResolveAudioCueBus();
 
             fallbackInventory = new Inventory(12f, 2);
             ThreatGate = new ThreatSpawnGate();
@@ -80,10 +85,14 @@ namespace KHorrorGame.Migration
         {
             if (CanSettleLoadedCargo())
             {
-                return SettleLoadedCargo();
+                var settled = SettleLoadedCargo();
+                RequestAudioCue(settled ? KoreanHorrorAudioCueBus.TerminalAccepted : KoreanHorrorAudioCueBus.TerminalDenied);
+                return settled;
             }
 
-            return State.OperateBongoTerminal();
+            var operated = State.OperateBongoTerminal();
+            RequestAudioCue(operated ? KoreanHorrorAudioCueBus.TerminalAccepted : KoreanHorrorAudioCueBus.TerminalDenied);
+            return operated;
         }
 
         public bool ExtractPlayerInventory()
@@ -130,8 +139,14 @@ namespace KHorrorGame.Migration
                 return;
             }
 
+            var previousStage = State.Resentment.Stage();
             ThreatGate.NotifyArtifactPicked(definition);
             State.Resentment.AddResentment(ResentmentGainFor(definition), definition.DisplayName);
+            if (State.Resentment.Stage() > previousStage)
+            {
+                RequestAudioCue(KoreanHorrorAudioCueBus.ResentmentStageUp);
+            }
+
             NotifyStateChanged();
         }
 
@@ -301,6 +316,23 @@ namespace KHorrorGame.Migration
             if (estateCargoHold == null)
             {
                 estateCargoHold = FindCargoHoldInRoot(estateRoot, "EstateReturnBongo");
+            }
+        }
+
+        private void ResolveAudioCueBus()
+        {
+            if (audioCueBus == null)
+            {
+                audioCueBus = FindObjectOfType<KoreanHorrorAudioCueBus>();
+            }
+        }
+
+        private void RequestAudioCue(string cueKey)
+        {
+            ResolveAudioCueBus();
+            if (audioCueBus != null)
+            {
+                audioCueBus.RequestCue(cueKey);
             }
         }
 

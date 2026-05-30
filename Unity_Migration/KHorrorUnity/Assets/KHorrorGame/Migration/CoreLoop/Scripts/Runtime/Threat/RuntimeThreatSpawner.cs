@@ -17,6 +17,7 @@ namespace KHorrorGame.Migration
         [SerializeField] private Light spawnCueLight;
         [SerializeField] private float evaluationIntervalSeconds = 0.45f;
         [SerializeField] private float gatePlaneZ = 54f;
+        [SerializeField] private KoreanHorrorAudioCueBus audioCueBus;
 
         private readonly ThreatDirector director = new ThreatDirector();
         private float evaluationTimer;
@@ -91,28 +92,41 @@ namespace KHorrorGame.Migration
 
             if (decision.Action == ThreatDirectorAction.SpawnGhost)
             {
-                ActivateNextActor(
+                if (ActivateNextActor(
                     GetGhostActors(),
                     GetGhostSpawnAnchors(),
                     ghostSpawnAnchor,
                     EnemyKind.Ghost,
                     TerritoryKind.EstateInterior,
-                    decision.Profile);
+                    decision.Profile))
+                {
+                    RequestAudioCue(KoreanHorrorAudioCueBus.GhostNearby);
+                }
+
                 SetCueVisible(true);
                 return;
             }
 
             if (decision.Action == ThreatDirectorAction.SpawnDokkaebi)
             {
-                ActivateNextActor(
+                if (ActivateNextActor(
                     GetDokkaebiActors(),
                     GetDokkaebiSpawnAnchors(),
                     dokkaebiSpawnAnchor,
                     EnemyKind.Dokkaebi,
                     TerritoryKind.ForestApproach,
-                    decision.Profile);
+                    decision.Profile))
+                {
+                    RequestAudioCue(KoreanHorrorAudioCueBus.DokkaebiCue);
+                }
+
                 SetCueVisible(true);
                 return;
+            }
+
+            if (decision.Action == ThreatDirectorAction.CueOnly)
+            {
+                RequestAudioCue(KoreanHorrorAudioCueBus.ThreatWarningCue);
             }
 
             SetCueVisible(decision.Action == ThreatDirectorAction.CueOnly);
@@ -152,13 +166,16 @@ namespace KHorrorGame.Migration
                 return;
             }
 
-            ActivateNextActor(
+            if (ActivateNextActor(
                 GetGhostActors(),
                 GetGhostSpawnAnchors(),
                 ghostSpawnAnchor,
                 EnemyKind.Ghost,
                 TerritoryKind.EstateInterior,
-                ThreatStageProfile.ForStage(resentmentStage));
+                ThreatStageProfile.ForStage(resentmentStage)))
+            {
+                RequestAudioCue(KoreanHorrorAudioCueBus.GhostNearby);
+            }
         }
 
         private void TickActor(EnemyBrain actor, TerritoryKind targetTerritory)
@@ -220,6 +237,11 @@ namespace KHorrorGame.Migration
                 {
                     playerTarget = player.transform;
                 }
+            }
+
+            if (audioCueBus == null)
+            {
+                audioCueBus = FindObjectOfType<KoreanHorrorAudioCueBus>();
             }
         }
 
@@ -304,7 +326,7 @@ namespace KHorrorGame.Migration
             }
         }
 
-        private void ActivateNextActor(
+        private bool ActivateNextActor(
             EnemyBrain[] actors,
             Transform[] anchors,
             Transform fallbackAnchor,
@@ -321,8 +343,10 @@ namespace KHorrorGame.Migration
                 }
 
                 ActivateActor(actor, SelectAnchor(anchors, fallbackAnchor, i), enemyKind, homeTerritory, profile);
-                return;
+                return IsActorActive(actor);
             }
+
+            return false;
         }
 
         private static Transform SelectAnchor(Transform[] anchors, Transform fallbackAnchor, int actorIndex)
@@ -340,6 +364,19 @@ namespace KHorrorGame.Migration
             if (spawnCueLight != null)
             {
                 spawnCueLight.enabled = visible;
+            }
+        }
+
+        private void RequestAudioCue(string cueKey)
+        {
+            if (audioCueBus == null)
+            {
+                audioCueBus = FindObjectOfType<KoreanHorrorAudioCueBus>();
+            }
+
+            if (audioCueBus != null)
+            {
+                audioCueBus.RequestCue(cueKey);
             }
         }
 

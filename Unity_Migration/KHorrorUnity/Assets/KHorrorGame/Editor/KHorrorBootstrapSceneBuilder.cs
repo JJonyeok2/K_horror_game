@@ -50,7 +50,9 @@ namespace KHorrorGame.Editor
 
             var player = CreatePlayer();
             var controller = systems.AddComponent<GameLoopController>();
+            var audioCueBus = CreateAudioCueBus(systems.transform);
             SetObject(controller, "player", player.Controller);
+            SetObject(controller, "audioCueBus", audioCueBus);
             SetObject(controller, "bongoHubSpawn", bongoSpawn);
             SetObject(controller, "estateSpawn", estateSpawn);
             SetObject(controller, "settlementSpawn", settlementSpawn);
@@ -64,7 +66,7 @@ namespace KHorrorGame.Editor
             CreateLighting(systems.transform, player.CameraLight, player.Camera);
             CreateHud(systems.transform, controller, player.Controller, player.Interactor);
             var hubCargoHold = CreateBongoHub(bongoHub.transform, controller);
-            var estateCargoHold = CreateEstateProxy(estate.transform, controller, player.Controller);
+            var estateCargoHold = CreateEstateProxy(estate.transform, controller, player.Controller, audioCueBus);
             SetObject(controller, "hubCargoHold", hubCargoHold);
             SetObject(controller, "estateCargoHold", estateCargoHold);
             CreateSettlementProxy(settlement.transform, controller);
@@ -76,6 +78,22 @@ namespace KHorrorGame.Editor
 
             Selection.activeObject = AssetDatabase.LoadAssetAtPath<SceneAsset>(ScenePath);
             Debug.Log($"Created bootstrap Unity migration scene at {ScenePath}.");
+        }
+
+        private static KoreanHorrorAudioCueBus CreateAudioCueBus(Transform parent)
+        {
+            var audioObject = new GameObject("AudioCueBus");
+            audioObject.transform.SetParent(parent, false);
+            var source = audioObject.AddComponent<AudioSource>();
+            source.playOnAwake = false;
+            source.loop = false;
+            source.spatialBlend = 0f;
+            source.volume = 0.48f;
+            var bus = audioObject.AddComponent<KoreanHorrorAudioCueBus>();
+            SetObject(bus, "output", source);
+            EditorUtility.SetDirty(source);
+            EditorUtility.SetDirty(bus);
+            return bus;
         }
 
         private static PlayerBundle CreatePlayer()
@@ -198,7 +216,11 @@ namespace KHorrorGame.Editor
             return cargoHold;
         }
 
-        private static VanCargoHold CreateEstateProxy(Transform parent, GameLoopController gameLoop, UnityPlayerController player)
+        private static VanCargoHold CreateEstateProxy(
+            Transform parent,
+            GameLoopController gameLoop,
+            UnityPlayerController player,
+            KoreanHorrorAudioCueBus audioCueBus)
         {
             var forestRoot = CreateZoneRoot(parent, "ForestApproach");
             var gateRoot = CreateZoneRoot(parent, "FrontGateBoundary");
@@ -224,7 +246,7 @@ namespace KHorrorGame.Editor
 
             CreateDistantSilhouette(parent);
             CreateForest(forestRoot);
-            CreateOuterGate(gateRoot, gateInsideSpawn, gateOutsideSpawn);
+            CreateOuterGate(gateRoot, gateInsideSpawn, gateOutsideSpawn, audioCueBus);
             CreateCourtyard(courtyardRoot);
             CreateMainHouse(mainHouseRoot);
             CreateSarangchae(courtyardRoot);
@@ -232,8 +254,8 @@ namespace KHorrorGame.Editor
             CreateShrineLoop(shrineRoot);
 
             CreateEstateArtifacts(parent, gameLoop);
-            CreateRuntimeThreatSpawner(parent, gameLoop, player);
-            return CreateEstateReturnBongo(parent, gameLoop);
+            CreateRuntimeThreatSpawner(parent, gameLoop, player, audioCueBus);
+            return CreateEstateReturnBongo(parent, gameLoop, audioCueBus);
         }
 
         private static void CreateEstateArtifacts(Transform parent, GameLoopController gameLoop)
@@ -277,13 +299,18 @@ namespace KHorrorGame.Editor
             EditorUtility.SetDirty(door);
         }
 
-        private static void CreateRuntimeThreatSpawner(Transform parent, GameLoopController gameLoop, UnityPlayerController player)
+        private static void CreateRuntimeThreatSpawner(
+            Transform parent,
+            GameLoopController gameLoop,
+            UnityPlayerController player,
+            KoreanHorrorAudioCueBus audioCueBus)
         {
             var root = new GameObject("RuntimeThreatSpawner");
             root.transform.SetParent(parent);
             var spawner = root.AddComponent<RuntimeThreatSpawner>();
             SetObject(spawner, "gameLoop", gameLoop);
             SetObject(spawner, "playerTarget", player.transform);
+            SetObject(spawner, "audioCueBus", audioCueBus);
 
             var ghostAnchors = new[]
             {
@@ -511,7 +538,10 @@ namespace KHorrorGame.Editor
             SetObject(sequence, "motionRig", backdrop.transform);
         }
 
-        private static VanCargoHold CreateEstateReturnBongo(Transform parent, GameLoopController gameLoop)
+        private static VanCargoHold CreateEstateReturnBongo(
+            Transform parent,
+            GameLoopController gameLoop,
+            KoreanHorrorAudioCueBus audioCueBus)
         {
             var root = new GameObject("EstateReturnBongo");
             root.transform.SetParent(parent);
@@ -546,6 +576,7 @@ namespace KHorrorGame.Editor
             var cargoDeposit = cargoDepositZone.AddComponent<VanCargoDepositZone>();
             SetObject(cargoDeposit, "gameLoop", gameLoop);
             SetObject(cargoDeposit, "cargoHold", cargoHold);
+            SetObject(cargoDeposit, "audioCueBus", audioCueBus);
             CreateCube("ReturnBongoCargoPad_G", root.transform, new Vector3(0f, 0.32f, 3.38f), new Vector3(2.8f, 0.08f, 1.25f), Materials.Extraction).GetComponent<Collider>().enabled = false;
             CreateCube("ReturnBongoFrontBumper", root.transform, new Vector3(0f, 0.55f, -4.2f), new Vector3(3.7f, 0.32f, 0.18f), Materials.RustedMetal);
             CreateCube("ReturnBongoRearBumper", root.transform, new Vector3(0f, 0.55f, 4.18f), new Vector3(3.7f, 0.32f, 0.18f), Materials.RustedMetal);
@@ -731,13 +762,18 @@ namespace KHorrorGame.Editor
             }
         }
 
-        private static void CreateOuterGate(Transform parent, Transform gateInsideSpawn, Transform gateOutsideSpawn)
+        private static void CreateOuterGate(
+            Transform parent,
+            Transform gateInsideSpawn,
+            Transform gateOutsideSpawn,
+            KoreanHorrorAudioCueBus audioCueBus)
         {
             var gatePortal = new GameObject("OuterGateTraversalPortal");
             gatePortal.transform.SetParent(parent);
             var portal = gatePortal.AddComponent<EstateGatePortal>();
             SetObject(portal, "insideSpawn", gateInsideSpawn);
             SetObject(portal, "outsideSpawn", gateOutsideSpawn);
+            SetObject(portal, "audioCueBus", audioCueBus);
             SetFloat(portal, "gatePlaneZ", 54f);
             SetString(portal, "enterLabel", "대문 안으로 들어가기 [E]");
             SetString(portal, "exitLabel", "대문 밖으로 나가기 [E]");
