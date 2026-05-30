@@ -66,6 +66,8 @@ namespace KHorrorGame.Migration.Tests
             StringAssert.Contains("Lurk -> Misdirect -> BlockPath", report);
             StringAssert.Contains("estate entry -> Retreat -> Despawn", report);
             StringAssert.Contains("dokkaebi cannot cross into estate interior", report);
+            StringAssert.Contains("terminal states -> depart -> traveling -> return -> settle", report);
+            StringAssert.Contains("travel fade -> generated bongo engine hum -> motion shake", report);
         }
 
         private static Type FindLoadedType(string fullName)

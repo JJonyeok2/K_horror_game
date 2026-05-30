@@ -68,7 +68,7 @@ namespace KHorrorGame.Editor
             SetObject(controller, "hubCargoHold", hubCargoHold);
             SetObject(controller, "estateCargoHold", estateCargoHold);
             CreateSettlementProxy(settlement.transform, controller);
-            CreateTravelProxy(travel.transform);
+            CreateTravelProxy(travel.transform, controller);
 
             EditorSceneManager.SaveScene(scene, ScenePath);
             AssetDatabase.SaveAssets();
@@ -474,9 +474,40 @@ namespace KHorrorGame.Editor
             CreatePointLight("SettlementOfficeDimFill", parent, new Vector3(1.2f, 2.8f, -36.5f), new Color(0.46f, 0.54f, 0.48f), 1.2f, 10f);
         }
 
-        private static void CreateTravelProxy(Transform parent)
+        private static void CreateTravelProxy(Transform parent, GameLoopController gameLoop)
         {
-            CreateCube("TravelMotionBackdrop", parent, new Vector3(0f, 1.2f, 8f), new Vector3(8f, 2.5f, 0.2f), Materials.Night);
+            var sequenceObject = new GameObject("BongoTravelSequence");
+            sequenceObject.transform.SetParent(parent, false);
+            var audio = sequenceObject.AddComponent<AudioSource>();
+            var sequence = sequenceObject.AddComponent<BongoTravelSequenceController>();
+
+            var fadeCanvasObject = new GameObject("BongoTravelFadeCanvas");
+            fadeCanvasObject.transform.SetParent(sequenceObject.transform, false);
+            var canvas = fadeCanvasObject.AddComponent<Canvas>();
+            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            canvas.sortingOrder = 90;
+            fadeCanvasObject.AddComponent<UnityEngine.UI.CanvasScaler>();
+            fadeCanvasObject.AddComponent<UnityEngine.UI.GraphicRaycaster>();
+            var fadeGroup = fadeCanvasObject.AddComponent<CanvasGroup>();
+            fadeGroup.alpha = 0f;
+            fadeGroup.blocksRaycasts = false;
+            var fadeImage = CreateUiImage(
+                "BongoTravelFadeImage",
+                fadeCanvasObject.transform,
+                Vector2.zero,
+                new Vector2(3200f, 1800f),
+                new Color(0f, 0f, 0f, 0.82f));
+            fadeImage.rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
+            fadeImage.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+            fadeImage.raycastTarget = false;
+
+            var backdrop = CreateCube("TravelMotionBackdrop", sequenceObject.transform, new Vector3(0f, 1.2f, 8f), new Vector3(8f, 2.5f, 0.2f), Materials.Night);
+            backdrop.GetComponent<Collider>().enabled = false;
+
+            SetObject(sequence, "gameLoop", gameLoop);
+            SetObject(sequence, "travelAudio", audio);
+            SetObject(sequence, "fadeGroup", fadeGroup);
+            SetObject(sequence, "motionRig", backdrop.transform);
         }
 
         private static VanCargoHold CreateEstateReturnBongo(Transform parent, GameLoopController gameLoop)

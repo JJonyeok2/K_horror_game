@@ -93,10 +93,11 @@
   - Ensure dokkaebi does not enter estate interior past the gate.
   - _Requirements: 3.3, 3.4, 8.3, 9.2_
 
-- [ ] 7. Improve the bongo tablet and travel UX
+- [x] 7. Improve the bongo tablet and travel UX
   - Replace oversized world text with terminal interaction prompt plus a tablet or screen-space panel.
   - Show valid actions for depart, return, settlement, and unavailable states.
   - Add travel audio and optional fade or motion sequence before player placement.
+  - Verified with Task 7 RED/GREEN tests and the full EditMode suite (`120 total / 120 passed / 0 failed`).
   - _Requirements: 1.1, 1.2, 6.1, 6.2, 6.4, 6.5, 8.4_
 
 - [ ] 8. Complete return, cargo, and settlement flow polish
