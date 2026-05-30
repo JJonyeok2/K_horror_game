@@ -107,7 +107,7 @@
   - Add success and failure feedback for cargo loading, repickup, and settlement.
   - _Requirements: 1.3, 1.4, 1.5, 5.7, 6.3_
 
-- [ ] 9. Refine interaction prompt presentation
+- [x] 9. Refine interaction prompt presentation
   - Split `HudPresenter` responsibilities so center-bottom prompts are independent from status text.
   - Show pickup key and item name in subdued text.
   - Show invalid reasons for full hands or invalid actions.

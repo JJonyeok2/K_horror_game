@@ -12,8 +12,10 @@ namespace KHorrorGame.Migration
         [SerializeField] private LayerMask interactionMask = ~0;
 
         private IInteractable currentTarget;
+        private bool currentTargetCanInteract;
 
         public string CurrentLabel { get; private set; } = string.Empty;
+        public string CurrentInvalidReason { get; private set; } = string.Empty;
 
         private void Awake()
         {
@@ -48,7 +50,7 @@ namespace KHorrorGame.Migration
         {
             RefreshTarget();
 
-            if (currentTarget != null && WasInteractPressed())
+            if (currentTarget != null && currentTargetCanInteract && WasInteractPressed())
             {
                 currentTarget.Interact(actor);
             }
@@ -57,7 +59,9 @@ namespace KHorrorGame.Migration
         private void RefreshTarget()
         {
             currentTarget = null;
+            currentTargetCanInteract = false;
             CurrentLabel = string.Empty;
+            CurrentInvalidReason = string.Empty;
 
             if (sourceCamera == null)
             {
@@ -72,13 +76,18 @@ namespace KHorrorGame.Migration
             }
 
             var target = ResolveInteractable(hit.collider);
-            if (target == null || !target.CanInteract(actor))
+            if (target == null)
             {
                 return;
             }
 
             currentTarget = target;
             CurrentLabel = target.InteractionLabel;
+            currentTargetCanInteract = target.CanInteract(actor);
+            if (!currentTargetCanInteract)
+            {
+                CurrentInvalidReason = ResolveInvalidReason(target);
+            }
         }
 
         private static IInteractable ResolveInteractable(Collider collider)
@@ -99,6 +108,17 @@ namespace KHorrorGame.Migration
             }
 
             return null;
+        }
+
+        private string ResolveInvalidReason(IInteractable target)
+        {
+            var invalidReason = target as IInteractionFailureReason;
+            if (invalidReason == null)
+            {
+                return string.Empty;
+            }
+
+            return invalidReason.InvalidInteractionReason(actor) ?? string.Empty;
         }
 
         private bool WasInteractPressed()

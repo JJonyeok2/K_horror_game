@@ -8,4 +8,9 @@ namespace KHorrorGame.Migration
 
         void Interact(UnityPlayerController actor);
     }
+
+    public interface IInteractionFailureReason
+    {
+        string InvalidInteractionReason(UnityPlayerController actor);
+    }
 }

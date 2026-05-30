@@ -1270,7 +1270,11 @@ namespace KHorrorGame.Editor
             canvasObject.AddComponent<UnityEngine.UI.GraphicRaycaster>();
 
             var statusText = CreateText("StatusText", canvasObject.transform, new Vector2(18f, -18f), TextAnchor.UpperLeft, 18, new Vector2(360f, 150f));
-            var promptText = CreateText("CenterPromptText", canvasObject.transform, new Vector2(0f, 72f), TextAnchor.LowerCenter, 22, new Vector2(680f, 64f));
+            var promptText = CreateText("CenterPromptText", canvasObject.transform, new Vector2(0f, 88f), TextAnchor.LowerCenter, 22, new Vector2(680f, 34f));
+            var promptSubjectText = CreateText("CenterPromptSubjectText", canvasObject.transform, new Vector2(0f, 60f), TextAnchor.LowerCenter, 18, new Vector2(680f, 28f));
+            promptSubjectText.color = new Color(0.78f, 0.95f, 0.83f, 0.58f);
+            var feedbackText = CreateText("FeedbackText", canvasObject.transform, new Vector2(0f, 116f), TextAnchor.LowerCenter, 18, new Vector2(720f, 30f));
+            feedbackText.color = new Color(1f, 0.82f, 0.52f, 0.92f);
 
             var staminaBack = CreateUiImage("StaminaBack", canvasObject.transform, new Vector2(0f, 30f), new Vector2(240f, 10f), new Color(0.05f, 0.06f, 0.05f, 0.9f));
             var staminaFill = CreateUiImage("StaminaFill", staminaBack.transform, Vector2.zero, new Vector2(240f, 10f), new Color(0.45f, 0.86f, 0.38f, 0.95f));
@@ -1283,6 +1287,8 @@ namespace KHorrorGame.Editor
             SetObject(presenter, "interactor", interactor);
             SetObject(presenter, "statusText", statusText);
             SetObject(presenter, "centerPromptText", promptText);
+            SetObject(presenter, "centerPromptSubjectText", promptSubjectText);
+            SetObject(presenter, "feedbackText", feedbackText);
             SetObject(presenter, "staminaFill", staminaFill);
         }
 
