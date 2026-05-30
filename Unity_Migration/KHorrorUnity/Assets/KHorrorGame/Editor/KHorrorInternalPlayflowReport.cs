@@ -101,6 +101,7 @@ namespace KHorrorGame.EditorTools
             builder.AppendLine("- Core loop smoke: `BongoHub -> JonggaEstate -> cargo load -> re-pickup -> return -> settlement`");
             builder.AppendLine("- Threat loop smoke: `shrine theft -> grace -> ghost actor -> audio occlusion -> atmosphere cue`");
             builder.AppendLine("- Cargo drop proof: `single-owner G input`, `inside van -> cargo hold`, `outside van -> world pickup`, `lowered-floor drop snap`");
+            builder.AppendLine("- Ghost AI proof: `Dormant -> Haunt -> Investigate -> Stalk -> Chase`, `front gate exit -> ReturnHome -> Despawn`, `ghost cannot cross into forest approach`");
             builder.AppendLine("- Screenshot proof: bongo terminal, cargo hold, held cargo, shrine threat cue.");
             return builder.ToString();
         }

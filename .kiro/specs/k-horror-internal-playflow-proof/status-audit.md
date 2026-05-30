@@ -24,9 +24,13 @@ Marked complete:
   - Evidence: `UnityPlayerController.DropOrDepositCurrentArtifact` routes the same drop input to van loading only when the player is inside a `VanCargoDepositZone`; otherwise it creates a world pickup and snaps it above the walkable floor. Held views still use one-hand left/right and two-hand centered obstruction layouts.
   - Tests: `VanCargoDepositZoneTests.CargoDropInputInsideVanZoneDepositsInsteadOfDroppingLooseArtifact`, `VanCargoDepositZoneTests.CargoDropInputOutsideVanZoneSpawnsPickupAboveGround`, `VanCargoDepositZoneTests.LargeHeldArtifactObstructsLowerCenterView`, `VanCargoDepositZoneTests.SmallHeldArtifactsOccupyBothSidesOfFirstPersonView`, `VanCargoHoldTests.StoredCargoCanBePickedBackUpFromHold`, `VanCargoHoldTests.SettlementConsumesOnlyCargoLoadedInHold`
 
+- `5. Implement ghost MVP behavior`
+  - Evidence: `GhostEnemy` adds the dedicated ghost state machine (`Dormant`, `Haunt`, `Investigate`, `Stalk`, `Chase`, `ReturnHome`, `Despawn`) on top of the reusable `EnemyController`/`EnemyBrain` movement body. `RuntimeThreatSpawner` ensures pooled ghost actors receive the `GhostEnemy` controller at runtime, configures the player target on activation, owns ticking, and keeps ghosts from pursuing into the forest approach.
+  - Tests: `GhostEnemyTests.GhostStartsDormantThenHauntsFarInteriorTarget`, `GhostEnemyTests.GhostUsesInvestigateStalkAndChaseBandsInsideEstate`, `GhostEnemyTests.GhostReturnsHomeAndDespawnsWhenPlayerLeavesThroughFrontGate`, `GhostEnemyTests.GhostNeverMovesTowardForestTargetPastGateBoundary`, `GhostEnemyTests.GhostUsesBaseControllerTrackingAndTerritoryState`, `EstateContentIntegrityTests.EstateHasRuntimeThreatSpawnerWithTerritoryActors`, `EstateContentIntegrityTests.RuntimeThreatSpawnerConfiguresGhostControllerWhenActivatingActor`
+
 Left incomplete:
 
-- `5`, `6`: `EnemyBrain` exists, but the requested dedicated `GhostEnemy` and `DokkaebiEnemy` state sets are not fully represented.
+- `6`: `EnemyBrain` exists, but the requested dedicated `DokkaebiEnemy` state set is not fully represented.
 - `7`, `9`, `11`, `12`, `13`, `15`, `16`, `17`, `18`, `20`, `21`, `22`: partial coverage exists, but the full task wording is not yet proven by current tests.
 
 ## k-horror-physical-cargo-loop

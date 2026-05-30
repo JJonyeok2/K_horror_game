@@ -382,6 +382,9 @@ namespace KHorrorGame.Editor
             var brain = actor.AddComponent<EnemyBrain>();
             brain.Configure(EnemyKind.Ghost, ThreatStageProfile.ForStage(4), playerTarget, TerritoryKind.EstateInterior, position);
             brain.SetAutomaticTick(false);
+            var ghost = actor.AddComponent<GhostEnemy>();
+            ghost.Configure(brain, playerTarget, TerritoryKind.EstateInterior, position);
+            ghost.SetAutomaticTick(false);
 
             CreateLocalPrimitive(PrimitiveType.Cylinder, "RuntimeGhostActor_Body", actor.transform, new Vector3(0f, 0.68f, 0f), new Vector3(0.33f, 0.68f, 0.33f), Materials.GhostBody);
             CreateLocalPrimitive(PrimitiveType.Sphere, "RuntimeGhostActor_Head", actor.transform, new Vector3(0f, 1.5f, 0f), new Vector3(0.48f, 0.52f, 0.48f), Materials.GhostBody);

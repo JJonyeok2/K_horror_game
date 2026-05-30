@@ -177,6 +177,7 @@ namespace KHorrorGame.Migration.Tests
 
             var spawner = UnityEngine.Object.FindObjectOfType<RuntimeThreatSpawner>(true);
             Assert.IsNotNull(spawner, "RuntimeThreatSpawner scene object should exist.");
+            InvokeAwake(spawner);
             Assert.IsNull(
                 UnityEngine.Object.FindObjectOfType<ThreatProxySpawner>(true),
                 "Static threat proxy spawner should be replaced by runtime AI actors.");
@@ -204,6 +205,9 @@ namespace KHorrorGame.Migration.Tests
             {
                 Assert.IsFalse(ghost.gameObject.activeSelf, ghost.name + " should start hidden until the director requests it.");
                 Assert.AreEqual(EnemyKind.Ghost, ghost.EnemyKind);
+                Assert.IsNotNull(
+                    ghost.GetComponent<GhostEnemy>(),
+                    ghost.name + " should carry the GhostEnemy state controller, not only the generic EnemyBrain.");
             }
 
             foreach (var forestActor in dokkaebi)
@@ -392,6 +396,46 @@ namespace KHorrorGame.Migration.Tests
                 UnityEngine.Object.DestroyImmediate(ghostAnchor);
                 UnityEngine.Object.DestroyImmediate(dokkaebiAnchor);
                 UnityEngine.Object.DestroyImmediate(cue.gameObject);
+            }
+        }
+
+        [Test]
+        public void RuntimeThreatSpawnerConfiguresGhostControllerWhenActivatingActor()
+        {
+            var root = new GameObject("GhostControllerSpawnerFixture");
+            var player = new GameObject("PlayerFixture");
+            var ghost = new GameObject("GhostActorFixture");
+            var ghostAnchor = new GameObject("GhostAnchorFixture");
+            var spawner = root.AddComponent<RuntimeThreatSpawner>();
+
+            try
+            {
+                player.transform.position = new Vector3(1.2f, 0f, 88f);
+                var ghostBrain = ghost.AddComponent<EnemyBrain>();
+                var ghostController = ghost.AddComponent<GhostEnemy>();
+                ghost.SetActive(false);
+                ghostAnchor.transform.position = new Vector3(0f, 0f, 88f);
+
+                SetObject(spawner, "playerTarget", player.transform);
+                SetObjectArray(spawner, "ghostActors", ghostBrain);
+                SetObjectArray(spawner, "ghostSpawnAnchors", ghostAnchor.transform);
+
+                spawner.EvaluateThreats(true, 5, GameMapId.JonggaEstate, TerritoryKind.EstateInterior);
+
+                Assert.IsTrue(ghost.activeSelf, "Stage-five estate threat should activate the ghost actor.");
+                Assert.IsFalse(ghostController.AutomaticTickEnabled, "RuntimeThreatSpawner should own ticking for pooled ghost actors.");
+
+                ghostController.ManualTick(0.1f, TerritoryKind.EstateInterior);
+
+                Assert.AreEqual(GhostEnemyState.Chase, ghostController.State, "Activation should configure GhostEnemy with the current player target.");
+                Assert.AreEqual(EnemyControllerState.Tracking, ghostController.ControllerState);
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(root);
+                UnityEngine.Object.DestroyImmediate(player);
+                UnityEngine.Object.DestroyImmediate(ghost);
+                UnityEngine.Object.DestroyImmediate(ghostAnchor);
             }
         }
 

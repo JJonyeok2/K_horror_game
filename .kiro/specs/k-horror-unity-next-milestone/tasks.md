@@ -79,7 +79,7 @@
   - Add tests for no spawn during grace, ghost spawn inside estate, and dokkaebi spawn in forest.
   - _Requirements: 3.6, 8.1, 8.5, 9.1, 9.2_
 
-- [ ] 5. Implement ghost MVP behavior
+- [x] 5. Implement ghost MVP behavior
   - Add `EnemyController` base state machine with target tracking and territory validation.
   - Add `GhostEnemy` states: `Dormant`, `Haunt`, `Investigate`, `Stalk`, `Chase`, `ReturnHome`, `Despawn`.
   - Ensure ghosts stop, return, or despawn when the player leaves through the front gate.

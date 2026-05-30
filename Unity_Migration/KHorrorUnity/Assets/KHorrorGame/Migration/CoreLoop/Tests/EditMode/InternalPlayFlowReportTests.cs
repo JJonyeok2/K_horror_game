@@ -60,6 +60,9 @@ namespace KHorrorGame.Migration.Tests
             StringAssert.Contains("inside van -> cargo hold", report);
             StringAssert.Contains("outside van -> world pickup", report);
             StringAssert.Contains("lowered-floor drop snap", report);
+            StringAssert.Contains("Dormant -> Haunt -> Investigate -> Stalk -> Chase", report);
+            StringAssert.Contains("front gate exit -> ReturnHome -> Despawn", report);
+            StringAssert.Contains("ghost cannot cross into forest approach", report);
         }
 
         private static Type FindLoadedType(string fullName)

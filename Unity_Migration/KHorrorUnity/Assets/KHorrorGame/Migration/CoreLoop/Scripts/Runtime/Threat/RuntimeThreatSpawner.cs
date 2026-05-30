@@ -24,6 +24,7 @@ namespace KHorrorGame.Migration
         private void Awake()
         {
             EnsureReferences();
+            EnsureGhostControllers(GetGhostActors());
             HideActors(GetGhostActors());
             HideActors(GetDokkaebiActors());
             SetCueVisible(false);
@@ -128,10 +129,16 @@ namespace KHorrorGame.Migration
                 return;
             }
 
+            var controller = EnsureControllerFor(actor, enemyKind);
             actor.transform.SetPositionAndRotation(spawnAnchor.position, spawnAnchor.rotation);
             actor.gameObject.SetActive(true);
-            actor.SetAutomaticTick(false);
             actor.Configure(enemyKind, profile, playerTarget, homeTerritory, spawnAnchor.position);
+            actor.SetAutomaticTick(false);
+            if (controller != null)
+            {
+                controller.Configure(actor, playerTarget, homeTerritory, spawnAnchor.position);
+                controller.SetAutomaticTick(false);
+            }
         }
 
         private void EnsureInteriorGhostAtMaximumThreat(bool canSpawnThreats, int resentmentStage, GameMapId currentMap)
@@ -157,6 +164,13 @@ namespace KHorrorGame.Migration
         {
             if (!IsActorActive(actor))
             {
+                return;
+            }
+
+            var controller = actor.GetComponent<EnemyController>();
+            if (controller != null)
+            {
+                controller.ManualTick(Time.deltaTime, targetTerritory);
                 return;
             }
 
@@ -273,6 +287,11 @@ namespace KHorrorGame.Migration
             {
                 actor.gameObject.SetActive(false);
                 actor.SetAutomaticTick(false);
+                var controller = actor.GetComponent<EnemyController>();
+                if (controller != null)
+                {
+                    controller.SetAutomaticTick(false);
+                }
             }
         }
 
@@ -321,6 +340,35 @@ namespace KHorrorGame.Migration
             {
                 spawnCueLight.enabled = visible;
             }
+        }
+
+        private static void EnsureGhostControllers(EnemyBrain[] actors)
+        {
+            foreach (var actor in actors)
+            {
+                EnsureControllerFor(actor, EnemyKind.Ghost);
+            }
+        }
+
+        private static EnemyController EnsureControllerFor(EnemyBrain actor, EnemyKind enemyKind)
+        {
+            if (actor == null)
+            {
+                return null;
+            }
+
+            var controller = actor.GetComponent<EnemyController>();
+            if (controller == null && enemyKind == EnemyKind.Ghost)
+            {
+                controller = actor.gameObject.AddComponent<GhostEnemy>();
+            }
+
+            if (controller != null)
+            {
+                controller.SetAutomaticTick(false);
+            }
+
+            return controller;
         }
     }
 }
