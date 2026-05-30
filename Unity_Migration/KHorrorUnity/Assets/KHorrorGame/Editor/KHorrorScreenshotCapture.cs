@@ -165,6 +165,67 @@ namespace KHorrorGame.EditorTools
             Debug.Log("Saved paper door proof screenshot to: " + outputPath);
         }
 
+        [MenuItem("Tools/K Horror Migration/Capture Threat Atmosphere Proof")]
+        public static void CaptureThreatAtmosphereProof()
+        {
+            EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+
+            var cameraObject = new GameObject("ScreenshotCamera");
+            cameraObject.transform.position = new Vector3(0f, 1.35f, -6.8f);
+            cameraObject.transform.rotation = Quaternion.Euler(7f, 0f, 0f);
+            var camera = cameraObject.AddComponent<Camera>();
+            camera.clearFlags = CameraClearFlags.SolidColor;
+            camera.backgroundColor = new Color(0.025f, 0.018f, 0.017f, 1f);
+            camera.fieldOfView = 48f;
+            camera.nearClipPlane = 0.01f;
+            camera.farClipPlane = 34f;
+
+            CreateBackdrop();
+            CreateLight();
+
+            var lanternLeft = CreateLantern("ThreatProof_LanternLeft", new Vector3(-1.45f, 1.4f, -0.15f));
+            var lanternRight = CreateLantern("ThreatProof_LanternRight", new Vector3(1.45f, 1.4f, -0.15f));
+            var shrinePanel = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            shrinePanel.name = "ThreatProof_ShrineBackPanel";
+            shrinePanel.transform.position = new Vector3(0f, 0.65f, 0.35f);
+            shrinePanel.transform.localScale = new Vector3(2.4f, 1.85f, 0.12f);
+            shrinePanel.GetComponent<Renderer>().sharedMaterial = CreateLitMaterial(new Color(0.16f, 0.055f, 0.045f, 1f));
+
+            var enemy = GameObject.CreatePrimitive(PrimitiveType.Capsule);
+            enemy.name = "ThreatProof_OccludedGhost";
+            enemy.transform.position = new Vector3(-2.1f, 0.42f, 0.2f);
+            enemy.transform.localScale = new Vector3(0.55f, 0.85f, 0.55f);
+            enemy.GetComponent<Renderer>().sharedMaterial = CreateLitMaterial(new Color(0.42f, 0.96f, 0.76f, 1f));
+
+            var wall = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            wall.name = "ThreatProof_AudioOcclusionWall";
+            wall.transform.position = new Vector3(-0.65f, 0.72f, 0.05f);
+            wall.transform.localScale = new Vector3(0.18f, 1.55f, 1.8f);
+            wall.GetComponent<Renderer>().sharedMaterial = CreateLitMaterial(new Color(0.24f, 0.20f, 0.16f, 1f));
+
+            var listener = new GameObject("ThreatProof_PlayerListener");
+            listener.transform.position = new Vector3(2f, 0.8f, 0.2f);
+            var brain = enemy.AddComponent<EnemyBrain>();
+            brain.Configure(EnemyKind.Ghost, ThreatStageProfile.ForStage(5), listener.transform, TerritoryKind.EstateInterior, enemy.transform.position);
+            var audioSource = enemy.AddComponent<AudioSource>();
+            var filter = enemy.AddComponent<AudioLowPassFilter>();
+            var occlusion = enemy.AddComponent<ThreatAudioOcclusion>();
+            occlusion.Configure(brain, listener.transform, audioSource, filter);
+            Physics.SyncTransforms();
+            occlusion.ManualRefresh();
+
+            var cueObject = new GameObject("ThreatProof_AtmosphereCue");
+            var cue = cueObject.AddComponent<ThreatAtmosphereCue>();
+            cue.Configure(null, new[] { lanternLeft, lanternRight });
+            cue.TriggerHighThreatCue("Shrine proof cue");
+            cue.ManualTick(0.2f, ThreatStageProfile.MaxStage, GameMapId.JonggaEstate);
+
+            var outputPath = Path.Combine(Directory.GetCurrentDirectory(), ScreenshotRoot, "threat-atmosphere-proof.png");
+            Directory.CreateDirectory(Path.GetDirectoryName(outputPath));
+            RenderCameraToPng(camera, outputPath, 1280, 720);
+            Debug.Log("Saved threat atmosphere proof screenshot to: " + outputPath);
+        }
+
         private static void TintHeldArtifact()
         {
             var held = GameObject.Find("Held_Ledger");
@@ -182,6 +243,24 @@ namespace KHorrorGame.EditorTools
             var material = new Material(Shader.Find("Universal Render Pipeline/Lit"));
             material.color = new Color(0.46f, 0.34f, 0.16f, 1f);
             renderer.sharedMaterial = material;
+        }
+
+        private static Light CreateLantern(string name, Vector3 position)
+        {
+            var body = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            body.name = name + "_Body";
+            body.transform.position = position;
+            body.transform.localScale = new Vector3(0.18f, 0.42f, 0.18f);
+            body.GetComponent<Renderer>().sharedMaterial = CreateLitMaterial(new Color(0.62f, 0.18f, 0.08f, 1f));
+
+            var lightObject = new GameObject(name);
+            lightObject.transform.position = position + Vector3.up * 0.25f;
+            var light = lightObject.AddComponent<Light>();
+            light.type = LightType.Point;
+            light.color = new Color(1f, 0.22f, 0.08f, 1f);
+            light.intensity = 1.35f;
+            light.range = 5.5f;
+            return light;
         }
 
         private static void CreateBackdrop()

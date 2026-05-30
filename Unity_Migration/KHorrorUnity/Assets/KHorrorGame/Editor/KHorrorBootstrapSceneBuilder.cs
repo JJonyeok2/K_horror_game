@@ -311,6 +311,26 @@ namespace KHorrorGame.Editor
             var cue = CreatePointLight("ThreatSpawnCueLight", root.transform, new Vector3(-4.9f, 2.3f, 136.2f), new Color(1f, 0.2f, 0.1f), 2.4f, 11f);
             cue.enabled = false;
 
+            foreach (var ghost in ghosts)
+            {
+                AttachThreatAudio(ghost, player.transform);
+            }
+
+            foreach (var forestActor in dokkaebi)
+            {
+                AttachThreatAudio(forestActor, player.transform);
+            }
+
+            var atmosphere = root.AddComponent<ThreatAtmosphereCue>();
+            SetObject(atmosphere, "gameLoop", gameLoop);
+            SetObjectArray(
+                atmosphere,
+                "threatLights",
+                cue,
+                FindSceneLight("DeepShrineLanternGlow"),
+                FindSceneLight("RearRouteLanternPool_Second"),
+                FindSceneLight("RearRouteLanternPool_Third"));
+
             SetObject(spawner, "ghostActor", ghosts[0]);
             SetObject(spawner, "dokkaebiActor", dokkaebi[0]);
             SetObject(spawner, "ghostSpawnAnchor", ghostAnchors[0]);
@@ -320,6 +340,33 @@ namespace KHorrorGame.Editor
             SetObjectArray(spawner, "ghostSpawnAnchors", ghostAnchors);
             SetObjectArray(spawner, "dokkaebiSpawnAnchors", dokkaebiAnchors);
             SetObject(spawner, "spawnCueLight", cue);
+        }
+
+        private static void AttachThreatAudio(EnemyBrain brain, Transform listener)
+        {
+            var actor = brain.gameObject;
+            var source = actor.AddComponent<AudioSource>();
+            source.spatialBlend = 1f;
+            source.playOnAwake = false;
+            source.loop = true;
+            source.volume = 0.15f;
+            source.minDistance = 1.5f;
+            source.maxDistance = 18f;
+
+            var filter = actor.AddComponent<AudioLowPassFilter>();
+            filter.cutoffFrequency = 22000f;
+
+            var occlusion = actor.AddComponent<ThreatAudioOcclusion>();
+            occlusion.Configure(brain, listener, source, filter);
+            EditorUtility.SetDirty(source);
+            EditorUtility.SetDirty(filter);
+            EditorUtility.SetDirty(occlusion);
+        }
+
+        private static Light FindSceneLight(string name)
+        {
+            var found = GameObject.Find(name);
+            return found != null ? found.GetComponent<Light>() : null;
         }
 
         private static EnemyBrain CreateGhostActor(
