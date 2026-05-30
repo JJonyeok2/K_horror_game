@@ -41,7 +41,10 @@ namespace KHorrorGame.Migration.Tests
             foreach (var waypoint in waypoints)
             {
                 Assert.IsTrue(TryFindWalkableGround(waypoint.position, out var ground), waypoint.name + " has no walkable ground.");
-                Assert.LessOrEqual(Mathf.Abs(ground.point.y - waypoint.position.y), 0.28f, waypoint.name + " is not aligned with ground.");
+                Assert.LessOrEqual(
+                    Mathf.Abs(ground.point.y - waypoint.position.y),
+                    0.28f,
+                    waypoint.name + " is not aligned with ground: " + ground.collider.name + " at y=" + ground.point.y.ToString("0.00"));
                 Assert.IsFalse(CapsuleHitsSidePathBlocker(waypoint.position), waypoint.name + " is blocked by the risky side path geometry.");
             }
         }
