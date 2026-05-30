@@ -145,7 +145,7 @@
   - Preserve shrine threat grace before immediate aggressive spawning.
   - _Requirements: 3.6, 4.5, 4.6_
 
-- [ ] 15. Define side path risk
+- [x] 15. Define side path risk
   - Keep front gate as mandatory main entry.
   - Add optional side paths that are riskier, narrower, and more exposed to dokkaebi or sound events.
   - Prevent side path collision gaps from bypassing the intended gate boundary.
