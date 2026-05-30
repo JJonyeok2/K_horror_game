@@ -226,6 +226,177 @@ namespace KHorrorGame.EditorTools
             Debug.Log("Saved threat atmosphere proof screenshot to: " + outputPath);
         }
 
+        [MenuItem("Tools/K Horror Migration/Capture Internal Playflow Proof")]
+        public static void CaptureInternalPlayFlowProof()
+        {
+            var outputPath = Path.Combine(Directory.GetCurrentDirectory(), ScreenshotRoot, "internal-playflow-proof.png");
+            if (!Application.isBatchMode && !EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
+            {
+                return;
+            }
+
+            CaptureInternalPlayFlowProofToPath(outputPath, !Application.isBatchMode);
+        }
+
+        public static void CaptureInternalPlayFlowProofForTest(string outputPath)
+        {
+            CaptureInternalPlayFlowProofToPath(outputPath, !Application.isBatchMode);
+        }
+
+        private static void CaptureInternalPlayFlowProofToPath(string outputPath, bool restorePreviousScene)
+        {
+            if (string.IsNullOrWhiteSpace(outputPath))
+            {
+                throw new ArgumentException("Screenshot output path is required.", nameof(outputPath));
+            }
+
+            var previousScenePath = restorePreviousScene ? EditorSceneManager.GetActiveScene().path : string.Empty;
+
+            try
+            {
+                EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+
+            var cameraObject = new GameObject("InternalPlayflowProofCamera");
+            cameraObject.transform.position = new Vector3(0f, 2.05f, -8.4f);
+            cameraObject.transform.rotation = Quaternion.Euler(13f, 0f, 0f);
+            var camera = cameraObject.AddComponent<Camera>();
+            camera.clearFlags = CameraClearFlags.SolidColor;
+            camera.backgroundColor = new Color(0.017f, 0.018f, 0.016f, 1f);
+            camera.fieldOfView = 43f;
+            camera.nearClipPlane = 0.01f;
+            camera.farClipPlane = 42f;
+
+            var keyLight = new GameObject("InternalPlayflowProof_KeyLight").AddComponent<Light>();
+            keyLight.type = LightType.Directional;
+            keyLight.transform.rotation = Quaternion.Euler(38f, -24f, 0f);
+            keyLight.intensity = 1.08f;
+            keyLight.color = new Color(0.86f, 0.91f, 0.78f, 1f);
+
+            var floor = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            floor.name = "InternalPlayflowProof_Floor";
+            floor.transform.position = new Vector3(0f, -0.62f, 0.6f);
+            floor.transform.localScale = new Vector3(8.8f, 0.08f, 5.2f);
+            floor.GetComponent<Renderer>().sharedMaterial = CreateLitMaterial(new Color(0.055f, 0.065f, 0.058f, 1f));
+
+            var rearWall = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            rearWall.name = "InternalPlayflowProof_RearWall";
+            rearWall.transform.position = new Vector3(0f, 1.1f, 2.55f);
+            rearWall.transform.localScale = new Vector3(8.8f, 3.2f, 0.1f);
+            rearWall.GetComponent<Renderer>().sharedMaterial = CreateLitMaterial(new Color(0.035f, 0.043f, 0.037f, 1f));
+
+            CreateProofBongoTerminal(new Vector3(-3.05f, 0.35f, 0.5f));
+            CreateProofCargoLoop(new Vector3(0f, 0.24f, 0.5f));
+            CreateProofShrineThreat(new Vector3(3.05f, 0.22f, 0.46f));
+
+            Directory.CreateDirectory(Path.GetDirectoryName(outputPath));
+            RenderCameraToPng(camera, outputPath, 1280, 720);
+                Debug.Log("Saved internal playflow proof screenshot to: " + outputPath);
+            }
+            finally
+            {
+                if (restorePreviousScene && !string.IsNullOrEmpty(previousScenePath))
+                {
+                    EditorSceneManager.OpenScene(previousScenePath);
+                }
+            }
+        }
+
+        private static void CreateProofBongoTerminal(Vector3 origin)
+        {
+            CreateProofLabel("BONGO HUB", origin + new Vector3(0f, 1.45f, -0.08f), 0.18f, new Color(0.78f, 0.96f, 0.72f, 1f));
+
+            var vanBody = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            vanBody.name = "InternalPlayflowProof_BongoBody";
+            vanBody.transform.position = origin + new Vector3(0f, 0.22f, 0.18f);
+            vanBody.transform.localScale = new Vector3(1.9f, 1.1f, 1.25f);
+            vanBody.GetComponent<Renderer>().sharedMaterial = CreateLitMaterial(new Color(0.08f, 0.16f, 0.105f, 1f));
+
+            var screen = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            screen.name = "InternalPlayflowProof_TerminalScreen";
+            screen.transform.position = origin + new Vector3(0f, 0.74f, -0.48f);
+            screen.transform.localScale = new Vector3(1.18f, 0.58f, 0.04f);
+            var material = CreateLitMaterial(new Color(0.02f, 0.20f, 0.14f, 1f));
+            material.SetColor("_EmissionColor", new Color(0.02f, 0.42f, 0.22f, 1f));
+            material.EnableKeyword("_EMISSION");
+            screen.GetComponent<Renderer>().sharedMaterial = material;
+
+            CreateProofLabel("CARGO 230\nQUOTA 0/800\n[E] SETTLE", origin + new Vector3(-0.47f, 0.9f, -0.54f), 0.115f, new Color(0.64f, 1f, 0.72f, 1f));
+        }
+
+        private static void CreateProofCargoLoop(Vector3 origin)
+        {
+            CreateProofLabel("LOAD / RE-PICKUP", origin + new Vector3(0f, 1.45f, -0.08f), 0.18f, new Color(0.96f, 0.86f, 0.62f, 1f));
+
+            var hold = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            hold.name = "InternalPlayflowProof_VanCargoHold";
+            hold.transform.position = origin + new Vector3(0f, 0.05f, 0f);
+            hold.transform.localScale = new Vector3(1.9f, 0.18f, 1.15f);
+            hold.GetComponent<Renderer>().sharedMaterial = CreateLitMaterial(new Color(0.12f, 0.10f, 0.075f, 1f));
+
+            var cargoLeft = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            cargoLeft.name = "InternalPlayflowProof_LoadedLedger";
+            cargoLeft.transform.position = origin + new Vector3(-0.44f, 0.34f, -0.05f);
+            cargoLeft.transform.rotation = Quaternion.Euler(0f, -9f, 0f);
+            cargoLeft.transform.localScale = new Vector3(0.48f, 0.28f, 0.34f);
+            cargoLeft.GetComponent<Renderer>().sharedMaterial = CreateLitMaterial(new Color(0.62f, 0.43f, 0.20f, 1f));
+
+            var cargoRight = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            cargoRight.name = "InternalPlayflowProof_HeldLedger";
+            cargoRight.transform.position = origin + new Vector3(0.44f, 0.56f, -0.36f);
+            cargoRight.transform.rotation = Quaternion.Euler(5f, 12f, -7f);
+            cargoRight.transform.localScale = new Vector3(0.58f, 0.36f, 0.36f);
+            cargoRight.GetComponent<Renderer>().sharedMaterial = CreateLitMaterial(new Color(0.86f, 0.72f, 0.43f, 1f));
+
+            CreateProofLabel("G LOAD\nE PICK UP", origin + new Vector3(-0.55f, 0.86f, -0.58f), 0.115f, new Color(0.94f, 0.83f, 0.55f, 1f));
+        }
+
+        private static void CreateProofShrineThreat(Vector3 origin)
+        {
+            CreateProofLabel("SHRINE THREAT", origin + new Vector3(0f, 1.45f, -0.08f), 0.18f, new Color(1f, 0.58f, 0.44f, 1f));
+
+            var shrine = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            shrine.name = "InternalPlayflowProof_ShrinePanel";
+            shrine.transform.position = origin + new Vector3(0f, 0.48f, 0.22f);
+            shrine.transform.localScale = new Vector3(1.55f, 1.38f, 0.13f);
+            shrine.GetComponent<Renderer>().sharedMaterial = CreateLitMaterial(new Color(0.18f, 0.055f, 0.045f, 1f));
+
+            var ghost = GameObject.CreatePrimitive(PrimitiveType.Capsule);
+            ghost.name = "InternalPlayflowProof_InteriorGhost";
+            ghost.transform.position = origin + new Vector3(-0.58f, 0.28f, -0.36f);
+            ghost.transform.localScale = new Vector3(0.38f, 0.68f, 0.38f);
+            var ghostMaterial = CreateLitMaterial(new Color(0.38f, 0.92f, 0.72f, 1f));
+            ghostMaterial.SetColor("_EmissionColor", new Color(0.10f, 0.50f, 0.36f, 1f));
+            ghostMaterial.EnableKeyword("_EMISSION");
+            ghost.GetComponent<Renderer>().sharedMaterial = ghostMaterial;
+
+            var wall = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            wall.name = "InternalPlayflowProof_OcclusionWall";
+            wall.transform.position = origin + new Vector3(-0.04f, 0.46f, -0.28f);
+            wall.transform.localScale = new Vector3(0.12f, 1.18f, 0.92f);
+            wall.GetComponent<Renderer>().sharedMaterial = CreateLitMaterial(new Color(0.23f, 0.20f, 0.16f, 1f));
+
+            var lanternLeft = CreateLantern("InternalPlayflowProof_LanternLeft", origin + new Vector3(-0.62f, 1.08f, -0.03f));
+            var lanternRight = CreateLantern("InternalPlayflowProof_LanternRight", origin + new Vector3(0.62f, 1.08f, -0.03f));
+            lanternLeft.intensity = 2.5f;
+            lanternRight.intensity = 2.5f;
+
+            CreateProofLabel("STAGE 5\nFOG + AUDIO", origin + new Vector3(0.14f, 0.88f, -0.58f), 0.115f, new Color(1f, 0.52f, 0.42f, 1f));
+        }
+
+        private static void CreateProofLabel(string text, Vector3 position, float size, Color color)
+        {
+            var labelObject = new GameObject("ProofLabel_" + text.Split('\n')[0].Replace(' ', '_'));
+            labelObject.transform.position = position;
+            labelObject.transform.rotation = Quaternion.Euler(0f, 0f, 0f);
+            var textMesh = labelObject.AddComponent<TextMesh>();
+            textMesh.text = text;
+            textMesh.anchor = TextAnchor.MiddleCenter;
+            textMesh.alignment = TextAlignment.Center;
+            textMesh.characterSize = size * 0.24f;
+            textMesh.fontSize = 32;
+            textMesh.color = color;
+        }
+
         private static void TintHeldArtifact()
         {
             var held = GameObject.Find("Held_Ledger");
