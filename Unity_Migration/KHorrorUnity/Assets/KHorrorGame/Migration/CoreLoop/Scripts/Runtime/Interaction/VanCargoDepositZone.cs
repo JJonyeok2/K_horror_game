@@ -1,5 +1,4 @@
 using UnityEngine;
-using UnityEngine.InputSystem;
 
 namespace KHorrorGame.Migration
 {
@@ -34,14 +33,6 @@ namespace KHorrorGame.Migration
             if (zoneCollider != null)
             {
                 zoneCollider.isTrigger = true;
-            }
-        }
-
-        private void Update()
-        {
-            if (Keyboard.current != null && Keyboard.current.gKey.wasPressedThisFrame)
-            {
-                ManualDeposit(ResolveCurrentActor());
             }
         }
 
@@ -107,6 +98,11 @@ namespace KHorrorGame.Migration
             actor.RefreshHeldItemViews();
             SetFeedback("Cargo loaded");
             return true;
+        }
+
+        public bool ContainsActor(UnityPlayerController actor)
+        {
+            return IsInsideZone(actor);
         }
 
         private void CaptureActor(Collider other)

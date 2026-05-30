@@ -208,6 +208,128 @@ namespace KHorrorGame.Migration.Tests
             }
         }
 
+        [Test]
+        public void CargoDropInputInsideVanZoneDepositsInsteadOfDroppingLooseArtifact()
+        {
+            var fixture = new CargoDepositFixture(true);
+
+            try
+            {
+                fixture.Actor.transform.position = fixture.DepositZone.transform.position;
+                Assert.IsTrue(fixture.Actor.TryCollectArtifact(new ArtifactDefinition("Ledger", 230, 1.5f, 1)));
+
+                Assert.IsTrue(fixture.Actor.DropOrDepositCurrentArtifact());
+
+                Assert.AreEqual(0, fixture.Actor.Inventory.Items.Count);
+                Assert.AreEqual(1, fixture.CargoHold.CargoCount);
+                Assert.AreEqual(230, fixture.CargoHold.TotalCargoValue);
+                Assert.IsNull(GameObject.Find("DroppedArtifact"), "Van-zone G should load cargo into the van hold, not spawn loose floor cargo.");
+                Assert.AreEqual("Cargo loaded", fixture.DepositZone.LastFeedbackMessage);
+            }
+            finally
+            {
+                fixture.Destroy();
+            }
+        }
+
+        [Test]
+        public void CargoDropInputOutsideVanZoneSpawnsPickupAboveGround()
+        {
+            var fixture = new CargoDepositFixture(true);
+            var floor = GameObject.CreatePrimitive(PrimitiveType.Cube);
+
+            try
+            {
+                floor.name = "DropSafetyFloor";
+                floor.transform.position = new Vector3(10f, -0.05f, 0f);
+                floor.transform.localScale = new Vector3(6f, 0.1f, 6f);
+                fixture.Actor.transform.position = new Vector3(10f, 1.05f, 0f);
+                fixture.Actor.transform.rotation = Quaternion.identity;
+
+                var cameraObject = new GameObject("DropTestCamera");
+                cameraObject.transform.SetParent(fixture.Actor.transform, false);
+                cameraObject.transform.localPosition = new Vector3(0f, 0.65f, 0f);
+                cameraObject.transform.localRotation = Quaternion.Euler(62f, 0f, 0f);
+                cameraObject.AddComponent<Camera>();
+                SetPrivateField(fixture.Actor, "playerCamera", cameraObject.GetComponent<Camera>());
+                Physics.SyncTransforms();
+
+                Assert.IsTrue(fixture.Actor.TryCollectArtifact(new ArtifactDefinition("Ceramic Jar", 160, 1.2f, 1)));
+
+                Assert.IsTrue(fixture.Actor.DropOrDepositCurrentArtifact());
+
+                var dropped = GameObject.Find("DroppedArtifact");
+                Assert.IsNotNull(dropped, "Outside the van, G should place the held artifact as a pickup in the world.");
+                Assert.IsNotNull(dropped.GetComponent<ArtifactPickup>());
+                Assert.AreEqual(0, fixture.CargoHold.CargoCount, "Loose floor drops must not count toward van settlement.");
+                Assert.AreEqual(0, fixture.Actor.Inventory.Items.Count);
+                Assert.GreaterOrEqual(dropped.GetComponent<Collider>().bounds.min.y, -0.001f, "Dropped cargo should be snapped above the walkable floor.");
+            }
+            finally
+            {
+                Object.DestroyImmediate(floor);
+                var dropped = GameObject.Find("DroppedArtifact");
+                if (dropped != null)
+                {
+                    Object.DestroyImmediate(dropped);
+                }
+
+                fixture.Destroy();
+            }
+        }
+
+        [Test]
+        public void VanCargoDepositZoneDoesNotProcessDropInputInItsOwnUpdateLoop()
+        {
+            var update = typeof(VanCargoDepositZone).GetMethod("Update", BindingFlags.Instance | BindingFlags.NonPublic);
+
+            Assert.IsNull(update, "The G drop/load key should have one owner: UnityPlayerController. A zone Update would process the same key frame twice.");
+        }
+
+        [Test]
+        public void CargoDropInputSnapsToLoweredFloorWithoutFloatingToWorldOrigin()
+        {
+            var fixture = new CargoDepositFixture(true);
+            var floor = GameObject.CreatePrimitive(PrimitiveType.Cube);
+
+            try
+            {
+                floor.name = "LoweredDropSafetyFloor";
+                floor.transform.position = new Vector3(14f, -2.05f, 0f);
+                floor.transform.localScale = new Vector3(6f, 0.1f, 6f);
+                fixture.Actor.transform.position = new Vector3(14f, -0.9f, 0f);
+                fixture.Actor.transform.rotation = Quaternion.identity;
+
+                var cameraObject = new GameObject("LoweredDropTestCamera");
+                cameraObject.transform.SetParent(fixture.Actor.transform, false);
+                cameraObject.transform.localPosition = new Vector3(0f, 0.65f, 0f);
+                cameraObject.transform.localRotation = Quaternion.Euler(62f, 0f, 0f);
+                cameraObject.AddComponent<Camera>();
+                SetPrivateField(fixture.Actor, "playerCamera", cameraObject.GetComponent<Camera>());
+                Physics.SyncTransforms();
+
+                Assert.IsTrue(fixture.Actor.TryCollectArtifact(new ArtifactDefinition("Lowered Floor Jar", 160, 1.2f, 1)));
+
+                Assert.IsTrue(fixture.Actor.DropOrDepositCurrentArtifact());
+
+                var dropped = GameObject.Find("DroppedArtifact");
+                Assert.IsNotNull(dropped);
+                Assert.GreaterOrEqual(dropped.GetComponent<Collider>().bounds.min.y, -2.001f, "Dropped cargo should sit above the lowered floor surface.");
+                Assert.Less(dropped.transform.position.y, -1.6f, "Dropped cargo should not be lifted back to world y=0 when the valid floor is lower.");
+            }
+            finally
+            {
+                Object.DestroyImmediate(floor);
+                var dropped = GameObject.Find("DroppedArtifact");
+                if (dropped != null)
+                {
+                    Object.DestroyImmediate(dropped);
+                }
+
+                fixture.Destroy();
+            }
+        }
+
         private sealed class CargoDepositFixture
         {
             public GameObject Root { get; }

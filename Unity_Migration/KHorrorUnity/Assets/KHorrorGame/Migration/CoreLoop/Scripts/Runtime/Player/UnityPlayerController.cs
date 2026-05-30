@@ -105,9 +105,9 @@ namespace KHorrorGame.Migration
             UpdateLook();
             UpdateMovement(Time.deltaTime);
 
-            if (WasActionPressed(dropAction, Key.Q))
+            if (WasActionPressed(dropAction, Key.G) || WasKeyboardKeyPressed(Key.Q))
             {
-                DropCurrentArtifact();
+                DropOrDepositCurrentArtifact();
             }
         }
 
@@ -156,6 +156,17 @@ namespace KHorrorGame.Migration
             SpawnDroppedArtifact(item);
             RefreshHeldItemViews();
             return true;
+        }
+
+        public bool DropOrDepositCurrentArtifact()
+        {
+            var depositZone = ResolveCargoDepositZone();
+            if (depositZone != null)
+            {
+                return depositZone.ManualDeposit(this);
+            }
+
+            return DropCurrentArtifact();
         }
 
         private void UpdateMovement(float deltaTime)
@@ -280,6 +291,11 @@ namespace KHorrorGame.Migration
             return Keyboard.current != null && Keyboard.current[fallbackKey].wasPressedThisFrame;
         }
 
+        private static bool WasKeyboardKeyPressed(Key key)
+        {
+            return Keyboard.current != null && Keyboard.current[key].wasPressedThisFrame;
+        }
+
         private static void EnableAction(InputActionReference actionReference)
         {
             if (actionReference != null && actionReference.action != null)
@@ -322,6 +338,62 @@ namespace KHorrorGame.Migration
             }
 
             pickup.ApplyDefinition(item);
+            SnapDroppedArtifactAboveFloor(artifactObject);
+        }
+
+        private VanCargoDepositZone ResolveCargoDepositZone()
+        {
+            foreach (var zone in FindObjectsByType<VanCargoDepositZone>(FindObjectsSortMode.None))
+            {
+                if (zone != null && zone.ContainsActor(this))
+                {
+                    return zone;
+                }
+            }
+
+            return null;
+        }
+
+        private static void SnapDroppedArtifactAboveFloor(GameObject artifactObject)
+        {
+            if (artifactObject == null)
+            {
+                return;
+            }
+
+            Physics.SyncTransforms();
+            var collider = artifactObject.GetComponent<Collider>();
+            var halfHeight = collider != null ? collider.bounds.extents.y : Mathf.Max(artifactObject.transform.localScale.y * 0.5f, 0.05f);
+            var rayOrigin = artifactObject.transform.position + Vector3.up * 1.5f;
+            var hadCollider = collider != null;
+            var floorY = float.NegativeInfinity;
+
+            if (collider != null)
+            {
+                collider.enabled = false;
+                Physics.SyncTransforms();
+            }
+
+            if (Physics.Raycast(rayOrigin, Vector3.down, out var hit, 4f, Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore))
+            {
+                floorY = hit.point.y;
+                artifactObject.transform.position = new Vector3(
+                    artifactObject.transform.position.x,
+                    floorY + halfHeight + 0.015f,
+                    artifactObject.transform.position.z);
+            }
+
+            if (collider != null)
+            {
+                collider.enabled = true;
+            }
+
+            Physics.SyncTransforms();
+            if (hadCollider && collider.bounds.min.y < floorY)
+            {
+                artifactObject.transform.position += Vector3.up * (floorY - collider.bounds.min.y + 0.015f);
+                Physics.SyncTransforms();
+            }
         }
 
         private void EnsureHandMounts()

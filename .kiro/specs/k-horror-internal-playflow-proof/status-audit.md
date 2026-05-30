@@ -20,10 +20,14 @@ Marked complete:
   - Evidence: Unity scene integrity coverage exists for roots, spawn markers, gate portal references, floors, route blockers, and known escape gaps.
   - Tests: `EstateContentIntegrityTests.EstateHasTerritoryRootsResolverAndGateAiBoundary`, `EstateFloorContinuityTests.EstateRouteHasWalkableGroundAtCriticalConnectors`, `EstateGatePortalTests.OuterGateFlanksDoNotAllowBypassAroundGate`, `EstateBoundaryIntegrityTests.EstatePlayableAreaHasEscapeBlockingBoundaries`
 
+- `10. Strengthen inventory and dropped item handling`
+  - Evidence: `UnityPlayerController.DropOrDepositCurrentArtifact` routes the same drop input to van loading only when the player is inside a `VanCargoDepositZone`; otherwise it creates a world pickup and snaps it above the walkable floor. Held views still use one-hand left/right and two-hand centered obstruction layouts.
+  - Tests: `VanCargoDepositZoneTests.CargoDropInputInsideVanZoneDepositsInsteadOfDroppingLooseArtifact`, `VanCargoDepositZoneTests.CargoDropInputOutsideVanZoneSpawnsPickupAboveGround`, `VanCargoDepositZoneTests.LargeHeldArtifactObstructsLowerCenterView`, `VanCargoDepositZoneTests.SmallHeldArtifactsOccupyBothSidesOfFirstPersonView`, `VanCargoHoldTests.StoredCargoCanBePickedBackUpFromHold`, `VanCargoHoldTests.SettlementConsumesOnlyCargoLoadedInHold`
+
 Left incomplete:
 
 - `5`, `6`: `EnemyBrain` exists, but the requested dedicated `GhostEnemy` and `DokkaebiEnemy` state sets are not fully represented.
-- `7`, `9`, `10`, `11`, `12`, `13`, `15`, `16`, `17`, `18`, `20`, `21`, `22`: partial coverage exists, but the full task wording is not yet proven by current tests.
+- `7`, `9`, `11`, `12`, `13`, `15`, `16`, `17`, `18`, `20`, `21`, `22`: partial coverage exists, but the full task wording is not yet proven by current tests.
 
 ## k-horror-physical-cargo-loop
 
@@ -41,9 +45,14 @@ Marked complete:
   - Evidence: `KHorrorBootstrapSceneBuilder` creates hub and estate return cargo holds, slots, and deposit zones.
   - Tests: `EstateContentIntegrityTests.ReturnBongoHasGCargoDepositZone`, `EstateContentIntegrityTests.BongoHubHasCargoHoldForImmediateSettlement`, `EstateContentIntegrityTests.VanCargoDepositZoneManualDepositLoadsCargoWithoutLeavingEstate`
 
+Additional completion:
+
+- `C5. 일반 드롭과 밴 적재 상태 분리`
+  - Evidence: `UnityPlayerController.DropOrDepositCurrentArtifact` keeps hand-held, loose dropped, and van-loaded cargo states mutually exclusive. `VanCargoDepositZone.ContainsActor` provides the zone priority check for the shared drop key.
+  - Tests: `VanCargoDepositZoneTests.CargoDropInputInsideVanZoneDepositsInsteadOfDroppingLooseArtifact`, `VanCargoDepositZoneTests.CargoDropInputOutsideVanZoneSpawnsPickupAboveGround`, `VanCargoHoldTests.SettlementConsumesOnlyCargoLoadedInHold`
+
 Left incomplete:
 
-- `C5`: general ground drop priority and under-floor drop prevention still need focused regression coverage.
 - `C8`: user checkpoint task remains open until the next manual Unity test pass is actually handed off.
 
 ## k-horror-lethal-loop-polish

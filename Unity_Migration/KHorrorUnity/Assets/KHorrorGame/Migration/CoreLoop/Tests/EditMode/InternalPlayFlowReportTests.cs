@@ -56,6 +56,10 @@ namespace KHorrorGame.Migration.Tests
             StringAssert.Contains("Screenshot bytes: `24576`", report);
             StringAssert.Contains("BongoHub -> JonggaEstate -> cargo load -> re-pickup -> return -> settlement", report);
             StringAssert.Contains("shrine theft -> grace -> ghost actor -> audio occlusion -> atmosphere cue", report);
+            StringAssert.Contains("single-owner G input", report);
+            StringAssert.Contains("inside van -> cargo hold", report);
+            StringAssert.Contains("outside van -> world pickup", report);
+            StringAssert.Contains("lowered-floor drop snap", report);
         }
 
         private static Type FindLoadedType(string fullName)

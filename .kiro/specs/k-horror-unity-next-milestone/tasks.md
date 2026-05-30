@@ -112,7 +112,7 @@
   - Show invalid reasons for full hands or invalid actions.
   - _Requirements: 5.1, 5.2, 5.5, 6.5_
 
-- [ ] 10. Strengthen inventory and dropped item handling
+- [x] 10. Strengthen inventory and dropped item handling
   - Add held-item view definitions for small and large artifacts.
   - Ensure one large item uses both hands and two small items use left/right hands.
   - Ensure dropped items and bongo cargo items restore pickup definitions and do not spawn under the floor.
