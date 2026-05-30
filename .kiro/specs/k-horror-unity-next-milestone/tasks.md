@@ -127,7 +127,7 @@
   - Add a timed traversal check or documented measurement pass.
   - _Requirements: 4.1, 4.2, 7.2_
 
-- [ ] 12. Rebuild the courtyard as a navigable space
+- [x] 12. Rebuild the courtyard as a navigable space
   - Add route anchors such as well, jangdok area, sheds, stacked wood, low walls, and lantern points.
   - Reduce empty open-lot feel by placing collision-safe props and occluders.
   - Keep route readability from gate to main house and optional side routes.

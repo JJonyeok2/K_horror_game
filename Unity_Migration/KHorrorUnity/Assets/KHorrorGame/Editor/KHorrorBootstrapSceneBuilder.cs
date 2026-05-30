@@ -796,6 +796,89 @@ namespace KHorrorGame.Editor
             CreateStoneCairn(parent, new Vector3(7.6f, 0.2f, 64.5f), "CourtyardCairn");
             CreatePaperLantern(parent, new Vector3(-10.8f, 2.3f, 66f), "LeftWallLantern");
             CreatePaperLantern(parent, new Vector3(10.8f, 2.2f, 73f), "RightWallLantern");
+            CreateCourtyardRoutesAndDensity(parent);
+        }
+
+        private static void CreateCourtyardRoutesAndDensity(Transform parent)
+        {
+            var mainRoute = new[]
+            {
+                new Vector3(0f, 0.12f, 58.8f),
+                new Vector3(0f, 0.12f, 62.4f),
+                new Vector3(0f, 0.12f, 66.2f),
+                new Vector3(0f, 0.12f, 70.1f),
+                new Vector3(0f, 0.12f, 74.2f),
+                new Vector3(0f, 0.12f, 78.2f),
+            };
+            for (var i = 0; i < mainRoute.Length; i++)
+            {
+                CreateMarker("CourtyardMainRouteWaypoint_" + i.ToString("00"), mainRoute[i], Quaternion.identity, parent);
+            }
+
+            var sideRoute = new[]
+            {
+                new Vector3(6.3f, 0.12f, 59.8f),
+                new Vector3(6.2f, 0.12f, 64.7f),
+                new Vector3(5.9f, 0.12f, 70.7f),
+                new Vector3(5.6f, 0.12f, 75.8f),
+                new Vector3(3.4f, 0.12f, 78.2f),
+            };
+            for (var i = 0; i < sideRoute.Length; i++)
+            {
+                CreateMarker("CourtyardSideRouteWaypoint_" + i.ToString("00"), sideRoute[i], Quaternion.identity, parent);
+            }
+
+            CreateMarker("CourtyardRouteAnchor_00_GateLanding", mainRoute[0], Quaternion.identity, parent);
+            CreateMarker("CourtyardRouteAnchor_01_Well", new Vector3(-5.6f, 0.12f, 71f), Quaternion.identity, parent);
+            CreateMarker("CourtyardRouteAnchor_02_Jangdok", new Vector3(-5.6f, 0.12f, 62.65f), Quaternion.identity, parent);
+            CreateMarker("CourtyardRouteAnchor_03_WoodStack", new Vector3(4.6f, 0.12f, 73.8f), Quaternion.identity, parent);
+            CreateMarker("CourtyardRouteAnchor_04_SideShed", new Vector3(9.3f, 0.12f, 68.8f), Quaternion.identity, parent);
+            CreateMarker("CourtyardRouteAnchor_05_MainHouse", mainRoute[mainRoute.Length - 1], Quaternion.identity, parent);
+
+            CreateCube("CourtyardLowWall_Northwest", parent, new Vector3(-7.55f, 0.42f, 67.2f), new Vector3(3.8f, 0.65f, 0.32f), Materials.StoneWall);
+            CreateCube("CourtyardLowWall_Southwest", parent, new Vector3(-4.15f, 0.42f, 60.9f), new Vector3(3.0f, 0.65f, 0.32f), Materials.StoneWall);
+            CreateCube("CourtyardLowWall_EastDogleg", parent, new Vector3(8.05f, 0.42f, 71.2f), new Vector3(3.2f, 0.65f, 0.32f), Materials.StoneWall);
+            CreateCube("CourtyardLowWall_MainHouseEdge", parent, new Vector3(3.8f, 0.42f, 76.4f), new Vector3(3.6f, 0.65f, 0.32f), Materials.StoneWall);
+
+            for (var i = 0; i < 4; i++)
+            {
+                CreateStackedWoodPile(parent, new Vector3(4.6f + i * 0.58f, 0.18f, 73.4f + (i % 2) * 0.48f), "CourtyardStackedWood_East_" + i);
+                CreateStackedWoodPile(parent, new Vector3(-8.1f + i * 0.52f, 0.18f, 69.4f + (i % 2) * 0.46f), "CourtyardStackedWood_Well_" + i);
+            }
+
+            CreateCourtyardSideShed(parent, new Vector3(9.35f, 0f, 68.8f));
+            CreateCube("CourtyardSightlineOccluder_LeftYard", parent, new Vector3(-8.2f, 1.2f, 66.2f), new Vector3(1.1f, 2.4f, 0.34f), Materials.DarkWood);
+            CreateCube("CourtyardSightlineOccluder_RightYard", parent, new Vector3(8.0f, 1.2f, 67.7f), new Vector3(1.0f, 2.4f, 0.34f), Materials.DarkWood);
+            CreateCube("CourtyardSightlineOccluder_WellCross", parent, new Vector3(-5.1f, 1.05f, 73.5f), new Vector3(0.36f, 2.1f, 1.4f), Materials.DarkWood);
+            CreateCube("CourtyardSightlineOccluder_EastShedCross", parent, new Vector3(5.2f, 1.05f, 71.2f), new Vector3(0.36f, 2.1f, 1.35f), Materials.DarkWood);
+
+            CreatePaperLantern(parent, new Vector3(-9.8f, 2.15f, 61.4f), "CourtyardLanternPoint_00");
+            CreatePaperLantern(parent, new Vector3(-9.6f, 2.15f, 74.2f), "CourtyardLanternPoint_01");
+            CreatePaperLantern(parent, new Vector3(9.7f, 2.15f, 64.6f), "CourtyardLanternPoint_02");
+            CreatePaperLantern(parent, new Vector3(9.6f, 2.15f, 76.4f), "CourtyardLanternPoint_03");
+        }
+
+        private static void CreateStackedWoodPile(Transform parent, Vector3 basePosition, string name)
+        {
+            for (var i = 0; i < 3; i++)
+            {
+                var log = CreateCylinder(
+                    name + "_Log_" + i,
+                    parent,
+                    basePosition + new Vector3(0f, i * 0.16f, (i - 1) * 0.08f),
+                    new Vector3(0.12f, 0.45f, 0.12f),
+                    Materials.DarkWood,
+                    Quaternion.Euler(0f, 0f, 90f));
+                log.transform.rotation *= Quaternion.Euler(0f, (i % 2 == 0 ? 7f : -6f), 0f);
+            }
+        }
+
+        private static void CreateCourtyardSideShed(Transform parent, Vector3 basePosition)
+        {
+            CreateCube("CourtyardSideShed_Foundation", parent, basePosition + new Vector3(0f, 0.12f, 0f), new Vector3(2.4f, 0.24f, 2.8f), Materials.Stone);
+            CreateCube("CourtyardSideShed_BackWall", parent, basePosition + new Vector3(0.9f, 1.25f, 0f), new Vector3(0.24f, 2.3f, 2.65f), Materials.Plaster);
+            CreateCube("CourtyardSideShed_Roof", parent, basePosition + new Vector3(0f, 2.55f, 0f), new Vector3(2.7f, 0.28f, 3.1f), Materials.Roof, Quaternion.Euler(0f, 0f, -5f));
+            CreateCube("CourtyardSideShed_WoodRack", parent, basePosition + new Vector3(-0.82f, 0.65f, -0.7f), new Vector3(0.38f, 0.9f, 1.05f), Materials.DarkWood);
         }
 
         private static void CreateMainHouse(Transform parent)
