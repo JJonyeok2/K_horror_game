@@ -159,10 +159,11 @@ namespace KHorrorGame.Editor
             rig.ApplyProfile();
 
             CreatePostProcessVolume(parent);
-            CreatePointLight("ApproachPathLowFill", parent, new Vector3(0f, 3.1f, 36f), new Color(0.45f, 0.55f, 0.68f), 2.25f, 42f);
-            CreatePointLight("CourtyardMoonBounce", parent, new Vector3(0f, 4.4f, 69f), new Color(0.52f, 0.58f, 0.66f), 1.65f, 36f);
-            CreatePointLight("GateWetLamp_Left", parent, new Vector3(-3.7f, 3.05f, 52.9f), new Color(1f, 0.58f, 0.34f), 2.5f, 12f);
+            CreatePointLight("ApproachPathLowFill", parent, new Vector3(0f, 3.1f, 36f), new Color(0.45f, 0.55f, 0.68f), 2.55f, 46f);
+            CreatePointLight("CourtyardMoonBounce", parent, new Vector3(0f, 4.4f, 69f), new Color(0.52f, 0.58f, 0.66f), 1.9f, 40f);
+            CreatePointLight("GateWetLamp_Left", parent, new Vector3(-3.7f, 3.05f, 52.9f), new Color(1f, 0.58f, 0.34f), 2.7f, 12.5f);
             CreatePointLight("GateWetLamp_Right", parent, new Vector3(3.7f, 3.05f, 52.9f), new Color(1f, 0.58f, 0.34f), 2.25f, 11f);
+            CreatePointLight("MainHouseInteriorReadabilityFill", parent, new Vector3(0f, 2.6f, 83.2f), new Color(0.62f, 0.55f, 0.43f), 1.35f, 11f);
             CreatePointLight("ShrineCandleGlow", parent, new Vector3(ShrineX, 1.35f, ShrineZ + 1f), new Color(1f, 0.46f, 0.25f), 2.5f, 8f);
         }
 
@@ -1180,7 +1181,7 @@ namespace KHorrorGame.Editor
             CreatePaperLantern(parent, new Vector3(2.65f, 2.25f, 116.0f), "RearRouteLantern_Second");
             CreatePaperLantern(parent, new Vector3(-9.35f, 2.25f, 134.0f), "RearRouteLantern_Third");
             CreatePointLight("RearRouteLanternPool_First", parent, new Vector3(-8.9f, 1.75f, 101.0f), new Color(0.95f, 0.46f, 0.24f), 1.25f, 7.2f);
-            CreatePointLight("RearRouteLanternPool_Second", parent, new Vector3(4.0f, 1.75f, 116.0f), new Color(0.9f, 0.42f, 0.22f), 1.1f, 6.8f);
+            CreatePointLight("RearRouteLanternPool_Second", parent, new Vector3(4.0f, 1.75f, 116.0f), new Color(0.9f, 0.42f, 0.22f), 1.4f, 7.8f);
             CreatePointLight("RearRouteLanternPool_Third", parent, new Vector3(-8.0f, 1.75f, 134.0f), new Color(0.86f, 0.38f, 0.2f), 1.15f, 7.4f);
 
             CreateNonBlockingPaperCharm(parent, new Vector3(-8.9f, 2.25f, 99.55f), "RearHanokGateCharm_First");
@@ -1234,7 +1235,7 @@ namespace KHorrorGame.Editor
             CreateCylinder("ShrineCandle_B", parent, new Vector3(ShrineX + 0.45f, 1.45f, ShrineZ + 0.9f), new Vector3(0.08f, 0.22f, 0.08f), Materials.CandleWax);
             CreateSphere("ShrineCandleFlame_A", parent, new Vector3(ShrineX - 0.45f, 1.72f, ShrineZ + 0.9f), new Vector3(0.12f, 0.18f, 0.12f), Materials.LanternGlow);
             CreateSphere("ShrineCandleFlame_B", parent, new Vector3(ShrineX + 0.45f, 1.72f, ShrineZ + 0.9f), new Vector3(0.12f, 0.18f, 0.12f), Materials.LanternGlow);
-            CreatePointLight("DeepShrineLanternGlow", parent, new Vector3(ShrineX, 2.1f, ShrineZ - 1.15f), new Color(0.9f, 0.44f, 0.22f), 1.45f, 9f);
+            CreatePointLight("DeepShrineLanternGlow", parent, new Vector3(ShrineX, 2.1f, ShrineZ - 1.15f), new Color(0.9f, 0.44f, 0.22f), 1.7f, 10f);
             CreateStoneCairn(parent, new Vector3(ShrineX - 2.6f, 0.3f, ShrineZ - 4.5f), "ShrinePathCairn");
         }
 
@@ -1730,19 +1731,19 @@ namespace KHorrorGame.Editor
         {
             var serialized = new SerializedObject(profile);
             SetSerializedBool(serialized, "fogEnabled", true);
-            SetSerializedFloat(serialized, "fogDensity", 0.021f);
-            SetSerializedColor(serialized, "fogColor", new Color(0.045f, 0.052f, 0.052f, 1f));
-            SetSerializedColor(serialized, "ambientColor", new Color(0.062f, 0.066f, 0.058f, 1f));
-            SetSerializedFloat(serialized, "reflectionIntensity", 0.16f);
-            SetSerializedColor(serialized, "moonColor", new Color(0.58f, 0.67f, 0.78f, 1f));
-            SetSerializedFloat(serialized, "moonIntensity", 0.42f);
+            SetSerializedFloat(serialized, "fogDensity", 0.016f);
+            SetSerializedColor(serialized, "fogColor", new Color(0.052f, 0.06f, 0.06f, 1f));
+            SetSerializedColor(serialized, "ambientColor", new Color(0.075f, 0.079f, 0.068f, 1f));
+            SetSerializedFloat(serialized, "reflectionIntensity", 0.18f);
+            SetSerializedColor(serialized, "moonColor", new Color(0.62f, 0.71f, 0.82f, 1f));
+            SetSerializedFloat(serialized, "moonIntensity", 0.58f);
             SetSerializedVector3(serialized, "moonEulerAngles", new Vector3(54f, -41f, 0f));
             SetSerializedColor(serialized, "flashlightColor", new Color(1.0f, 0.94f, 0.76f, 1f));
-            SetSerializedFloat(serialized, "flashlightIntensity", 14f);
-            SetSerializedFloat(serialized, "flashlightRange", 34f);
-            SetSerializedFloat(serialized, "flashlightSpotAngle", 54f);
-            SetSerializedFloat(serialized, "exposureCompensation", 0.35f);
-            SetSerializedFloat(serialized, "vignetteIntensity", 0.16f);
+            SetSerializedFloat(serialized, "flashlightIntensity", 16f);
+            SetSerializedFloat(serialized, "flashlightRange", 39f);
+            SetSerializedFloat(serialized, "flashlightSpotAngle", 60f);
+            SetSerializedFloat(serialized, "exposureCompensation", 0.68f);
+            SetSerializedFloat(serialized, "vignetteIntensity", 0.13f);
             SetSerializedFloat(serialized, "saturation", -8f);
             serialized.ApplyModifiedPropertiesWithoutUndo();
             EditorUtility.SetDirty(profile);
@@ -1782,8 +1783,8 @@ namespace KHorrorGame.Editor
             profile.components.Clear();
 
             var color = AddVolumeComponent<ColorAdjustments>(profile);
-            color.postExposure.Override(0.45f);
-            color.contrast.Override(6f);
+            color.postExposure.Override(0.68f);
+            color.contrast.Override(4.2f);
             color.saturation.Override(-8f);
             color.colorFilter.Override(new Color(0.98f, 1.0f, 0.94f, 1f));
 
@@ -1792,7 +1793,7 @@ namespace KHorrorGame.Editor
             whiteBalance.tint.Override(-2f);
 
             var vignette = AddVolumeComponent<Vignette>(profile);
-            vignette.intensity.Override(0.16f);
+            vignette.intensity.Override(0.13f);
             vignette.smoothness.Override(0.45f);
             vignette.color.Override(new Color(0f, 0.006f, 0.003f, 1f));
 
