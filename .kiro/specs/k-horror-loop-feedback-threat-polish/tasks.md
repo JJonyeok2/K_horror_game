@@ -1,6 +1,6 @@
 # Implementation Plan
 
-- [ ] Task 1. 적재 화물 재픽업 루프 완성
+- [x] Task 1. 적재 화물 재픽업 루프 완성
   - `VanCargoItem`을 `IInteractable`로 확장한다.
   - 적재 화물을 바라보고 `E`를 누르면 `VanCargoHold`에서 제거되고 플레이어 인벤토리에 다시 들어가게 한다.
   - 재픽업 성공 시 `CargoCount`, `TotalCargoValue`, 손 시야 가림 오브젝트가 즉시 갱신되게 한다.
