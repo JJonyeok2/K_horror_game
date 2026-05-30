@@ -120,7 +120,7 @@
   - Keep hand-held, dropped, and bongo-loaded states mutually exclusive for each artifact.
   - _Requirements: 5.3, 5.4, 5.5, 5.6_
 
-- [ ] 11. Expand the forest approach route
+- [x] 11. Expand the forest approach route
   - Increase playable path distance so normal walking from bongo to gate takes at least 60 seconds.
   - Add taller trees, canopy clusters, jangseung pairs, rocks, dead grass, and fog occluders.
   - Add route blockers that shape the path without catching the player on small steps.

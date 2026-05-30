@@ -578,6 +578,8 @@ namespace KHorrorGame.Editor
 
         private static void CreateForest(Transform parent)
         {
+            CreateForestSwitchbackRoute(parent);
+
             for (var i = 0; i < 64; i++)
             {
                 var z = 15f + i * 0.7f;
@@ -623,6 +625,109 @@ namespace KHorrorGame.Editor
             CreateJangseung(parent, new Vector3(4.8f, 0f, 48.4f), "GateJangseung_Right");
             CreateSotdae(parent, new Vector3(-3.2f, 0f, 50.5f), "Sotdae_Left");
             CreateSotdae(parent, new Vector3(3.2f, 0f, 50.7f), "Sotdae_Right");
+
+            CreateDeepForestDensity(parent);
+        }
+
+        private static void CreateForestSwitchbackRoute(Transform parent)
+        {
+            var waypoints = new Vector3[55];
+            waypoints[0] = new Vector3(0f, 0.12f, 17.5f);
+            waypoints[1] = new Vector3(4.8f, 0.12f, 17.5f);
+
+            var waypointIndex = 2;
+            for (var i = 0; i < 13; i++)
+            {
+                var z = 19.3f + i * 2.4f;
+                waypoints[waypointIndex++] = new Vector3(4.8f, 0.12f, z);
+                waypoints[waypointIndex++] = new Vector3(-4.8f, 0.12f, z);
+                waypoints[waypointIndex++] = new Vector3(-4.8f, 0.12f, z + 1.2f);
+                waypoints[waypointIndex++] = new Vector3(4.8f, 0.12f, z + 1.2f);
+            }
+
+            waypoints[waypoints.Length - 1] = new Vector3(0f, 0.12f, 51.25f);
+
+            for (var i = 0; i < waypoints.Length; i++)
+            {
+                CreateMarker("ForestRouteWaypoint_" + i.ToString("00"), waypoints[i], Quaternion.identity, parent);
+            }
+
+            for (var i = 1; i < waypoints.Length; i++)
+            {
+                CreateForestRouteLane(parent, waypoints[i - 1], waypoints[i], i - 1);
+            }
+
+            for (var i = 0; i < 26; i++)
+            {
+                var z = 18.65f + i * 1.2f;
+                var openRight = i % 2 == 0;
+                var centerX = openRight ? -4.45f : 4.45f;
+                var blocker = CreateCube(
+                    "ForestSwitchbackBlocker_" + i.ToString("00"),
+                    parent,
+                    new Vector3(centerX, 1.15f, z),
+                    new Vector3(15.1f, 2.3f, 0.24f),
+                    Materials.DistantHill);
+                blocker.transform.rotation = Quaternion.Euler(0f, openRight ? 1.5f : -1.5f, 0f);
+
+                var thicketX = openRight ? -1.4f : 1.4f;
+                CreateBambooCluster(parent, new Vector3(thicketX, 0f, z - 0.18f), "ForestSwitchbackBamboo_" + i.ToString("00"));
+                CreateRockCluster(parent, new Vector3(openRight ? -2.8f : 2.8f, 0.2f, z + 0.16f), "ForestSwitchbackRock_" + i.ToString("00"));
+            }
+        }
+
+        private static void CreateForestRouteLane(Transform parent, Vector3 start, Vector3 end, int index)
+        {
+            var delta = end - start;
+            var center = (start + end) * 0.5f;
+            var horizontal = Mathf.Abs(delta.x) >= Mathf.Abs(delta.z);
+            var scale = horizontal
+                ? new Vector3(Mathf.Abs(delta.x) + 2.2f, 0.14f, 2.2f)
+                : new Vector3(2.2f, 0.14f, Mathf.Abs(delta.z) + 2.2f);
+            CreateCube(
+                "ForestSwitchbackLane_" + index.ToString("00"),
+                parent,
+                new Vector3(center.x, 0.045f, center.z),
+                scale,
+                index % 2 == 0 ? Materials.Road : Materials.WetMud);
+        }
+
+        private static void CreateDeepForestDensity(Transform parent)
+        {
+            for (var i = 0; i < 36; i++)
+            {
+                var z = 16.5f + (i % 18) * 1.95f;
+                var side = i < 18 ? -1f : 1f;
+                var x = side * (8.2f + (i % 4) * 0.75f);
+                CreateTree(parent, "DeepForestTree_" + i.ToString("00"), new Vector3(x, 0f, z), 11.5f + (i % 5) * 0.85f);
+            }
+
+            for (var i = 0; i < 12; i++)
+            {
+                var z = 19f + i * 2.8f;
+                var occluder = CreateCube(
+                    "ForestCanopyOccluder_" + i.ToString("00"),
+                    parent,
+                    new Vector3((i % 2 == 0 ? -1.8f : 1.8f), 4.25f, z),
+                    new Vector3(12.8f, 3.1f, 0.38f),
+                    Materials.Night,
+                    Quaternion.Euler(0f, i % 2 == 0 ? -5f : 5f, 0f));
+                DisableCollider(occluder);
+            }
+
+            for (var i = 0; i < 24; i++)
+            {
+                var z = 17f + i * 1.45f;
+                var x = i % 2 == 0 ? -2.4f - (i % 3) * 0.55f : 2.3f + (i % 4) * 0.45f;
+                CreateGrassClump(parent, new Vector3(x, 0.08f, z), "ForestDeadGrassPatch_" + i.ToString("00"));
+            }
+
+            for (var i = 0; i < 6; i++)
+            {
+                var z = 20.2f + i * 5.1f;
+                CreateJangseung(parent, new Vector3(-5.85f, 0f, z), "ForestRouteJangseungPair_" + i.ToString("00") + "_Left");
+                CreateJangseung(parent, new Vector3(5.85f, 0f, z + 1.15f), "ForestRouteJangseungPair_" + i.ToString("00") + "_Right");
+            }
         }
 
         private static void CreateOuterGate(Transform parent, Transform gateInsideSpawn, Transform gateOutsideSpawn)
