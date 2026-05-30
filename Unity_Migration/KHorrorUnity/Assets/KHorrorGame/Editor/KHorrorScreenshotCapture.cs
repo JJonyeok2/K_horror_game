@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Reflection;
 using KHorrorGame.Migration;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -55,6 +56,57 @@ namespace KHorrorGame.EditorTools
             Debug.Log("Saved cargo re-pickup screenshot to: " + outputPath);
         }
 
+        [MenuItem("Tools/K Horror Migration/Capture Terminal UI Proof")]
+        public static void CaptureTerminalUiProof()
+        {
+            EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+
+            var cameraObject = new GameObject("ScreenshotCamera");
+            var camera = cameraObject.AddComponent<Camera>();
+            camera.clearFlags = CameraClearFlags.SolidColor;
+            camera.backgroundColor = new Color(0.018f, 0.022f, 0.02f, 1f);
+            camera.orthographic = true;
+            camera.orthographicSize = 3.2f;
+            camera.nearClipPlane = 0.01f;
+            camera.farClipPlane = 20f;
+
+            CreateBackdrop();
+            CreateLight();
+
+            var playerObject = new GameObject("TerminalScreenshotPlayer");
+            playerObject.AddComponent<CharacterController>();
+            var player = playerObject.AddComponent<UnityPlayerController>();
+
+            var hubRoot = new GameObject("BongoHub");
+            var cargoHoldObject = new GameObject("BongoHubCargoHold");
+            cargoHoldObject.transform.SetParent(hubRoot.transform, false);
+            var cargoHold = cargoHoldObject.AddComponent<VanCargoHold>();
+            var slot = new GameObject("CargoSlot").transform;
+            slot.SetParent(cargoHoldObject.transform, false);
+            cargoHold.RegisterSlot(slot);
+            if (!cargoHold.TryStore(new ArtifactDefinition("Ledger", 230, 1.5f, 1), out _))
+            {
+                throw new InvalidOperationException("Could not create terminal screenshot cargo item.");
+            }
+
+            var gameLoopObject = new GameObject("GameLoop");
+            var gameLoop = gameLoopObject.AddComponent<GameLoopController>();
+            SetObject(gameLoop, "player", player);
+            SetObject(gameLoop, "bongoHubRoot", hubRoot);
+            SetObject(gameLoop, "hubCargoHold", cargoHold);
+            InvokePrivate(gameLoop, "Awake");
+
+            var terminal = VanTerminalController.EnsureRuntimePanel(gameLoop);
+            terminal.ManualRefresh(true);
+            terminal.ManualTick(20f);
+            AttachTerminalCanvasToCamera(terminal, camera);
+
+            var outputPath = Path.Combine(Directory.GetCurrentDirectory(), ScreenshotRoot, "terminal-ui-proof.png");
+            Directory.CreateDirectory(Path.GetDirectoryName(outputPath));
+            RenderCameraToPng(camera, outputPath, 1280, 720);
+            Debug.Log("Saved terminal UI screenshot to: " + outputPath);
+        }
+
         private static void TintHeldArtifact()
         {
             var held = GameObject.Find("Held_Ledger");
@@ -100,6 +152,40 @@ namespace KHorrorGame.EditorTools
             light.type = LightType.Directional;
             light.intensity = 1.25f;
             light.color = new Color(0.85f, 0.9f, 0.78f, 1f);
+        }
+
+        private static void AttachTerminalCanvasToCamera(VanTerminalController terminal, Camera camera)
+        {
+            var canvas = terminal.GetComponentInChildren<Canvas>();
+            if (canvas == null)
+            {
+                return;
+            }
+
+            canvas.renderMode = RenderMode.ScreenSpaceCamera;
+            canvas.worldCamera = camera;
+            canvas.planeDistance = 1f;
+            canvas.sortingOrder = 50;
+        }
+
+        private static void SetObject(UnityEngine.Object target, string fieldName, UnityEngine.Object value)
+        {
+            var field = target.GetType().GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic);
+            if (field != null)
+            {
+                field.SetValue(target, value);
+            }
+        }
+
+        private static void InvokePrivate(object target, string methodName)
+        {
+            var method = target.GetType().GetMethod(methodName, BindingFlags.Instance | BindingFlags.NonPublic);
+            if (method == null)
+            {
+                throw new MissingMethodException(target.GetType().FullName, methodName);
+            }
+
+            method.Invoke(target, null);
         }
 
         private static void RenderCameraToPng(Camera camera, string outputPath, int width, int height)

@@ -6,13 +6,18 @@ namespace KHorrorGame.Migration
     {
         [SerializeField] private GameLoopController gameLoop;
 
-        public string InteractionLabel => gameLoop != null ? gameLoop.TerminalActionText() + " [E]" : "Use terminal [E]";
+        public string InteractionLabel => gameLoop != null ? "[E] 단말기 조작 - " + gameLoop.TerminalActionText() : "[E] 단말기 조작";
 
         private void Awake()
         {
             if (gameLoop == null)
             {
                 gameLoop = FindObjectOfType<GameLoopController>();
+            }
+
+            if (gameLoop != null)
+            {
+                VanTerminalController.EnsureRuntimePanel(gameLoop);
             }
         }
 
@@ -26,6 +31,7 @@ namespace KHorrorGame.Migration
             if (CanInteract(actor))
             {
                 gameLoop.OperateBongoTerminal();
+                VanTerminalController.EnsureRuntimePanel(gameLoop);
             }
         }
     }
