@@ -934,6 +934,86 @@ namespace KHorrorGame.Editor
             CreatePaperCharm(parent, new Vector3(2.4f, 2.7f, 79.15f), "MainDoorCharm_Right");
             CreateCube("BackExitGap", parent, new Vector3(-7.6f, 0.1f, 88.5f), new Vector3(2.2f, 0.2f, 6.4f), Materials.Road);
             CreateBambooCluster(parent, new Vector3(-9.1f, 0f, 88.5f), "BackExitBamboo");
+            CreateMainHouseInteriorRoute(parent);
+        }
+
+        private static void CreateMainHouseInteriorRoute(Transform parent)
+        {
+            CreateCube("MainHouseRoom_LeftAncestralChamber", parent, new Vector3(-5.15f, 0.58f, 83.0f), new Vector3(2.95f, 0.04f, 5.4f), Materials.Wood);
+            CreateCube("MainHouseRoom_CentralHall", parent, new Vector3(0f, 0.585f, 83.1f), new Vector3(4.8f, 0.04f, 5.6f), Materials.Wood);
+            CreateCube("MainHouseRoom_RightStorageChamber", parent, new Vector3(5.15f, 0.58f, 83.0f), new Vector3(2.95f, 0.04f, 5.4f), Materials.Wood);
+
+            for (var i = 0; i < 3; i++)
+            {
+                CreateCube(
+                    "MainHouseCeilingPanel_" + i,
+                    parent,
+                    new Vector3(-4.8f + i * 4.8f, 3.42f, 83.05f),
+                    new Vector3(4.25f, 0.14f, 5.7f),
+                    Materials.DarkWood);
+            }
+
+            for (var i = 0; i < 5; i++)
+            {
+                CreateCube(
+                    "MainHouseCeilingBeam_" + i,
+                    parent,
+                    new Vector3(-5.6f + i * 2.8f, 3.12f, 83.0f),
+                    new Vector3(0.18f, 0.28f, 5.9f),
+                    Materials.DarkWood);
+            }
+
+            CreateDoorFrame(parent, "MainHouseDoorFrame_CenterEntry", new Vector3(0f, 1.78f, 79.36f), 1.85f, 2.35f, true);
+            CreateDoorFrame(parent, "MainHouseDoorFrame_LeftRoomEntry", new Vector3(-4.55f, 1.65f, 81.1f), 1.55f, 2.05f, false);
+            CreateDoorFrame(parent, "MainHouseDoorFrame_RightRoomEntry", new Vector3(4.55f, 1.65f, 81.1f), 1.55f, 2.05f, false);
+            CreateDoorFrame(parent, "MainHouseDoorFrame_LeftRearPassage", new Vector3(-5.85f, 1.52f, 86.2f), 1.35f, 1.9f, true);
+            CreateDoorFrame(parent, "MainHouseDoorFrame_CenterRearScreen", new Vector3(0f, 1.55f, 84.86f), 1.65f, 1.95f, true);
+            CreateDoorFrame(parent, "MainHouseDoorFrame_RightStorageNiche", new Vector3(5.45f, 1.52f, 84.3f), 1.25f, 1.85f, true);
+
+            AttachPaperDoorInteraction(
+                CreateCube("MainHouseInteriorPaperDoor_LeftRoom", parent, new Vector3(-5.25f, 1.55f, 82.65f), new Vector3(1.2f, 1.9f, 0.08f), Materials.DoorPaper),
+                "left main house paper door");
+            AttachPaperDoorInteraction(
+                CreateCube("MainHouseInteriorPaperDoor_RightRoom", parent, new Vector3(5.25f, 1.55f, 82.65f), new Vector3(1.2f, 1.9f, 0.08f), Materials.DoorPaper),
+                "right main house paper door");
+
+            CreateCube("MainHouseInteriorSightlineBlocker_LeftRoomScreen", parent, new Vector3(-5.6f, 1.55f, 84.05f), new Vector3(1.2f, 2.0f, 0.14f), Materials.DoorPaper);
+            CreateCube("MainHouseInteriorSightlineBlocker_RightRoomScreen", parent, new Vector3(5.6f, 1.55f, 84.05f), new Vector3(1.2f, 2.0f, 0.14f), Materials.DoorPaper);
+            CreateCube("MainHouseInteriorSightlineBlocker_CentralPrayerScreen", parent, new Vector3(0f, 1.55f, 84.05f), new Vector3(1.4f, 2.0f, 0.14f), Materials.DoorPaper);
+
+            CreateCube("MainHouseRoomProp_AncestralChest", parent, new Vector3(-6.0f, 0.98f, 85.15f), new Vector3(0.8f, 0.65f, 0.45f), Materials.DarkWood);
+            CreateCube("MainHouseRoomProp_RightShelf", parent, new Vector3(6.15f, 1.1f, 85.2f), new Vector3(0.55f, 1.1f, 0.45f), Materials.DarkWood);
+
+            var route = new[]
+            {
+                ("MainHouseInteriorRouteWaypoint_00_Entry", new Vector3(0f, 0.62f, 79.65f)),
+                ("MainHouseInteriorRouteWaypoint_01_CentralMaru", new Vector3(0f, 0.62f, 81.1f)),
+                ("MainHouseInteriorRouteWaypoint_02_LeftTurn", new Vector3(-1.65f, 0.62f, 82.0f)),
+                ("MainHouseInteriorRouteWaypoint_03_ScrollApproach", new Vector3(-1.65f, 0.62f, 83.2f)),
+                ("MainHouseInteriorRouteWaypoint_04_CenterReturn", new Vector3(0f, 0.62f, 83.6f)),
+                ("MainHouseInteriorRouteWaypoint_05_RearPassage", new Vector3(-1.65f, 0.62f, 85.55f)),
+                ("MainHouseInteriorRouteWaypoint_06_RearExit", new Vector3(-5.8f, 0.66f, 86.85f)),
+            };
+            foreach (var waypoint in route)
+            {
+                CreateMarker(waypoint.Item1, waypoint.Item2, Quaternion.identity, parent);
+            }
+
+            CreateMarker("MainHouseArtifactRouteWaypoint_00_Entry", new Vector3(0f, 0.62f, 79.65f), Quaternion.identity, parent);
+            CreateMarker("MainHouseArtifactRouteWaypoint_01_LeftInterior", new Vector3(-1.65f, 0.62f, 81.85f), Quaternion.identity, parent);
+            CreateMarker("MainHouseArtifactRouteWaypoint_02_ScrollPickup", new Vector3(-1.6f, 0.62f, 82.95f), Quaternion.identity, parent);
+        }
+
+        private static void CreateDoorFrame(Transform parent, string name, Vector3 center, float width, float height, bool alongX)
+        {
+            var halfWidth = width * 0.5f;
+            var sideScale = alongX ? new Vector3(0.12f, height, 0.16f) : new Vector3(0.16f, height, 0.12f);
+            var topScale = alongX ? new Vector3(width + 0.24f, 0.14f, 0.18f) : new Vector3(0.18f, 0.14f, width + 0.24f);
+            var sideOffset = alongX ? new Vector3(halfWidth, 0f, 0f) : new Vector3(0f, 0f, halfWidth);
+
+            CreateCube(name + "_LeftPost", parent, center - sideOffset, sideScale, Materials.DarkWood);
+            CreateCube(name + "_RightPost", parent, center + sideOffset, sideScale, Materials.DarkWood);
+            CreateCube(name + "_Header", parent, center + new Vector3(0f, height * 0.5f, 0f), topScale, Materials.DarkWood);
         }
 
         private static void CreateSarangchae(Transform parent)
