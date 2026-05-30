@@ -40,7 +40,7 @@ namespace KHorrorGame.Migration.Tests
         }
 
         [Test]
-        public void ExtractingCargoRequiresEstateAndClearsHands()
+        public void ExtractingCargoNoLongerConvertsInventoryToInvisiblePendingValue()
         {
             var state = CreateState(0f);
             var relic = new ArtifactDefinition("Ledger", 230, 1.5f, 1);
@@ -50,14 +50,14 @@ namespace KHorrorGame.Migration.Tests
             Assert.IsTrue(state.OperateBongoTerminal());
             state.CompleteBongoTravel();
 
-            Assert.IsTrue(state.ExtractPlayerInventory());
-            Assert.AreEqual(230, state.PendingRecoveredValue);
-            Assert.AreEqual(0, state.PlayerInventory.Items.Count);
-            Assert.AreEqual(1, state.PendingCargoItems.Count);
+            Assert.IsFalse(state.ExtractPlayerInventory());
+            Assert.AreEqual(0, state.PendingRecoveredValue);
+            Assert.AreEqual(1, state.PlayerInventory.Items.Count);
+            Assert.AreEqual(0, state.PendingCargoItems.Count);
         }
 
         [Test]
-        public void CargoSettlementHappensImmediatelyInHub()
+        public void HubTerminalDoesNotSettleInventoryThatWasNeverPhysicallyLoaded()
         {
             var state = CreateState(0f);
             var relic = new ArtifactDefinition("Brass Bowl", 400, 2f, 2, null, 2);
@@ -65,7 +65,7 @@ namespace KHorrorGame.Migration.Tests
 
             Assert.IsTrue(state.OperateBongoTerminal());
             state.CompleteBongoTravel();
-            Assert.IsTrue(state.ExtractPlayerInventory());
+            Assert.IsFalse(state.ExtractPlayerInventory());
             Assert.IsFalse(state.SettleStoredCargo());
 
             Assert.IsTrue(state.OperateBongoTerminal());
@@ -73,14 +73,15 @@ namespace KHorrorGame.Migration.Tests
             Assert.AreEqual(GameMapId.BongoHub, state.CurrentMap);
 
             Assert.IsTrue(state.OperateBongoTerminal());
-            Assert.AreEqual(GameMapId.BongoHub, state.CurrentMap);
-            Assert.IsFalse(state.IsTraveling);
-            Assert.AreEqual(400, state.Quota.RecoveredValue);
+            Assert.AreEqual(GameMapId.BongoTravel, state.CurrentMap);
+            Assert.IsTrue(state.IsTraveling);
+            Assert.AreEqual(0, state.Quota.RecoveredValue);
             Assert.AreEqual(0, state.PendingRecoveredValue);
+            Assert.AreEqual(1, state.PlayerInventory.Items.Count);
         }
 
         [Test]
-        public void TerminalScreenShowsImmediateSettlementWhenCargoIsLoadedInHub()
+        public void TerminalScreenDoesNotShowSettlementForInventoryOnlyCargo()
         {
             var state = CreateState(0f);
             var relic = new ArtifactDefinition("Brass Bowl", 400, 2f, 2, null, 2);
@@ -88,13 +89,13 @@ namespace KHorrorGame.Migration.Tests
 
             Assert.IsTrue(state.OperateBongoTerminal());
             state.CompleteBongoTravel();
-            Assert.IsTrue(state.ExtractPlayerInventory());
+            Assert.IsFalse(state.ExtractPlayerInventory());
             Assert.IsTrue(state.ReturnToBongoHub());
             state.CompleteBongoTravel();
 
-            Assert.AreEqual("[E]\nSettle Cargo", state.TerminalScreenText());
-            Assert.AreEqual("Settle loaded cargo", state.TerminalActionText());
-            StringAssert.Contains("Loaded cargo: 400", state.MonitorBodyText());
+            Assert.AreEqual("[E]\nJongga Estate", state.TerminalScreenText());
+            Assert.AreEqual("Drive to Jongga estate", state.TerminalActionText());
+            StringAssert.Contains("Loaded cargo: 0", state.MonitorBodyText());
             StringAssert.Contains("Quota: 0 / 800", state.MonitorBodyText());
         }
 

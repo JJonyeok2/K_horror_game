@@ -6,7 +6,23 @@ namespace KHorrorGame.Migration
     {
         [SerializeField] private GameLoopController gameLoop;
 
-        public string InteractionLabel => gameLoop != null ? "[E] 단말기 조작 - " + gameLoop.TerminalActionText() : "[E] 단말기 조작";
+        public string InteractionLabel
+        {
+            get
+            {
+                if (gameLoop == null)
+                {
+                    return "[E] 단말기 조작";
+                }
+
+                if (gameLoop.State != null && gameLoop.State.IsTraveling)
+                {
+                    return "[E] 단말기 조작 - 이동 중 사용 불가";
+                }
+
+                return "[E] 단말기 조작 - " + gameLoop.TerminalActionText();
+            }
+        }
 
         private void Awake()
         {

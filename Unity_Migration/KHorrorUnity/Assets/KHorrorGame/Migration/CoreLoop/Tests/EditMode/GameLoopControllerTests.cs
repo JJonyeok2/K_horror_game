@@ -108,6 +108,83 @@ namespace KHorrorGame.Migration.Tests
             }
         }
 
+        [Test]
+        public void SettlementStationSettlesPhysicalCargoFromLoadedHold()
+        {
+            var fixture = new GameObject("SettlementStationFixture");
+            var holdObject = new GameObject("HubCargoHoldFixture");
+            var stationObject = new GameObject("SettlementStation");
+            var actorObject = new GameObject("SettlementActor");
+
+            try
+            {
+                var actor = actorObject.AddComponent<UnityPlayerController>();
+                var controller = fixture.AddComponent<GameLoopController>();
+                var hold = holdObject.AddComponent<VanCargoHold>();
+                Assert.IsTrue(hold.TryStore(new ArtifactDefinition("Ledger", 230, 1.5f, 1), out _));
+
+                typeof(GameLoopController)
+                    .GetMethod("Awake", BindingFlags.Instance | BindingFlags.NonPublic)
+                    .Invoke(controller, null);
+                SetPrivateField(controller, "hubCargoHold", hold);
+                Assert.IsTrue(controller.State.BeginBongoTravel(GameMapId.SettlementOffice));
+                controller.State.CompleteBongoTravel();
+
+                var station = stationObject.AddComponent<SettlementStation>();
+                SetPrivateField(station, "gameLoop", controller);
+
+                Assert.IsTrue(station.CanInteract(actor));
+
+                station.Interact(actor);
+
+                Assert.AreEqual(230, controller.Quota.RecoveredValue);
+                Assert.AreEqual(0, hold.CargoCount);
+                StringAssert.Contains("+230", controller.FeedbackMessage);
+            }
+            finally
+            {
+                Object.DestroyImmediate(actorObject);
+                Object.DestroyImmediate(stationObject);
+                Object.DestroyImmediate(holdObject);
+                Object.DestroyImmediate(fixture);
+            }
+        }
+
+        [Test]
+        public void SettlementStationShowsNoCargoFeedbackForEmptyPhysicalHold()
+        {
+            var fixture = new GameObject("SettlementStationEmptyFixture");
+            var stationObject = new GameObject("SettlementStation");
+            var actorObject = new GameObject("SettlementActor");
+
+            try
+            {
+                var actor = actorObject.AddComponent<UnityPlayerController>();
+                var controller = fixture.AddComponent<GameLoopController>();
+                typeof(GameLoopController)
+                    .GetMethod("Awake", BindingFlags.Instance | BindingFlags.NonPublic)
+                    .Invoke(controller, null);
+                Assert.IsTrue(controller.State.BeginBongoTravel(GameMapId.SettlementOffice));
+                controller.State.CompleteBongoTravel();
+
+                var station = stationObject.AddComponent<SettlementStation>();
+                SetPrivateField(station, "gameLoop", controller);
+
+                Assert.IsTrue(station.CanInteract(actor));
+
+                station.Interact(actor);
+
+                Assert.AreEqual(0, controller.Quota.RecoveredValue);
+                Assert.AreEqual("No loaded cargo", controller.FeedbackMessage);
+            }
+            finally
+            {
+                Object.DestroyImmediate(actorObject);
+                Object.DestroyImmediate(stationObject);
+                Object.DestroyImmediate(fixture);
+            }
+        }
+
         private static void SetPrivateField(object target, string fieldName, object value)
         {
             target.GetType()

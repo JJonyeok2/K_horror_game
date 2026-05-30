@@ -8,7 +8,7 @@ namespace KHorrorGame.Migration
         [SerializeField] private GameLoopController gameLoop;
         [SerializeField] private bool autoExtractOnEnter;
 
-        public string InteractionLabel => "Load cargo [E]";
+        public string InteractionLabel => "[G] Load cargo inside van";
 
         private void Awake()
         {
@@ -36,7 +36,7 @@ namespace KHorrorGame.Migration
         {
             if (CanInteract(actor))
             {
-                gameLoop.ExtractPlayerInventory();
+                gameLoop.ShowFeedback("Use the van cargo zone with [G]");
             }
         }
 
@@ -50,7 +50,7 @@ namespace KHorrorGame.Migration
             var actor = other.GetComponentInParent<UnityPlayerController>();
             if (CanInteract(actor))
             {
-                gameLoop.ExtractPlayerInventory();
+                gameLoop.ShowFeedback("Use the van cargo zone with [G]");
             }
         }
     }

@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace KHorrorGame.Migration
 {
-    public sealed class ArtifactPickup : MonoBehaviour, IInteractable
+    public sealed class ArtifactPickup : MonoBehaviour, IInteractable, IInteractionFailureReason
     {
         [SerializeField] private string displayName = "Artifact";
         [SerializeField] private int value = 100;
@@ -13,7 +13,7 @@ namespace KHorrorGame.Migration
         [SerializeField] private bool countResentmentOnPickup = true;
         [SerializeField] private GameLoopController gameLoop;
 
-        public string InteractionLabel => $"Pick up [E] {displayName}";
+        public string InteractionLabel => "[E] 물건 줍기 - " + displayName;
 
         private void Awake()
         {
@@ -34,6 +34,16 @@ namespace KHorrorGame.Migration
         public bool CanInteract(UnityPlayerController actor)
         {
             return actor != null && actor.Inventory.FreeHandSlots() >= handSlots;
+        }
+
+        public string InvalidInteractionReason(UnityPlayerController actor)
+        {
+            if (actor == null)
+            {
+                return string.Empty;
+            }
+
+            return actor.Inventory.FreeHandSlots() < handSlots ? "Hands full" : string.Empty;
         }
 
         public void Interact(UnityPlayerController actor)

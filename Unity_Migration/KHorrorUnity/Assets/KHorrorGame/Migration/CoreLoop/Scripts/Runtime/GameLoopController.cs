@@ -26,6 +26,9 @@ namespace KHorrorGame.Migration
         [SerializeField] private float travelSeconds = BongoRunStateMachine.DefaultTravelSeconds;
         [SerializeField] private float feedbackSeconds = 2f;
 
+        [Header("Audio")]
+        [SerializeField] private KoreanHorrorAudioCueBus audioCueBus;
+
         private Inventory fallbackInventory;
         private float feedbackRemainingSeconds;
 
@@ -48,6 +51,8 @@ namespace KHorrorGame.Migration
                 player = FindObjectOfType<UnityPlayerController>();
             }
 
+            ResolveAudioCueBus();
+
             fallbackInventory = new Inventory(12f, 2);
             ThreatGate = new ThreatSpawnGate();
             State = new BongoRunStateMachine(
@@ -59,8 +64,6 @@ namespace KHorrorGame.Migration
 
             State.TravelStarted += OnTravelStarted;
             State.TravelCompleted += OnTravelCompleted;
-            State.CargoStored += OnCargoStored;
-            State.SettlementCompleted += OnSettlementCompleted;
             State.StateChanged += NotifyStateChanged;
         }
 
@@ -82,10 +85,14 @@ namespace KHorrorGame.Migration
         {
             if (CanSettleLoadedCargo())
             {
-                return SettleLoadedCargo();
+                var settled = SettleLoadedCargo();
+                RequestAudioCue(settled ? KoreanHorrorAudioCueBus.TerminalAccepted : KoreanHorrorAudioCueBus.TerminalDenied);
+                return settled;
             }
 
-            return State.OperateBongoTerminal();
+            var operated = State.OperateBongoTerminal();
+            RequestAudioCue(operated ? KoreanHorrorAudioCueBus.TerminalAccepted : KoreanHorrorAudioCueBus.TerminalDenied);
+            return operated;
         }
 
         public bool ExtractPlayerInventory()
@@ -95,25 +102,22 @@ namespace KHorrorGame.Migration
             {
                 player.RefreshHeldItemViews();
             }
+            else if (!extracted)
+            {
+                ShowFeedback("Use the van cargo zone with [G]");
+            }
 
             return extracted;
         }
 
         public bool SettleStoredCargo()
         {
-            if (CanSettleLoadedCargo())
+            if (CanUsePhysicalSettlement())
             {
                 return SettleLoadedCargo();
             }
 
-            var settled = State.PendingRecoveredValue;
-            var succeeded = State.SettleStoredCargo();
-            if (succeeded)
-            {
-                ShowSettlementFeedback(settled);
-            }
-
-            return succeeded;
+            return false;
         }
 
         public bool ReturnToBongoHub()
@@ -135,8 +139,14 @@ namespace KHorrorGame.Migration
                 return;
             }
 
+            var previousStage = State.Resentment.Stage();
             ThreatGate.NotifyArtifactPicked(definition);
             State.Resentment.AddResentment(ResentmentGainFor(definition), definition.DisplayName);
+            if (State.Resentment.Stage() > previousStage)
+            {
+                RequestAudioCue(KoreanHorrorAudioCueBus.ResentmentStageUp);
+            }
+
             NotifyStateChanged();
         }
 
@@ -147,7 +157,7 @@ namespace KHorrorGame.Migration
                 return "[E]\nUse Terminal";
             }
 
-            if (!State.IsTraveling && State.CurrentMap == GameMapId.BongoHub && LoadedCargoValue > 0)
+            if (CanSettleLoadedCargo())
             {
                 return "[E]\nSettle Cargo";
             }
@@ -162,7 +172,7 @@ namespace KHorrorGame.Migration
                 return "Use terminal";
             }
 
-            if (!State.IsTraveling && State.CurrentMap == GameMapId.BongoHub && LoadedCargoValue > 0)
+            if (CanSettleLoadedCargo())
             {
                 return "Settle loaded cargo";
             }
@@ -226,10 +236,15 @@ namespace KHorrorGame.Migration
         private bool CanSettleLoadedCargo()
         {
             EnsureCargoHoldReferences();
+            return CanUsePhysicalSettlement() && LoadedCargoValue > 0;
+        }
+
+        private bool CanUsePhysicalSettlement()
+        {
             return State != null
                    && !State.IsTraveling
-                   && State.CurrentMap == GameMapId.BongoHub
-                   && LoadedCargoValue > 0;
+                   && (State.CurrentMap == GameMapId.BongoHub
+                       || State.CurrentMap == GameMapId.SettlementOffice);
         }
 
         private bool SettleLoadedCargo()
@@ -304,6 +319,23 @@ namespace KHorrorGame.Migration
             }
         }
 
+        private void ResolveAudioCueBus()
+        {
+            if (audioCueBus == null)
+            {
+                audioCueBus = FindObjectOfType<KoreanHorrorAudioCueBus>();
+            }
+        }
+
+        private void RequestAudioCue(string cueKey)
+        {
+            ResolveAudioCueBus();
+            if (audioCueBus != null)
+            {
+                audioCueBus.RequestCue(cueKey);
+            }
+        }
+
         private VanCargoHold CreateRuntimeHubCargoHold()
         {
             var root = new GameObject("BongoHubCargoHold");
@@ -335,16 +367,6 @@ namespace KHorrorGame.Migration
         private void ShowSettlementFeedback(int value)
         {
             ShowFeedback(string.Format("Settled +{0}", value));
-        }
-
-        private void OnCargoStored(object sender, CargoEventArgs args)
-        {
-            NotifyStateChanged();
-        }
-
-        private void OnSettlementCompleted(object sender, CargoEventArgs args)
-        {
-            NotifyStateChanged();
         }
 
         private void MovePlayerTo(GameMapId mapId)

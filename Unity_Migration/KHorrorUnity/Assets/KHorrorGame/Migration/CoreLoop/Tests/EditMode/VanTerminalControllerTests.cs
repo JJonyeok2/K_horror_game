@@ -32,6 +32,42 @@ namespace KHorrorGame.Migration.Tests
         }
 
         [Test]
+        public void TerminalPanelShowsDepartTravelAndReturnActionStates()
+        {
+            var fixture = new TerminalFixture();
+
+            try
+            {
+                fixture.Terminal.ManualRefresh(true);
+                fixture.Terminal.ManualTick(20f);
+
+                Assert.AreEqual(VanTerminalVisualState.ReadyToDepart, fixture.Terminal.VisualState);
+                StringAssert.Contains("ACTION: Drive to Jongga estate", fixture.Terminal.VisibleBodyText);
+                StringAssert.Contains("DEPART", fixture.Terminal.FooterText);
+
+                Assert.IsTrue(fixture.GameLoop.OperateBongoTerminal());
+                fixture.Terminal.ManualRefresh(true);
+                fixture.Terminal.ManualTick(20f);
+
+                Assert.AreEqual(VanTerminalVisualState.Traveling, fixture.Terminal.VisualState);
+                StringAssert.Contains("ACTION: Traveling", fixture.Terminal.VisibleBodyText);
+                StringAssert.Contains("DRIVE SEQUENCE ACTIVE", fixture.Terminal.FooterText);
+
+                fixture.GameLoop.State.CompleteBongoTravel();
+                fixture.Terminal.ManualRefresh(true);
+                fixture.Terminal.ManualTick(20f);
+
+                Assert.AreEqual(VanTerminalVisualState.ReadyToReturn, fixture.Terminal.VisualState);
+                StringAssert.Contains("ACTION: Return to the van", fixture.Terminal.VisibleBodyText);
+                StringAssert.Contains("RETURN", fixture.Terminal.FooterText);
+            }
+            finally
+            {
+                fixture.Destroy();
+            }
+        }
+
+        [Test]
         public void TerminalPanelTypesBodyTextOverTime()
         {
             var fixture = new TerminalFixture();
@@ -136,9 +172,33 @@ namespace KHorrorGame.Migration.Tests
             }
         }
 
+        [Test]
+        public void TerminalInteractableShowsUnavailableLabelDuringTravel()
+        {
+            var fixture = new TerminalFixture();
+
+            try
+            {
+                var terminalObject = new GameObject("BongoTerminalFixture");
+                terminalObject.transform.SetParent(fixture.Root.transform, false);
+                var terminal = terminalObject.AddComponent<BongoTerminal>();
+                SetPrivateField(terminal, "gameLoop", fixture.GameLoop);
+
+                Assert.IsTrue(fixture.GameLoop.OperateBongoTerminal());
+
+                Assert.IsFalse(terminal.CanInteract(fixture.Player));
+                Assert.AreEqual("[E] 단말기 조작 - 이동 중 사용 불가", terminal.InteractionLabel);
+            }
+            finally
+            {
+                fixture.Destroy();
+            }
+        }
+
         private sealed class TerminalFixture
         {
             public GameObject Root { get; }
+            public UnityPlayerController Player { get; }
             public GameLoopController GameLoop { get; }
             public VanCargoHold CargoHold { get; }
             public VanTerminalController Terminal { get; }
@@ -150,7 +210,7 @@ namespace KHorrorGame.Migration.Tests
                 var playerObject = new GameObject("TerminalPlayer");
                 playerObject.transform.SetParent(Root.transform, false);
                 playerObject.AddComponent<CharacterController>();
-                var player = playerObject.AddComponent<UnityPlayerController>();
+                Player = playerObject.AddComponent<UnityPlayerController>();
 
                 var hubRoot = new GameObject("BongoHub");
                 hubRoot.transform.SetParent(Root.transform, false);
@@ -164,7 +224,7 @@ namespace KHorrorGame.Migration.Tests
                 var gameLoopObject = new GameObject("GameLoop");
                 gameLoopObject.transform.SetParent(Root.transform, false);
                 GameLoop = gameLoopObject.AddComponent<GameLoopController>();
-                SetPrivateField(GameLoop, "player", player);
+                SetPrivateField(GameLoop, "player", Player);
                 SetPrivateField(GameLoop, "bongoHubRoot", hubRoot);
                 SetPrivateField(GameLoop, "hubCargoHold", CargoHold);
                 InvokePrivate(GameLoop, "Awake");

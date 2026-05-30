@@ -32,6 +32,47 @@ namespace KHorrorGame.Migration.Tests
         }
 
         [Test]
+        public void StoredCargoInteractionLabelUsesReadableKoreanPickupPrompt()
+        {
+            var fixture = new CargoHoldFixture();
+
+            try
+            {
+                Assert.IsTrue(fixture.Hold.TryStore(new ArtifactDefinition("Ledger", 230, 1.5f, 1), out var cargoItem));
+
+                Assert.AreEqual("[E] 화물 다시 들기 - Ledger", ((IInteractable)cargoItem).InteractionLabel);
+            }
+            finally
+            {
+                fixture.Destroy();
+            }
+        }
+
+        [Test]
+        public void StoredCargoRepickupShowsSuccessFeedback()
+        {
+            var fixture = new CargoHoldFixture();
+            var actor = CreateActor("CargoRepickupFeedbackActor");
+            var gameLoopObject = new GameObject("CargoRepickupSuccessLoop");
+
+            try
+            {
+                var gameLoop = gameLoopObject.AddComponent<GameLoopController>();
+                Assert.IsTrue(fixture.Hold.TryStore(new ArtifactDefinition("Ledger", 230, 1.5f, 1), out var cargoItem));
+
+                ((IInteractable)cargoItem).Interact(actor);
+
+                Assert.AreEqual("Cargo picked up", gameLoop.FeedbackMessage);
+            }
+            finally
+            {
+                Object.DestroyImmediate(gameLoopObject);
+                DestroyActor(actor);
+                fixture.Destroy();
+            }
+        }
+
+        [Test]
         public void StoredCargoCanBePickedBackUpFromHold()
         {
             var fixture = new CargoHoldFixture();

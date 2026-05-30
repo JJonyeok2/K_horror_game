@@ -10,6 +10,8 @@ namespace KHorrorGame.Migration
         [SerializeField] private PlayerInteractor interactor;
         [SerializeField] private Text statusText;
         [SerializeField] private Text centerPromptText;
+        [SerializeField] private Text centerPromptSubjectText;
+        [SerializeField] private Text feedbackText;
         [SerializeField] private Image staminaFill;
 
         private void Awake()
@@ -49,7 +51,12 @@ namespace KHorrorGame.Migration
 
             if (centerPromptText != null)
             {
-                centerPromptText.text = ResolveCenterPrompt();
+                RefreshCenterPrompt();
+            }
+
+            if (feedbackText != null)
+            {
+                feedbackText.text = ResolveFeedbackText();
             }
 
             if (staminaFill != null && player != null)
@@ -60,12 +67,72 @@ namespace KHorrorGame.Migration
 
         private string ResolveCenterPrompt()
         {
-            if (gameLoop != null && !string.IsNullOrEmpty(gameLoop.FeedbackMessage))
+            if (feedbackText == null && gameLoop != null && !string.IsNullOrEmpty(gameLoop.FeedbackMessage))
             {
                 return gameLoop.FeedbackMessage;
             }
 
             return interactor != null ? interactor.CurrentLabel : string.Empty;
+        }
+
+        private void RefreshCenterPrompt()
+        {
+            var prompt = ResolveCenterPrompt();
+            var split = SplitPrompt(prompt);
+            centerPromptText.text = split.Action;
+
+            if (centerPromptSubjectText == null)
+            {
+                return;
+            }
+
+            centerPromptSubjectText.text = split.Subject;
+            var actionColor = centerPromptText.color;
+            centerPromptSubjectText.color = new Color(
+                actionColor.r,
+                actionColor.g,
+                actionColor.b,
+                Mathf.Min(actionColor.a, 0.58f));
+        }
+
+        private string ResolveFeedbackText()
+        {
+            if (gameLoop != null && !string.IsNullOrEmpty(gameLoop.FeedbackMessage))
+            {
+                return gameLoop.FeedbackMessage;
+            }
+
+            return interactor != null ? interactor.CurrentInvalidReason : string.Empty;
+        }
+
+        private static PromptParts SplitPrompt(string prompt)
+        {
+            if (string.IsNullOrEmpty(prompt))
+            {
+                return new PromptParts(string.Empty, string.Empty);
+            }
+
+            var separatorIndex = prompt.IndexOf(" - ", System.StringComparison.Ordinal);
+            if (separatorIndex < 0)
+            {
+                return new PromptParts(prompt, string.Empty);
+            }
+
+            return new PromptParts(
+                prompt.Substring(0, separatorIndex),
+                prompt.Substring(separatorIndex + 3));
+        }
+
+        private readonly struct PromptParts
+        {
+            public string Action { get; }
+            public string Subject { get; }
+
+            public PromptParts(string action, string subject)
+            {
+                Action = action;
+                Subject = subject;
+            }
         }
     }
 }

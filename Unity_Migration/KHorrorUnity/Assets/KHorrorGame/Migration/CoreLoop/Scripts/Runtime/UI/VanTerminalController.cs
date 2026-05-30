@@ -6,6 +6,8 @@ namespace KHorrorGame.Migration
     public enum VanTerminalVisualState
     {
         Idle,
+        ReadyToDepart,
+        ReadyToReturn,
         ReadyToSettle,
         Traveling,
         Success,
@@ -193,9 +195,25 @@ namespace KHorrorGame.Migration
                 return VanTerminalVisualState.Traveling;
             }
 
-            return gameLoop.LoadedCargoValue > 0
-                ? VanTerminalVisualState.ReadyToSettle
-                : VanTerminalVisualState.Idle;
+            if (gameLoop.State.CurrentMap == GameMapId.BongoHub)
+            {
+                return gameLoop.LoadedCargoValue > 0
+                    ? VanTerminalVisualState.ReadyToSettle
+                    : VanTerminalVisualState.ReadyToDepart;
+            }
+
+            if (gameLoop.State.CurrentMap == GameMapId.SettlementOffice && gameLoop.LoadedCargoValue > 0)
+            {
+                return VanTerminalVisualState.ReadyToSettle;
+            }
+
+            if (gameLoop.State.CurrentMap == GameMapId.JonggaEstate ||
+                gameLoop.State.CurrentMap == GameMapId.SettlementOffice)
+            {
+                return VanTerminalVisualState.ReadyToReturn;
+            }
+
+            return VanTerminalVisualState.Idle;
         }
 
         private void ApplyText()
@@ -221,6 +239,10 @@ namespace KHorrorGame.Migration
         {
             switch (VisualState)
             {
+                case VanTerminalVisualState.ReadyToDepart:
+                    return "READY // DEPART";
+                case VanTerminalVisualState.ReadyToReturn:
+                    return "READY // RETURN";
                 case VanTerminalVisualState.ReadyToSettle:
                     return "READY // SETTLE CARGO";
                 case VanTerminalVisualState.Traveling:
@@ -259,6 +281,10 @@ namespace KHorrorGame.Migration
         {
             switch (state)
             {
+                case VanTerminalVisualState.ReadyToDepart:
+                    return new Color(0.36f, 0.85f, 0.68f, 0.86f);
+                case VanTerminalVisualState.ReadyToReturn:
+                    return new Color(0.58f, 0.78f, 1f, 0.92f);
                 case VanTerminalVisualState.ReadyToSettle:
                     return new Color(0.2f, 0.92f, 0.48f, 0.95f);
                 case VanTerminalVisualState.Traveling:

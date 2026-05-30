@@ -13,16 +13,6 @@ namespace KHorrorGame.Migration
         }
     }
 
-    public sealed class CargoEventArgs : EventArgs
-    {
-        public int Value { get; private set; }
-
-        public CargoEventArgs(int value)
-        {
-            Value = value;
-        }
-    }
-
     [Serializable]
     public sealed class BongoRunStateMachine
     {
@@ -34,8 +24,6 @@ namespace KHorrorGame.Migration
 
         public event EventHandler<BongoTravelEventArgs> TravelStarted;
         public event EventHandler<BongoTravelEventArgs> TravelCompleted;
-        public event EventHandler<CargoEventArgs> CargoStored;
-        public event EventHandler<CargoEventArgs> SettlementCompleted;
         public event Action StateChanged;
 
         public Inventory PlayerInventory { get; private set; }
@@ -93,9 +81,7 @@ namespace KHorrorGame.Migration
 
             if (CurrentMap == GameMapId.BongoHub)
             {
-                return PendingRecoveredValue > 0
-                    ? SettleStoredCargo()
-                    : TravelToRetrievalMap(GameMapId.JonggaEstate);
+                return TravelToRetrievalMap(GameMapId.JonggaEstate);
             }
 
             if (CurrentMap == GameMapId.JonggaEstate)
@@ -105,7 +91,7 @@ namespace KHorrorGame.Migration
 
             if (CurrentMap == GameMapId.SettlementOffice)
             {
-                return PendingRecoveredValue > 0 ? SettleStoredCargo() : ReturnToBongoHub();
+                return ReturnToBongoHub();
             }
 
             return false;
@@ -113,48 +99,12 @@ namespace KHorrorGame.Migration
 
         public bool ExtractPlayerInventory()
         {
-            if (CurrentMap != GameMapId.JonggaEstate || PlayerInventory.Items.Count == 0)
-            {
-                return false;
-            }
-
-            var value = PlayerInventory.TotalValue();
-            foreach (var item in PlayerInventory.Items)
-            {
-                _pendingCargoItems.Add(item);
-            }
-
-            PendingRecoveredValue += value;
-            PlayerInventory.Clear();
-            var handler = CargoStored;
-            if (handler != null)
-            {
-                handler(this, new CargoEventArgs(value));
-            }
-
-            NotifyStateChanged();
-            return true;
+            return false;
         }
 
         public bool SettleStoredCargo()
         {
-            if ((CurrentMap != GameMapId.SettlementOffice && CurrentMap != GameMapId.BongoHub) || PendingRecoveredValue <= 0)
-            {
-                return false;
-            }
-
-            var settledValue = PendingRecoveredValue;
-            Quota.AddRecoveredValue(settledValue);
-            PendingRecoveredValue = 0;
-            _pendingCargoItems.Clear();
-            var handler = SettlementCompleted;
-            if (handler != null)
-            {
-                handler(this, new CargoEventArgs(settledValue));
-            }
-
-            NotifyStateChanged();
-            return true;
+            return false;
         }
 
         public bool DepartBongo()
@@ -181,7 +131,7 @@ namespace KHorrorGame.Migration
                 return false;
             }
 
-            if (CurrentMap != GameMapId.BongoHub || PendingRecoveredValue > 0 || mapId != GameMapId.JonggaEstate)
+            if (CurrentMap != GameMapId.BongoHub || mapId != GameMapId.JonggaEstate)
             {
                 return false;
             }
@@ -274,7 +224,7 @@ namespace KHorrorGame.Migration
 
             if (CurrentMap == GameMapId.BongoHub)
             {
-                return PendingRecoveredValue > 0 ? "[E]\nSettle Cargo" : "[E]\nJongga Estate";
+                return "[E]\nJongga Estate";
             }
 
             if (CurrentMap == GameMapId.JonggaEstate)
@@ -284,7 +234,7 @@ namespace KHorrorGame.Migration
 
             if (CurrentMap == GameMapId.SettlementOffice)
             {
-                return PendingRecoveredValue > 0 ? "[E]\nSettle Cargo" : "[E]\nReturn";
+                return "[E]\nReturn";
             }
 
             return "[E]\nUse Terminal";
@@ -299,9 +249,7 @@ namespace KHorrorGame.Migration
 
             if (CurrentMap == GameMapId.BongoHub)
             {
-                return PendingRecoveredValue > 0
-                    ? "Settle loaded cargo"
-                    : "Drive to Jongga estate";
+                return "Drive to Jongga estate";
             }
 
             if (CurrentMap == GameMapId.JonggaEstate)
@@ -311,7 +259,7 @@ namespace KHorrorGame.Migration
 
             if (CurrentMap == GameMapId.SettlementOffice)
             {
-                return PendingRecoveredValue > 0 ? "Settle loaded cargo" : "Return to the van hub";
+                return "Return to the van hub";
             }
 
             return "Idle";

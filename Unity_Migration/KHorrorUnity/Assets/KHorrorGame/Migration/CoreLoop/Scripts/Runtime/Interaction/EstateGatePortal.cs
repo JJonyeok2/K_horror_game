@@ -10,6 +10,7 @@ namespace KHorrorGame.Migration
         [SerializeField] private float cooldownSeconds = 0.45f;
         [SerializeField] private string enterLabel = "Enter estate [E]";
         [SerializeField] private string exitLabel = "Leave estate [E]";
+        [SerializeField] private KoreanHorrorAudioCueBus audioCueBus;
 
         private float nextAllowedTime;
         private string currentLabel = "Use gate [E]";
@@ -42,6 +43,7 @@ namespace KHorrorGame.Migration
 
             actor.Teleport(target.position, target.rotation);
             nextAllowedTime = Time.time + cooldownSeconds;
+            RequestAudioCue(KoreanHorrorAudioCueBus.GateTransition);
         }
 
         private bool IsOutside(UnityPlayerController actor)
@@ -52,6 +54,19 @@ namespace KHorrorGame.Migration
         private Transform ResolveTarget(UnityPlayerController actor)
         {
             return IsOutside(actor) ? insideSpawn : outsideSpawn;
+        }
+
+        private void RequestAudioCue(string cueKey)
+        {
+            if (audioCueBus == null)
+            {
+                audioCueBus = FindObjectOfType<KoreanHorrorAudioCueBus>();
+            }
+
+            if (audioCueBus != null)
+            {
+                audioCueBus.RequestCue(cueKey);
+            }
         }
     }
 }

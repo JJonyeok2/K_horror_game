@@ -50,7 +50,9 @@ namespace KHorrorGame.Editor
 
             var player = CreatePlayer();
             var controller = systems.AddComponent<GameLoopController>();
+            var audioCueBus = CreateAudioCueBus(systems.transform);
             SetObject(controller, "player", player.Controller);
+            SetObject(controller, "audioCueBus", audioCueBus);
             SetObject(controller, "bongoHubSpawn", bongoSpawn);
             SetObject(controller, "estateSpawn", estateSpawn);
             SetObject(controller, "settlementSpawn", settlementSpawn);
@@ -64,11 +66,11 @@ namespace KHorrorGame.Editor
             CreateLighting(systems.transform, player.CameraLight, player.Camera);
             CreateHud(systems.transform, controller, player.Controller, player.Interactor);
             var hubCargoHold = CreateBongoHub(bongoHub.transform, controller);
-            var estateCargoHold = CreateEstateProxy(estate.transform, controller, player.Controller);
+            var estateCargoHold = CreateEstateProxy(estate.transform, controller, player.Controller, audioCueBus);
             SetObject(controller, "hubCargoHold", hubCargoHold);
             SetObject(controller, "estateCargoHold", estateCargoHold);
             CreateSettlementProxy(settlement.transform, controller);
-            CreateTravelProxy(travel.transform);
+            CreateTravelProxy(travel.transform, controller);
 
             EditorSceneManager.SaveScene(scene, ScenePath);
             AssetDatabase.SaveAssets();
@@ -76,6 +78,22 @@ namespace KHorrorGame.Editor
 
             Selection.activeObject = AssetDatabase.LoadAssetAtPath<SceneAsset>(ScenePath);
             Debug.Log($"Created bootstrap Unity migration scene at {ScenePath}.");
+        }
+
+        private static KoreanHorrorAudioCueBus CreateAudioCueBus(Transform parent)
+        {
+            var audioObject = new GameObject("AudioCueBus");
+            audioObject.transform.SetParent(parent, false);
+            var source = audioObject.AddComponent<AudioSource>();
+            source.playOnAwake = false;
+            source.loop = false;
+            source.spatialBlend = 0f;
+            source.volume = 0.48f;
+            var bus = audioObject.AddComponent<KoreanHorrorAudioCueBus>();
+            SetObject(bus, "output", source);
+            EditorUtility.SetDirty(source);
+            EditorUtility.SetDirty(bus);
+            return bus;
         }
 
         private static PlayerBundle CreatePlayer()
@@ -159,10 +177,11 @@ namespace KHorrorGame.Editor
             rig.ApplyProfile();
 
             CreatePostProcessVolume(parent);
-            CreatePointLight("ApproachPathLowFill", parent, new Vector3(0f, 3.1f, 36f), new Color(0.45f, 0.55f, 0.68f), 2.25f, 42f);
-            CreatePointLight("CourtyardMoonBounce", parent, new Vector3(0f, 4.4f, 69f), new Color(0.52f, 0.58f, 0.66f), 1.65f, 36f);
-            CreatePointLight("GateWetLamp_Left", parent, new Vector3(-3.7f, 3.05f, 52.9f), new Color(1f, 0.58f, 0.34f), 2.5f, 12f);
+            CreatePointLight("ApproachPathLowFill", parent, new Vector3(0f, 3.1f, 36f), new Color(0.45f, 0.55f, 0.68f), 2.55f, 46f);
+            CreatePointLight("CourtyardMoonBounce", parent, new Vector3(0f, 4.4f, 69f), new Color(0.52f, 0.58f, 0.66f), 1.9f, 40f);
+            CreatePointLight("GateWetLamp_Left", parent, new Vector3(-3.7f, 3.05f, 52.9f), new Color(1f, 0.58f, 0.34f), 2.7f, 12.5f);
             CreatePointLight("GateWetLamp_Right", parent, new Vector3(3.7f, 3.05f, 52.9f), new Color(1f, 0.58f, 0.34f), 2.25f, 11f);
+            CreatePointLight("MainHouseInteriorReadabilityFill", parent, new Vector3(0f, 2.6f, 83.2f), new Color(0.62f, 0.55f, 0.43f), 1.35f, 11f);
             CreatePointLight("ShrineCandleGlow", parent, new Vector3(ShrineX, 1.35f, ShrineZ + 1f), new Color(1f, 0.46f, 0.25f), 2.5f, 8f);
         }
 
@@ -197,7 +216,11 @@ namespace KHorrorGame.Editor
             return cargoHold;
         }
 
-        private static VanCargoHold CreateEstateProxy(Transform parent, GameLoopController gameLoop, UnityPlayerController player)
+        private static VanCargoHold CreateEstateProxy(
+            Transform parent,
+            GameLoopController gameLoop,
+            UnityPlayerController player,
+            KoreanHorrorAudioCueBus audioCueBus)
         {
             var forestRoot = CreateZoneRoot(parent, "ForestApproach");
             var gateRoot = CreateZoneRoot(parent, "FrontGateBoundary");
@@ -223,7 +246,7 @@ namespace KHorrorGame.Editor
 
             CreateDistantSilhouette(parent);
             CreateForest(forestRoot);
-            CreateOuterGate(gateRoot, gateInsideSpawn, gateOutsideSpawn);
+            CreateOuterGate(gateRoot, gateInsideSpawn, gateOutsideSpawn, audioCueBus);
             CreateCourtyard(courtyardRoot);
             CreateMainHouse(mainHouseRoot);
             CreateSarangchae(courtyardRoot);
@@ -231,8 +254,8 @@ namespace KHorrorGame.Editor
             CreateShrineLoop(shrineRoot);
 
             CreateEstateArtifacts(parent, gameLoop);
-            CreateRuntimeThreatSpawner(parent, gameLoop, player);
-            return CreateEstateReturnBongo(parent, gameLoop);
+            CreateRuntimeThreatSpawner(parent, gameLoop, player, audioCueBus);
+            return CreateEstateReturnBongo(parent, gameLoop, audioCueBus);
         }
 
         private static void CreateEstateArtifacts(Transform parent, GameLoopController gameLoop)
@@ -276,13 +299,18 @@ namespace KHorrorGame.Editor
             EditorUtility.SetDirty(door);
         }
 
-        private static void CreateRuntimeThreatSpawner(Transform parent, GameLoopController gameLoop, UnityPlayerController player)
+        private static void CreateRuntimeThreatSpawner(
+            Transform parent,
+            GameLoopController gameLoop,
+            UnityPlayerController player,
+            KoreanHorrorAudioCueBus audioCueBus)
         {
             var root = new GameObject("RuntimeThreatSpawner");
             root.transform.SetParent(parent);
             var spawner = root.AddComponent<RuntimeThreatSpawner>();
             SetObject(spawner, "gameLoop", gameLoop);
             SetObject(spawner, "playerTarget", player.transform);
+            SetObject(spawner, "audioCueBus", audioCueBus);
 
             var ghostAnchors = new[]
             {
@@ -382,6 +410,9 @@ namespace KHorrorGame.Editor
             var brain = actor.AddComponent<EnemyBrain>();
             brain.Configure(EnemyKind.Ghost, ThreatStageProfile.ForStage(4), playerTarget, TerritoryKind.EstateInterior, position);
             brain.SetAutomaticTick(false);
+            var ghost = actor.AddComponent<GhostEnemy>();
+            ghost.Configure(brain, playerTarget, TerritoryKind.EstateInterior, position);
+            ghost.SetAutomaticTick(false);
 
             CreateLocalPrimitive(PrimitiveType.Cylinder, "RuntimeGhostActor_Body", actor.transform, new Vector3(0f, 0.68f, 0f), new Vector3(0.33f, 0.68f, 0.33f), Materials.GhostBody);
             CreateLocalPrimitive(PrimitiveType.Sphere, "RuntimeGhostActor_Head", actor.transform, new Vector3(0f, 1.5f, 0f), new Vector3(0.48f, 0.52f, 0.48f), Materials.GhostBody);
@@ -406,6 +437,9 @@ namespace KHorrorGame.Editor
             var brain = actor.AddComponent<EnemyBrain>();
             brain.Configure(EnemyKind.Dokkaebi, ThreatStageProfile.ForStage(3), playerTarget, TerritoryKind.ForestApproach, position);
             brain.SetAutomaticTick(false);
+            var dokkaebi = actor.AddComponent<DokkaebiEnemy>();
+            dokkaebi.Configure(brain, playerTarget, TerritoryKind.ForestApproach, position);
+            dokkaebi.SetAutomaticTick(false);
 
             CreateLocalPrimitive(PrimitiveType.Cylinder, "RuntimeDokkaebiActor_Body", actor.transform, new Vector3(0f, 0.58f, 0f), new Vector3(0.42f, 0.58f, 0.42f), Materials.DokkaebiBody);
             CreateLocalPrimitive(PrimitiveType.Sphere, "RuntimeDokkaebiActor_Head", actor.transform, new Vector3(0f, 1.34f, 0f), new Vector3(0.58f, 0.5f, 0.58f), Materials.DokkaebiBody);
@@ -468,12 +502,46 @@ namespace KHorrorGame.Editor
             CreatePointLight("SettlementOfficeDimFill", parent, new Vector3(1.2f, 2.8f, -36.5f), new Color(0.46f, 0.54f, 0.48f), 1.2f, 10f);
         }
 
-        private static void CreateTravelProxy(Transform parent)
+        private static void CreateTravelProxy(Transform parent, GameLoopController gameLoop)
         {
-            CreateCube("TravelMotionBackdrop", parent, new Vector3(0f, 1.2f, 8f), new Vector3(8f, 2.5f, 0.2f), Materials.Night);
+            var sequenceObject = new GameObject("BongoTravelSequence");
+            sequenceObject.transform.SetParent(parent, false);
+            var audio = sequenceObject.AddComponent<AudioSource>();
+            var sequence = sequenceObject.AddComponent<BongoTravelSequenceController>();
+
+            var fadeCanvasObject = new GameObject("BongoTravelFadeCanvas");
+            fadeCanvasObject.transform.SetParent(sequenceObject.transform, false);
+            var canvas = fadeCanvasObject.AddComponent<Canvas>();
+            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            canvas.sortingOrder = 90;
+            fadeCanvasObject.AddComponent<UnityEngine.UI.CanvasScaler>();
+            fadeCanvasObject.AddComponent<UnityEngine.UI.GraphicRaycaster>();
+            var fadeGroup = fadeCanvasObject.AddComponent<CanvasGroup>();
+            fadeGroup.alpha = 0f;
+            fadeGroup.blocksRaycasts = false;
+            var fadeImage = CreateUiImage(
+                "BongoTravelFadeImage",
+                fadeCanvasObject.transform,
+                Vector2.zero,
+                new Vector2(3200f, 1800f),
+                new Color(0f, 0f, 0f, 0.82f));
+            fadeImage.rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
+            fadeImage.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+            fadeImage.raycastTarget = false;
+
+            var backdrop = CreateCube("TravelMotionBackdrop", sequenceObject.transform, new Vector3(0f, 1.2f, 8f), new Vector3(8f, 2.5f, 0.2f), Materials.Night);
+            backdrop.GetComponent<Collider>().enabled = false;
+
+            SetObject(sequence, "gameLoop", gameLoop);
+            SetObject(sequence, "travelAudio", audio);
+            SetObject(sequence, "fadeGroup", fadeGroup);
+            SetObject(sequence, "motionRig", backdrop.transform);
         }
 
-        private static VanCargoHold CreateEstateReturnBongo(Transform parent, GameLoopController gameLoop)
+        private static VanCargoHold CreateEstateReturnBongo(
+            Transform parent,
+            GameLoopController gameLoop,
+            KoreanHorrorAudioCueBus audioCueBus)
         {
             var root = new GameObject("EstateReturnBongo");
             root.transform.SetParent(parent);
@@ -508,6 +576,7 @@ namespace KHorrorGame.Editor
             var cargoDeposit = cargoDepositZone.AddComponent<VanCargoDepositZone>();
             SetObject(cargoDeposit, "gameLoop", gameLoop);
             SetObject(cargoDeposit, "cargoHold", cargoHold);
+            SetObject(cargoDeposit, "audioCueBus", audioCueBus);
             CreateCube("ReturnBongoCargoPad_G", root.transform, new Vector3(0f, 0.32f, 3.38f), new Vector3(2.8f, 0.08f, 1.25f), Materials.Extraction).GetComponent<Collider>().enabled = false;
             CreateCube("ReturnBongoFrontBumper", root.transform, new Vector3(0f, 0.55f, -4.2f), new Vector3(3.7f, 0.32f, 0.18f), Materials.RustedMetal);
             CreateCube("ReturnBongoRearBumper", root.transform, new Vector3(0f, 0.55f, 4.18f), new Vector3(3.7f, 0.32f, 0.18f), Materials.RustedMetal);
@@ -541,6 +610,8 @@ namespace KHorrorGame.Editor
 
         private static void CreateForest(Transform parent)
         {
+            CreateForestSwitchbackRoute(parent);
+
             for (var i = 0; i < 64; i++)
             {
                 var z = 15f + i * 0.7f;
@@ -586,15 +657,123 @@ namespace KHorrorGame.Editor
             CreateJangseung(parent, new Vector3(4.8f, 0f, 48.4f), "GateJangseung_Right");
             CreateSotdae(parent, new Vector3(-3.2f, 0f, 50.5f), "Sotdae_Left");
             CreateSotdae(parent, new Vector3(3.2f, 0f, 50.7f), "Sotdae_Right");
+
+            CreateDeepForestDensity(parent);
         }
 
-        private static void CreateOuterGate(Transform parent, Transform gateInsideSpawn, Transform gateOutsideSpawn)
+        private static void CreateForestSwitchbackRoute(Transform parent)
+        {
+            var waypoints = new Vector3[55];
+            waypoints[0] = new Vector3(0f, 0.12f, 17.5f);
+            waypoints[1] = new Vector3(4.8f, 0.12f, 17.5f);
+
+            var waypointIndex = 2;
+            for (var i = 0; i < 13; i++)
+            {
+                var z = 19.3f + i * 2.4f;
+                waypoints[waypointIndex++] = new Vector3(4.8f, 0.12f, z);
+                waypoints[waypointIndex++] = new Vector3(-4.8f, 0.12f, z);
+                waypoints[waypointIndex++] = new Vector3(-4.8f, 0.12f, z + 1.2f);
+                waypoints[waypointIndex++] = new Vector3(4.8f, 0.12f, z + 1.2f);
+            }
+
+            waypoints[waypoints.Length - 1] = new Vector3(0f, 0.12f, 51.25f);
+
+            for (var i = 0; i < waypoints.Length; i++)
+            {
+                CreateMarker("ForestRouteWaypoint_" + i.ToString("00"), waypoints[i], Quaternion.identity, parent);
+            }
+
+            for (var i = 1; i < waypoints.Length; i++)
+            {
+                CreateForestRouteLane(parent, waypoints[i - 1], waypoints[i], i - 1);
+            }
+
+            for (var i = 0; i < 26; i++)
+            {
+                var z = 18.65f + i * 1.2f;
+                var openRight = i % 2 == 0;
+                var centerX = openRight ? -4.45f : 4.45f;
+                var blocker = CreateCube(
+                    "ForestSwitchbackBlocker_" + i.ToString("00"),
+                    parent,
+                    new Vector3(centerX, 1.15f, z),
+                    new Vector3(15.1f, 2.3f, 0.24f),
+                    Materials.DistantHill);
+                blocker.transform.rotation = Quaternion.Euler(0f, openRight ? 1.5f : -1.5f, 0f);
+
+                var thicketX = openRight ? -1.4f : 1.4f;
+                CreateBambooCluster(parent, new Vector3(thicketX, 0f, z - 0.18f), "ForestSwitchbackBamboo_" + i.ToString("00"));
+                CreateRockCluster(parent, new Vector3(openRight ? -2.8f : 2.8f, 0.2f, z + 0.16f), "ForestSwitchbackRock_" + i.ToString("00"));
+            }
+        }
+
+        private static void CreateForestRouteLane(Transform parent, Vector3 start, Vector3 end, int index)
+        {
+            var delta = end - start;
+            var center = (start + end) * 0.5f;
+            var horizontal = Mathf.Abs(delta.x) >= Mathf.Abs(delta.z);
+            var scale = horizontal
+                ? new Vector3(Mathf.Abs(delta.x) + 2.2f, 0.14f, 2.2f)
+                : new Vector3(2.2f, 0.14f, Mathf.Abs(delta.z) + 2.2f);
+            CreateCube(
+                "ForestSwitchbackLane_" + index.ToString("00"),
+                parent,
+                new Vector3(center.x, 0.045f, center.z),
+                scale,
+                index % 2 == 0 ? Materials.Road : Materials.WetMud);
+        }
+
+        private static void CreateDeepForestDensity(Transform parent)
+        {
+            for (var i = 0; i < 36; i++)
+            {
+                var z = 16.5f + (i % 18) * 1.95f;
+                var side = i < 18 ? -1f : 1f;
+                var x = side * (8.2f + (i % 4) * 0.75f);
+                CreateTree(parent, "DeepForestTree_" + i.ToString("00"), new Vector3(x, 0f, z), 11.5f + (i % 5) * 0.85f);
+            }
+
+            for (var i = 0; i < 12; i++)
+            {
+                var z = 19f + i * 2.8f;
+                var occluder = CreateCube(
+                    "ForestCanopyOccluder_" + i.ToString("00"),
+                    parent,
+                    new Vector3((i % 2 == 0 ? -1.8f : 1.8f), 4.25f, z),
+                    new Vector3(12.8f, 3.1f, 0.38f),
+                    Materials.Night,
+                    Quaternion.Euler(0f, i % 2 == 0 ? -5f : 5f, 0f));
+                DisableCollider(occluder);
+            }
+
+            for (var i = 0; i < 24; i++)
+            {
+                var z = 17f + i * 1.45f;
+                var x = i % 2 == 0 ? -2.4f - (i % 3) * 0.55f : 2.3f + (i % 4) * 0.45f;
+                CreateGrassClump(parent, new Vector3(x, 0.08f, z), "ForestDeadGrassPatch_" + i.ToString("00"));
+            }
+
+            for (var i = 0; i < 6; i++)
+            {
+                var z = 20.2f + i * 5.1f;
+                CreateJangseung(parent, new Vector3(-5.85f, 0f, z), "ForestRouteJangseungPair_" + i.ToString("00") + "_Left");
+                CreateJangseung(parent, new Vector3(5.85f, 0f, z + 1.15f), "ForestRouteJangseungPair_" + i.ToString("00") + "_Right");
+            }
+        }
+
+        private static void CreateOuterGate(
+            Transform parent,
+            Transform gateInsideSpawn,
+            Transform gateOutsideSpawn,
+            KoreanHorrorAudioCueBus audioCueBus)
         {
             var gatePortal = new GameObject("OuterGateTraversalPortal");
             gatePortal.transform.SetParent(parent);
             var portal = gatePortal.AddComponent<EstateGatePortal>();
             SetObject(portal, "insideSpawn", gateInsideSpawn);
             SetObject(portal, "outsideSpawn", gateOutsideSpawn);
+            SetObject(portal, "audioCueBus", audioCueBus);
             SetFloat(portal, "gatePlaneZ", 54f);
             SetString(portal, "enterLabel", "대문 안으로 들어가기 [E]");
             SetString(portal, "exitLabel", "대문 밖으로 나가기 [E]");
@@ -622,10 +801,61 @@ namespace KHorrorGame.Editor
             CreateCube("OuterWallRight", parent, new Vector3(10.5f, 1.7f, 58f), new Vector3(12f, 3.4f, 0.35f), Materials.StoneWall);
             CreateWallCapStones(parent, -10.5f, 58f, 12f, "LeftWallCap");
             CreateWallCapStones(parent, 10.5f, 58f, 12f, "RightWallCap");
-            CreateCube("RiskySidePassage", parent, new Vector3(7.1f, 0.1f, 58.3f), new Vector3(1.5f, 0.2f, 8.5f), Materials.Road);
-            CreateCube("SidePassageLowBeam", parent, new Vector3(7.1f, 1.35f, 60f), new Vector3(1.6f, 0.3f, 2.3f), Materials.DarkWood);
-            CreateBambooCluster(parent, new Vector3(8.9f, 0f, 60.5f), "SidePassageBamboo_A");
-            CreateBambooCluster(parent, new Vector3(5.7f, 0f, 62.8f), "SidePassageBamboo_B");
+            CreateRiskySidePath(parent);
+        }
+
+        private static void CreateRiskySidePath(Transform parent)
+        {
+            CreateCube("RiskySidePathOutsideBlocker_Lower", parent, new Vector3(7.2f, 1.55f, 55.0f), new Vector3(2.15f, 3.1f, 0.48f), Materials.StoneWall);
+            CreateCube("RiskySidePathOutsideBlocker_Upper", parent, new Vector3(8.15f, 1.55f, 56.35f), new Vector3(0.5f, 3.1f, 2.4f), Materials.StoneWall);
+
+            CreateCube("RiskySidePathFloor_00", parent, new Vector3(8.55f, 0.1f, 60.8f), new Vector3(1.35f, 0.2f, 2.8f), Materials.Road);
+            CreateCube("RiskySidePathFloor_01", parent, new Vector3(8.9f, 0.1f, 64.1f), new Vector3(1.3f, 0.2f, 3.3f), Materials.Road);
+            CreateCube("RiskySidePathFloor_02", parent, new Vector3(8.2f, 0.1f, 68.0f), new Vector3(1.25f, 0.2f, 3.4f), Materials.Road);
+            CreateCube("RiskySidePathFloor_03", parent, new Vector3(8.75f, 0.1f, 72.0f), new Vector3(1.25f, 0.2f, 3.8f), Materials.Road);
+            CreateCube("RiskySidePathFloor_04", parent, new Vector3(8.55f, 0.1f, 75.3f), new Vector3(1.35f, 0.2f, 2.6f), Materials.Road);
+
+            var waypoints = new[]
+            {
+                new Vector3(8.55f, 0.22f, 59.8f),
+                new Vector3(8.72f, 0.22f, 62.2f),
+                new Vector3(8.9f, 0.22f, 65.4f),
+                new Vector3(8.2f, 0.22f, 68.2f),
+                new Vector3(8.75f, 0.22f, 71.5f),
+                new Vector3(6.95f, 0.32f, 75.0f),
+            };
+            for (var i = 0; i < waypoints.Length; i++)
+            {
+                CreateMarker("RiskySidePathInteriorWaypoint_" + i.ToString("00"), waypoints[i], Quaternion.identity, parent);
+            }
+
+            CreateCube("RiskySidePathBlocker_West_00", parent, new Vector3(7.25f, 0.72f, 62.2f), new Vector3(0.34f, 1.25f, 3.2f), Materials.StoneWall);
+            CreateCube("RiskySidePathBlocker_West_01", parent, new Vector3(7.05f, 0.72f, 68.2f), new Vector3(0.34f, 1.25f, 3.2f), Materials.StoneWall);
+            CreateCube("RiskySidePathBlocker_East_00", parent, new Vector3(10.05f, 0.72f, 64.0f), new Vector3(0.34f, 1.25f, 3.4f), Materials.StoneWall);
+            CreateCube("RiskySidePathBlocker_East_01", parent, new Vector3(10.0f, 0.72f, 72.2f), new Vector3(0.34f, 1.25f, 4.2f), Materials.StoneWall);
+
+            CreateCube("RiskySidePathOccluder_BambooScreen_00", parent, new Vector3(7.55f, 1.55f, 65.3f), new Vector3(0.22f, 2.2f, 1.6f), Materials.DarkWood);
+            CreateCube("RiskySidePathOccluder_BambooScreen_01", parent, new Vector3(9.75f, 1.55f, 69.4f), new Vector3(0.22f, 2.2f, 1.9f), Materials.DarkWood);
+            CreateCube("RiskySidePathOccluder_LowBeam", parent, new Vector3(8.55f, 1.42f, 73.8f), new Vector3(1.65f, 0.26f, 1.7f), Materials.DarkWood);
+
+            CreateRiskySidePathSoundCue(parent, "RiskySidePathSoundCue_00_DryLeaves", new Vector3(8.65f, 1.0f, 63.2f), new Vector3(1.9f, 1.8f, 1.7f));
+            CreateRiskySidePathSoundCue(parent, "RiskySidePathSoundCue_01_BambooKnock", new Vector3(8.45f, 1.0f, 70.4f), new Vector3(1.9f, 1.8f, 1.7f));
+
+            CreateMarker("RiskySidePathDokkaebiExposure_00_GateFlank", new Vector3(8.0f, 0.92f, 59.9f), Quaternion.Euler(0f, -25f, 0f), parent);
+            CreateMarker("RiskySidePathDokkaebiExposure_01_BambooLure", new Vector3(9.45f, 0.92f, 61.8f), Quaternion.Euler(0f, 35f, 0f), parent);
+            CreateBambooCluster(parent, new Vector3(9.55f, 0f, 61.2f), "RiskySidePathBamboo_A");
+            CreateBambooCluster(parent, new Vector3(6.8f, 0f, 67.4f), "RiskySidePathBamboo_B");
+            CreateJangseung(parent, new Vector3(9.9f, 0f, 75.8f), "RiskySidePathJangseung_Warning");
+        }
+
+        private static void CreateRiskySidePathSoundCue(Transform parent, string name, Vector3 position, Vector3 scale)
+        {
+            var cue = CreateCube(name, parent, position, scale, Materials.Night);
+            var collider = cue.GetComponent<Collider>();
+            if (collider != null)
+            {
+                collider.isTrigger = true;
+            }
         }
 
         private static void CreateCourtyard(Transform parent)
@@ -654,6 +884,90 @@ namespace KHorrorGame.Editor
             CreateStoneCairn(parent, new Vector3(7.6f, 0.2f, 64.5f), "CourtyardCairn");
             CreatePaperLantern(parent, new Vector3(-10.8f, 2.3f, 66f), "LeftWallLantern");
             CreatePaperLantern(parent, new Vector3(10.8f, 2.2f, 73f), "RightWallLantern");
+            CreateCourtyardRoutesAndDensity(parent);
+        }
+
+        private static void CreateCourtyardRoutesAndDensity(Transform parent)
+        {
+            var mainRoute = new[]
+            {
+                new Vector3(0f, 0.12f, 58.8f),
+                new Vector3(0f, 0.12f, 62.4f),
+                new Vector3(0f, 0.12f, 66.2f),
+                new Vector3(0f, 0.12f, 70.1f),
+                new Vector3(0f, 0.12f, 74.2f),
+                new Vector3(0f, 0.12f, 78.2f),
+            };
+            for (var i = 0; i < mainRoute.Length; i++)
+            {
+                CreateMarker("CourtyardMainRouteWaypoint_" + i.ToString("00"), mainRoute[i], Quaternion.identity, parent);
+            }
+
+            var sideRoute = new[]
+            {
+                new Vector3(6.3f, 0.12f, 59.8f),
+                new Vector3(6.2f, 0.12f, 64.7f),
+                new Vector3(5.9f, 0.12f, 70.7f),
+                new Vector3(5.6f, 0.12f, 75.8f),
+                new Vector3(3.4f, 0.12f, 78.2f),
+            };
+            for (var i = 0; i < sideRoute.Length; i++)
+            {
+                CreateMarker("CourtyardSideRouteWaypoint_" + i.ToString("00"), sideRoute[i], Quaternion.identity, parent);
+            }
+
+            CreateMarker("CourtyardRouteAnchor_00_GateLanding", mainRoute[0], Quaternion.identity, parent);
+            CreateMarker("CourtyardRouteAnchor_01_Well", new Vector3(-5.6f, 0.12f, 71f), Quaternion.identity, parent);
+            CreateMarker("CourtyardRouteAnchor_02_Jangdok", new Vector3(-5.6f, 0.12f, 62.65f), Quaternion.identity, parent);
+            CreateMarker("CourtyardRouteAnchor_03_WoodStack", new Vector3(4.6f, 0.12f, 73.8f), Quaternion.identity, parent);
+            CreateMarker("CourtyardRouteAnchor_04_SideShed", new Vector3(9.3f, 0.12f, 68.8f), Quaternion.identity, parent);
+            CreateMarker("CourtyardRouteAnchor_05_MainHouse", mainRoute[mainRoute.Length - 1], Quaternion.identity, parent);
+
+            CreateCube("CourtyardLowWall_Northwest", parent, new Vector3(-7.55f, 0.42f, 67.2f), new Vector3(3.8f, 0.65f, 0.32f), Materials.StoneWall);
+            CreateCube("CourtyardLowWall_Southwest", parent, new Vector3(-4.15f, 0.42f, 60.9f), new Vector3(3.0f, 0.65f, 0.32f), Materials.StoneWall);
+            CreateCube("CourtyardLowWall_EastDogleg", parent, new Vector3(8.05f, 0.42f, 71.2f), new Vector3(3.2f, 0.65f, 0.32f), Materials.StoneWall);
+            CreateCube("CourtyardLowWall_MainHouseEdge", parent, new Vector3(3.8f, 0.42f, 76.4f), new Vector3(3.6f, 0.65f, 0.32f), Materials.StoneWall);
+
+            for (var i = 0; i < 4; i++)
+            {
+                CreateStackedWoodPile(parent, new Vector3(4.6f + i * 0.58f, 0.18f, 73.4f + (i % 2) * 0.48f), "CourtyardStackedWood_East_" + i);
+                CreateStackedWoodPile(parent, new Vector3(-8.1f + i * 0.52f, 0.18f, 69.4f + (i % 2) * 0.46f), "CourtyardStackedWood_Well_" + i);
+            }
+
+            CreateCourtyardSideShed(parent, new Vector3(9.35f, 0f, 68.8f));
+            CreateCube("CourtyardSightlineOccluder_LeftYard", parent, new Vector3(-8.2f, 1.2f, 66.2f), new Vector3(1.1f, 2.4f, 0.34f), Materials.DarkWood);
+            CreateCube("CourtyardSightlineOccluder_RightYard", parent, new Vector3(8.0f, 1.2f, 67.7f), new Vector3(1.0f, 2.4f, 0.34f), Materials.DarkWood);
+            CreateCube("CourtyardSightlineOccluder_WellCross", parent, new Vector3(-5.1f, 1.05f, 73.5f), new Vector3(0.36f, 2.1f, 1.4f), Materials.DarkWood);
+            CreateCube("CourtyardSightlineOccluder_EastShedCross", parent, new Vector3(5.2f, 1.05f, 71.2f), new Vector3(0.36f, 2.1f, 1.35f), Materials.DarkWood);
+
+            CreatePaperLantern(parent, new Vector3(-9.8f, 2.15f, 61.4f), "CourtyardLanternPoint_00");
+            CreatePaperLantern(parent, new Vector3(-9.6f, 2.15f, 74.2f), "CourtyardLanternPoint_01");
+            CreatePaperLantern(parent, new Vector3(9.7f, 2.15f, 64.6f), "CourtyardLanternPoint_02");
+            CreatePaperLantern(parent, new Vector3(9.6f, 2.15f, 76.4f), "CourtyardLanternPoint_03");
+        }
+
+        private static void CreateStackedWoodPile(Transform parent, Vector3 basePosition, string name)
+        {
+            for (var i = 0; i < 3; i++)
+            {
+                var log = CreateCylinder(
+                    name + "_Log_" + i,
+                    parent,
+                    basePosition + new Vector3(0f, i * 0.16f, (i - 1) * 0.08f),
+                    new Vector3(0.12f, 0.45f, 0.12f),
+                    Materials.DarkWood,
+                    Quaternion.Euler(0f, 0f, 90f));
+                log.transform.rotation *= Quaternion.Euler(0f, (i % 2 == 0 ? 7f : -6f), 0f);
+            }
+        }
+
+        private static void CreateCourtyardSideShed(Transform parent, Vector3 basePosition)
+        {
+            CreateCube("CourtyardSideShed_Foundation", parent, basePosition + new Vector3(0f, 0.12f, 0f), new Vector3(2.4f, 0.24f, 2.8f), Materials.Stone);
+            CreateCube("CourtyardSideShed_BackWall", parent, basePosition + new Vector3(0.9f, 1.25f, 0f), new Vector3(0.24f, 2.3f, 2.65f), Materials.Plaster);
+            var roof = CreateCube("CourtyardSideShed_Roof", parent, basePosition + new Vector3(0f, 2.55f, 0f), new Vector3(2.7f, 0.28f, 3.1f), Materials.Roof, Quaternion.Euler(0f, 0f, -5f));
+            roof.GetComponent<Collider>().enabled = false;
+            CreateCube("CourtyardSideShed_WoodRack", parent, basePosition + new Vector3(-0.82f, 0.65f, -0.7f), new Vector3(0.38f, 0.9f, 1.05f), Materials.DarkWood);
         }
 
         private static void CreateMainHouse(Transform parent)
@@ -667,6 +981,8 @@ namespace KHorrorGame.Editor
             CreateCube("MainHouseBackWall_LeftStub", parent, new Vector3(-6.95f, 2f, 86.6f), new Vector3(0.25f, 3.5f, 0.35f), Materials.Plaster);
             CreateCube("MainHouseLeftWall", parent, new Vector3(-7f, 2f, 83f), new Vector3(0.35f, 3.5f, 7f), Materials.Plaster);
             CreateCube("MainHouseRightWall", parent, new Vector3(7f, 2f, 83f), new Vector3(0.35f, 3.5f, 7f), Materials.Plaster);
+            CreateWornPlasterPatchRow(parent, "MainHouseBackWall", new Vector3(-4.8f, 2.2f, 86.41f), true);
+            CreateWornPlasterPatchRow(parent, "MainHouseRightWall", new Vector3(6.81f, 2.1f, 81.0f), false);
             CreateCube("MainHouseFrontBeam", parent, new Vector3(0f, 3.25f, 79.7f), new Vector3(14.8f, 0.35f, 0.35f), Materials.DarkWood);
             CreateCube("MainHouseBackBeam", parent, new Vector3(0f, 3.25f, 86.7f), new Vector3(14.8f, 0.35f, 0.35f), Materials.DarkWood);
             for (var i = 0; i < 7; i++)
@@ -709,6 +1025,86 @@ namespace KHorrorGame.Editor
             CreatePaperCharm(parent, new Vector3(2.4f, 2.7f, 79.15f), "MainDoorCharm_Right");
             CreateCube("BackExitGap", parent, new Vector3(-7.6f, 0.1f, 88.5f), new Vector3(2.2f, 0.2f, 6.4f), Materials.Road);
             CreateBambooCluster(parent, new Vector3(-9.1f, 0f, 88.5f), "BackExitBamboo");
+            CreateMainHouseInteriorRoute(parent);
+        }
+
+        private static void CreateMainHouseInteriorRoute(Transform parent)
+        {
+            CreateCube("MainHouseRoom_LeftAncestralChamber", parent, new Vector3(-5.15f, 0.58f, 83.0f), new Vector3(2.95f, 0.04f, 5.4f), Materials.Wood);
+            CreateCube("MainHouseRoom_CentralHall", parent, new Vector3(0f, 0.585f, 83.1f), new Vector3(4.8f, 0.04f, 5.6f), Materials.Wood);
+            CreateCube("MainHouseRoom_RightStorageChamber", parent, new Vector3(5.15f, 0.58f, 83.0f), new Vector3(2.95f, 0.04f, 5.4f), Materials.Wood);
+
+            for (var i = 0; i < 3; i++)
+            {
+                CreateCube(
+                    "MainHouseCeilingPanel_" + i,
+                    parent,
+                    new Vector3(-4.8f + i * 4.8f, 3.42f, 83.05f),
+                    new Vector3(4.25f, 0.14f, 5.7f),
+                    Materials.DarkWood);
+            }
+
+            for (var i = 0; i < 5; i++)
+            {
+                CreateCube(
+                    "MainHouseCeilingBeam_" + i,
+                    parent,
+                    new Vector3(-5.6f + i * 2.8f, 3.12f, 83.0f),
+                    new Vector3(0.18f, 0.28f, 5.9f),
+                    Materials.DarkWood);
+            }
+
+            CreateDoorFrame(parent, "MainHouseDoorFrame_CenterEntry", new Vector3(0f, 1.78f, 79.36f), 1.85f, 2.35f, true);
+            CreateDoorFrame(parent, "MainHouseDoorFrame_LeftRoomEntry", new Vector3(-4.55f, 1.65f, 81.1f), 1.55f, 2.05f, false);
+            CreateDoorFrame(parent, "MainHouseDoorFrame_RightRoomEntry", new Vector3(4.55f, 1.65f, 81.1f), 1.55f, 2.05f, false);
+            CreateDoorFrame(parent, "MainHouseDoorFrame_LeftRearPassage", new Vector3(-5.85f, 1.52f, 86.2f), 1.35f, 1.9f, true);
+            CreateDoorFrame(parent, "MainHouseDoorFrame_CenterRearScreen", new Vector3(0f, 1.55f, 84.86f), 1.65f, 1.95f, true);
+            CreateDoorFrame(parent, "MainHouseDoorFrame_RightStorageNiche", new Vector3(5.45f, 1.52f, 84.3f), 1.25f, 1.85f, true);
+
+            AttachPaperDoorInteraction(
+                CreateCube("MainHouseInteriorPaperDoor_LeftRoom", parent, new Vector3(-5.25f, 1.55f, 82.65f), new Vector3(1.2f, 1.9f, 0.08f), Materials.DoorPaper),
+                "left main house paper door");
+            AttachPaperDoorInteraction(
+                CreateCube("MainHouseInteriorPaperDoor_RightRoom", parent, new Vector3(5.25f, 1.55f, 82.65f), new Vector3(1.2f, 1.9f, 0.08f), Materials.DoorPaper),
+                "right main house paper door");
+
+            CreateCube("MainHouseInteriorSightlineBlocker_LeftRoomScreen", parent, new Vector3(-5.6f, 1.55f, 84.05f), new Vector3(1.2f, 2.0f, 0.14f), Materials.DoorPaper);
+            CreateCube("MainHouseInteriorSightlineBlocker_RightRoomScreen", parent, new Vector3(5.6f, 1.55f, 84.05f), new Vector3(1.2f, 2.0f, 0.14f), Materials.DoorPaper);
+            CreateCube("MainHouseInteriorSightlineBlocker_CentralPrayerScreen", parent, new Vector3(0f, 1.55f, 84.05f), new Vector3(1.4f, 2.0f, 0.14f), Materials.DoorPaper);
+
+            CreateCube("MainHouseRoomProp_AncestralChest", parent, new Vector3(-6.0f, 0.98f, 85.15f), new Vector3(0.8f, 0.65f, 0.45f), Materials.DarkWood);
+            CreateCube("MainHouseRoomProp_RightShelf", parent, new Vector3(6.15f, 1.1f, 85.2f), new Vector3(0.55f, 1.1f, 0.45f), Materials.DarkWood);
+
+            var route = new[]
+            {
+                ("MainHouseInteriorRouteWaypoint_00_Entry", new Vector3(0f, 0.62f, 79.65f)),
+                ("MainHouseInteriorRouteWaypoint_01_CentralMaru", new Vector3(0f, 0.62f, 81.1f)),
+                ("MainHouseInteriorRouteWaypoint_02_LeftTurn", new Vector3(-1.65f, 0.62f, 82.0f)),
+                ("MainHouseInteriorRouteWaypoint_03_ScrollApproach", new Vector3(-1.65f, 0.62f, 83.2f)),
+                ("MainHouseInteriorRouteWaypoint_04_CenterReturn", new Vector3(0f, 0.62f, 83.6f)),
+                ("MainHouseInteriorRouteWaypoint_05_RearPassage", new Vector3(-1.65f, 0.62f, 85.55f)),
+                ("MainHouseInteriorRouteWaypoint_06_RearExit", new Vector3(-5.8f, 0.66f, 86.85f)),
+            };
+            foreach (var waypoint in route)
+            {
+                CreateMarker(waypoint.Item1, waypoint.Item2, Quaternion.identity, parent);
+            }
+
+            CreateMarker("MainHouseArtifactRouteWaypoint_00_Entry", new Vector3(0f, 0.62f, 79.65f), Quaternion.identity, parent);
+            CreateMarker("MainHouseArtifactRouteWaypoint_01_LeftInterior", new Vector3(-1.65f, 0.62f, 81.85f), Quaternion.identity, parent);
+            CreateMarker("MainHouseArtifactRouteWaypoint_02_ScrollPickup", new Vector3(-1.6f, 0.62f, 82.95f), Quaternion.identity, parent);
+        }
+
+        private static void CreateDoorFrame(Transform parent, string name, Vector3 center, float width, float height, bool alongX)
+        {
+            var halfWidth = width * 0.5f;
+            var sideScale = alongX ? new Vector3(0.12f, height, 0.16f) : new Vector3(0.16f, height, 0.12f);
+            var topScale = alongX ? new Vector3(width + 0.24f, 0.14f, 0.18f) : new Vector3(0.18f, 0.14f, width + 0.24f);
+            var sideOffset = alongX ? new Vector3(halfWidth, 0f, 0f) : new Vector3(0f, 0f, halfWidth);
+
+            CreateCube(name + "_LeftPost", parent, center - sideOffset, sideScale, Materials.DarkWood);
+            CreateCube(name + "_RightPost", parent, center + sideOffset, sideScale, Materials.DarkWood);
+            CreateCube(name + "_Header", parent, center + new Vector3(0f, height * 0.5f, 0f), topScale, Materials.DarkWood);
         }
 
         private static void CreateSarangchae(Transform parent)
@@ -719,6 +1115,8 @@ namespace KHorrorGame.Editor
             CreateCube("SarangchaeBackWall", parent, new Vector3(11.05f, 1.85f, 75.5f), new Vector3(0.28f, 2.9f, 7.8f), Materials.Plaster);
             CreateCube("SarangchaeNorthWall", parent, new Vector3(9.2f, 1.85f, 79.5f), new Vector3(3.65f, 2.9f, 0.28f), Materials.Plaster);
             CreateCube("SarangchaeSouthWall", parent, new Vector3(9.2f, 1.85f, 71.5f), new Vector3(3.65f, 2.9f, 0.28f), Materials.Plaster);
+            CreateWornPlasterPatchRow(parent, "SarangchaeBackWall", new Vector3(10.86f, 2.0f, 72.9f), false);
+            CreateWornPlasterPatchRow(parent, "SarangchaeNorthWall", new Vector3(8.1f, 2.0f, 79.31f), true);
 
             for (var i = 0; i < 4; i++)
             {
@@ -744,6 +1142,7 @@ namespace KHorrorGame.Editor
             CreateCube("KitchenShedBackWall", parent, new Vector3(-3.0f, 1.65f, 93.25f), new Vector3(5.4f, 2.4f, 0.24f), Materials.Plaster);
             CreateCube("KitchenShedLeftWall", parent, new Vector3(-5.8f, 1.65f, 91.5f), new Vector3(0.24f, 2.4f, 3.4f), Materials.Plaster);
             CreateCube("KitchenShedRightWall", parent, new Vector3(-0.2f, 1.65f, 91.5f), new Vector3(0.24f, 2.4f, 3.4f), Materials.Plaster);
+            CreateWornPlasterPatchRow(parent, "KitchenShedBackWall", new Vector3(-4.8f, 1.7f, 93.08f), true);
             CreateCube("KitchenShedRoof", parent, new Vector3(-3.0f, 3.0f, 91.5f), new Vector3(6.1f, 0.35f, 4.1f), Materials.Roof, Quaternion.Euler(0f, 0f, -4f));
             CreateCylinder("KitchenOnggiJar", parent, new Vector3(-4.3f, 0.75f, 89.9f), new Vector3(0.55f, 0.6f, 0.55f), Materials.Jar);
         }
@@ -818,7 +1217,7 @@ namespace KHorrorGame.Editor
             CreatePaperLantern(parent, new Vector3(2.65f, 2.25f, 116.0f), "RearRouteLantern_Second");
             CreatePaperLantern(parent, new Vector3(-9.35f, 2.25f, 134.0f), "RearRouteLantern_Third");
             CreatePointLight("RearRouteLanternPool_First", parent, new Vector3(-8.9f, 1.75f, 101.0f), new Color(0.95f, 0.46f, 0.24f), 1.25f, 7.2f);
-            CreatePointLight("RearRouteLanternPool_Second", parent, new Vector3(4.0f, 1.75f, 116.0f), new Color(0.9f, 0.42f, 0.22f), 1.1f, 6.8f);
+            CreatePointLight("RearRouteLanternPool_Second", parent, new Vector3(4.0f, 1.75f, 116.0f), new Color(0.9f, 0.42f, 0.22f), 1.4f, 7.8f);
             CreatePointLight("RearRouteLanternPool_Third", parent, new Vector3(-8.0f, 1.75f, 134.0f), new Color(0.86f, 0.38f, 0.2f), 1.15f, 7.4f);
 
             CreateNonBlockingPaperCharm(parent, new Vector3(-8.9f, 2.25f, 99.55f), "RearHanokGateCharm_First");
@@ -860,6 +1259,7 @@ namespace KHorrorGame.Editor
             CreateCube("ShrineAltar", parent, new Vector3(ShrineX, 0.8f, ShrineZ + 1.4f), new Vector3(2f, 1.0f, 0.7f), Materials.Altar);
             var shrineRope = CreateCube("ShrineHangingRope", parent, new Vector3(ShrineX, 2.75f, ShrineZ - 1.95f), new Vector3(4.8f, 0.08f, 0.08f), Materials.Rope);
             shrineRope.GetComponent<Collider>().enabled = false;
+            CreateShrineRopeTwists(parent);
             for (var i = 0; i < 7; i++)
             {
                 var x = ShrineX - 2.1f + i * 0.7f;
@@ -871,7 +1271,7 @@ namespace KHorrorGame.Editor
             CreateCylinder("ShrineCandle_B", parent, new Vector3(ShrineX + 0.45f, 1.45f, ShrineZ + 0.9f), new Vector3(0.08f, 0.22f, 0.08f), Materials.CandleWax);
             CreateSphere("ShrineCandleFlame_A", parent, new Vector3(ShrineX - 0.45f, 1.72f, ShrineZ + 0.9f), new Vector3(0.12f, 0.18f, 0.12f), Materials.LanternGlow);
             CreateSphere("ShrineCandleFlame_B", parent, new Vector3(ShrineX + 0.45f, 1.72f, ShrineZ + 0.9f), new Vector3(0.12f, 0.18f, 0.12f), Materials.LanternGlow);
-            CreatePointLight("DeepShrineLanternGlow", parent, new Vector3(ShrineX, 2.1f, ShrineZ - 1.15f), new Color(0.9f, 0.44f, 0.22f), 1.45f, 9f);
+            CreatePointLight("DeepShrineLanternGlow", parent, new Vector3(ShrineX, 2.1f, ShrineZ - 1.15f), new Color(0.9f, 0.44f, 0.22f), 1.7f, 10f);
             CreateStoneCairn(parent, new Vector3(ShrineX - 2.6f, 0.3f, ShrineZ - 4.5f), "ShrinePathCairn");
         }
 
@@ -909,6 +1309,7 @@ namespace KHorrorGame.Editor
             CreateCube(name + "_Brow", parent, basePosition + new Vector3(0f, 3.08f, -0.23f), new Vector3(0.55f, 0.08f, 0.08f), Materials.RustedMetal);
             CreateCube(name + "_Mouth", parent, basePosition + new Vector3(0f, 2.72f, -0.23f), new Vector3(0.42f, 0.07f, 0.08f), Materials.RustedMetal);
             CreateCube(name + "_Hat", parent, basePosition + new Vector3(0f, 3.38f, -0.05f), new Vector3(0.9f, 0.22f, 0.38f), Materials.Roof);
+            CreateJangseungFaceDetails(parent, basePosition, name);
         }
 
         private static void CreateDistantSilhouette(Transform parent)
@@ -982,6 +1383,7 @@ namespace KHorrorGame.Editor
             CreateCube(name + "_InkTop", parent, position + new Vector3(0f, 0.16f, -0.035f), new Vector3(0.19f, 0.035f, 0.025f), Materials.TalismanInk);
             CreateCube(name + "_InkMid", parent, position + new Vector3(0f, -0.02f, -0.035f), new Vector3(0.13f, 0.035f, 0.025f), Materials.TalismanInk);
             CreateCube(name + "_InkLow", parent, position + new Vector3(0f, -0.18f, -0.035f), new Vector3(0.21f, 0.035f, 0.025f), Materials.TalismanInk);
+            CreateTalismanClusterMarker(parent, position, name);
         }
 
         private static void CreateNonBlockingPaperCharm(Transform parent, Vector3 position, string name)
@@ -990,6 +1392,7 @@ namespace KHorrorGame.Editor
             DisableCollider(CreateCube(name + "_InkTop", parent, position + new Vector3(0f, 0.16f, -0.035f), new Vector3(0.19f, 0.035f, 0.025f), Materials.TalismanInk));
             DisableCollider(CreateCube(name + "_InkMid", parent, position + new Vector3(0f, -0.02f, -0.035f), new Vector3(0.13f, 0.035f, 0.025f), Materials.TalismanInk));
             DisableCollider(CreateCube(name + "_InkLow", parent, position + new Vector3(0f, -0.18f, -0.035f), new Vector3(0.21f, 0.035f, 0.025f), Materials.TalismanInk));
+            CreateTalismanClusterMarker(parent, position, name);
         }
 
         private static void DisableCollider(GameObject target)
@@ -1015,6 +1418,43 @@ namespace KHorrorGame.Editor
             {
                 var x = -width * 0.46f + i * (width * 0.92f / 11f);
                 CreateCube(prefix + "_" + i, parent, center + new Vector3(x, 0.15f, 0f), new Vector3(0.07f, 0.13f, depth), Materials.RoofRidge);
+                DisableCollider(CreateCube("RoofEaveTileDetail_" + prefix + "_" + i.ToString("00") + "_Front", parent, center + new Vector3(x, -0.02f, -depth * 0.52f), new Vector3(0.12f, 0.16f, 0.22f), Materials.RoofRidge));
+                DisableCollider(CreateCube("RoofEaveTileDetail_" + prefix + "_" + i.ToString("00") + "_Back", parent, center + new Vector3(x, -0.02f, depth * 0.52f), new Vector3(0.12f, 0.16f, 0.22f), Materials.RoofRidge));
+            }
+        }
+
+        private static void CreateJangseungFaceDetails(Transform parent, Vector3 basePosition, string name)
+        {
+            DisableCollider(CreateCube("JangseungFaceDetail_" + name + "_LeftEye", parent, basePosition + new Vector3(-0.16f, 2.98f, -0.25f), new Vector3(0.09f, 0.09f, 0.045f), Materials.RustedMetal));
+            DisableCollider(CreateCube("JangseungFaceDetail_" + name + "_RightEye", parent, basePosition + new Vector3(0.16f, 2.98f, -0.25f), new Vector3(0.09f, 0.09f, 0.045f), Materials.RustedMetal));
+            DisableCollider(CreateCube("JangseungFaceDetail_" + name + "_NoseBridge", parent, basePosition + new Vector3(0f, 2.88f, -0.25f), new Vector3(0.08f, 0.24f, 0.045f), Materials.RustedMetal));
+            DisableCollider(CreateCube("JangseungFaceDetail_" + name + "_LeftTooth", parent, basePosition + new Vector3(-0.08f, 2.61f, -0.25f), new Vector3(0.055f, 0.13f, 0.04f), Materials.DoorPaper));
+            DisableCollider(CreateCube("JangseungFaceDetail_" + name + "_RightTooth", parent, basePosition + new Vector3(0.08f, 2.61f, -0.25f), new Vector3(0.055f, 0.13f, 0.04f), Materials.DoorPaper));
+        }
+
+        private static void CreateTalismanClusterMarker(Transform parent, Vector3 position, string name)
+        {
+            DisableCollider(CreateCube("KoreanTalismanCluster_" + name + "_Pin", parent, position + new Vector3(0f, 0.36f, -0.055f), new Vector3(0.09f, 0.055f, 0.035f), Materials.RustedMetal));
+        }
+
+        private static void CreateWornPlasterPatchRow(Transform parent, string prefix, Vector3 start, bool alongX)
+        {
+            for (var i = 0; i < 3; i++)
+            {
+                var offset = alongX ? new Vector3(i * 1.8f, (i % 2) * -0.42f, 0f) : new Vector3(0f, (i % 2) * -0.42f, i * 1.75f);
+                var rotation = alongX ? Quaternion.identity : Quaternion.Euler(0f, 90f, 0f);
+                var scale = new Vector3(0.9f - i * 0.12f, 0.45f + i * 0.09f, 0.035f);
+                DisableCollider(CreateCube("WornPlasterPatch_" + prefix + "_" + i.ToString("00"), parent, start + offset, scale, Materials.WetMud, rotation));
+            }
+        }
+
+        private static void CreateShrineRopeTwists(Transform parent)
+        {
+            for (var i = 0; i < 8; i++)
+            {
+                var x = ShrineX - 2.1f + i * 0.6f;
+                var rotation = Quaternion.Euler(0f, 0f, i % 2 == 0 ? 28f : -28f);
+                DisableCollider(CreateCube("ShrineRopeTwist_" + i.ToString("00"), parent, new Vector3(x, 2.75f, ShrineZ - 2.02f), new Vector3(0.08f, 0.28f, 0.08f), Materials.Rope, rotation));
             }
         }
 
@@ -1233,7 +1673,11 @@ namespace KHorrorGame.Editor
             canvasObject.AddComponent<UnityEngine.UI.GraphicRaycaster>();
 
             var statusText = CreateText("StatusText", canvasObject.transform, new Vector2(18f, -18f), TextAnchor.UpperLeft, 18, new Vector2(360f, 150f));
-            var promptText = CreateText("CenterPromptText", canvasObject.transform, new Vector2(0f, 72f), TextAnchor.LowerCenter, 22, new Vector2(680f, 64f));
+            var promptText = CreateText("CenterPromptText", canvasObject.transform, new Vector2(0f, 88f), TextAnchor.LowerCenter, 22, new Vector2(680f, 34f));
+            var promptSubjectText = CreateText("CenterPromptSubjectText", canvasObject.transform, new Vector2(0f, 60f), TextAnchor.LowerCenter, 18, new Vector2(680f, 28f));
+            promptSubjectText.color = new Color(0.78f, 0.95f, 0.83f, 0.58f);
+            var feedbackText = CreateText("FeedbackText", canvasObject.transform, new Vector2(0f, 116f), TextAnchor.LowerCenter, 18, new Vector2(720f, 30f));
+            feedbackText.color = new Color(1f, 0.82f, 0.52f, 0.92f);
 
             var staminaBack = CreateUiImage("StaminaBack", canvasObject.transform, new Vector2(0f, 30f), new Vector2(240f, 10f), new Color(0.05f, 0.06f, 0.05f, 0.9f));
             var staminaFill = CreateUiImage("StaminaFill", staminaBack.transform, Vector2.zero, new Vector2(240f, 10f), new Color(0.45f, 0.86f, 0.38f, 0.95f));
@@ -1246,6 +1690,8 @@ namespace KHorrorGame.Editor
             SetObject(presenter, "interactor", interactor);
             SetObject(presenter, "statusText", statusText);
             SetObject(presenter, "centerPromptText", promptText);
+            SetObject(presenter, "centerPromptSubjectText", promptSubjectText);
+            SetObject(presenter, "feedbackText", feedbackText);
             SetObject(presenter, "staminaFill", staminaFill);
         }
 
@@ -1321,19 +1767,19 @@ namespace KHorrorGame.Editor
         {
             var serialized = new SerializedObject(profile);
             SetSerializedBool(serialized, "fogEnabled", true);
-            SetSerializedFloat(serialized, "fogDensity", 0.021f);
-            SetSerializedColor(serialized, "fogColor", new Color(0.045f, 0.052f, 0.052f, 1f));
-            SetSerializedColor(serialized, "ambientColor", new Color(0.062f, 0.066f, 0.058f, 1f));
-            SetSerializedFloat(serialized, "reflectionIntensity", 0.16f);
-            SetSerializedColor(serialized, "moonColor", new Color(0.58f, 0.67f, 0.78f, 1f));
-            SetSerializedFloat(serialized, "moonIntensity", 0.42f);
+            SetSerializedFloat(serialized, "fogDensity", 0.016f);
+            SetSerializedColor(serialized, "fogColor", new Color(0.052f, 0.06f, 0.06f, 1f));
+            SetSerializedColor(serialized, "ambientColor", new Color(0.075f, 0.079f, 0.068f, 1f));
+            SetSerializedFloat(serialized, "reflectionIntensity", 0.18f);
+            SetSerializedColor(serialized, "moonColor", new Color(0.62f, 0.71f, 0.82f, 1f));
+            SetSerializedFloat(serialized, "moonIntensity", 0.58f);
             SetSerializedVector3(serialized, "moonEulerAngles", new Vector3(54f, -41f, 0f));
             SetSerializedColor(serialized, "flashlightColor", new Color(1.0f, 0.94f, 0.76f, 1f));
-            SetSerializedFloat(serialized, "flashlightIntensity", 14f);
-            SetSerializedFloat(serialized, "flashlightRange", 34f);
-            SetSerializedFloat(serialized, "flashlightSpotAngle", 54f);
-            SetSerializedFloat(serialized, "exposureCompensation", 0.35f);
-            SetSerializedFloat(serialized, "vignetteIntensity", 0.16f);
+            SetSerializedFloat(serialized, "flashlightIntensity", 16f);
+            SetSerializedFloat(serialized, "flashlightRange", 39f);
+            SetSerializedFloat(serialized, "flashlightSpotAngle", 60f);
+            SetSerializedFloat(serialized, "exposureCompensation", 0.68f);
+            SetSerializedFloat(serialized, "vignetteIntensity", 0.13f);
             SetSerializedFloat(serialized, "saturation", -8f);
             serialized.ApplyModifiedPropertiesWithoutUndo();
             EditorUtility.SetDirty(profile);
@@ -1373,8 +1819,8 @@ namespace KHorrorGame.Editor
             profile.components.Clear();
 
             var color = AddVolumeComponent<ColorAdjustments>(profile);
-            color.postExposure.Override(0.45f);
-            color.contrast.Override(6f);
+            color.postExposure.Override(0.68f);
+            color.contrast.Override(4.2f);
             color.saturation.Override(-8f);
             color.colorFilter.Override(new Color(0.98f, 1.0f, 0.94f, 1f));
 
@@ -1383,7 +1829,7 @@ namespace KHorrorGame.Editor
             whiteBalance.tint.Override(-2f);
 
             var vignette = AddVolumeComponent<Vignette>(profile);
-            vignette.intensity.Override(0.16f);
+            vignette.intensity.Override(0.13f);
             vignette.smoothness.Override(0.45f);
             vignette.color.Override(new Color(0f, 0.006f, 0.003f, 1f));
 
