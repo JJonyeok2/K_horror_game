@@ -86,7 +86,7 @@
   - Add PlayMode or component tests proving ghosts do not cross into forest approach.
   - _Requirements: 3.1, 3.2, 3.5, 8.2, 9.2_
 
-- [ ] 6. Implement dokkaebi MVP behavior
+- [x] 6. Implement dokkaebi MVP behavior
   - Add `DokkaebiEnemy` states: `Lurk`, `Misdirect`, `BlockPath`, `Retreat`.
   - Spawn dokkaebi only in forest approach territory for this milestone.
   - Add a simple placeholder visual and forest cue event.

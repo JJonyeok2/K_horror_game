@@ -28,9 +28,12 @@ Marked complete:
   - Evidence: `GhostEnemy` adds the dedicated ghost state machine (`Dormant`, `Haunt`, `Investigate`, `Stalk`, `Chase`, `ReturnHome`, `Despawn`) on top of the reusable `EnemyController`/`EnemyBrain` movement body. `RuntimeThreatSpawner` ensures pooled ghost actors receive the `GhostEnemy` controller at runtime, configures the player target on activation, owns ticking, and keeps ghosts from pursuing into the forest approach.
   - Tests: `GhostEnemyTests.GhostStartsDormantThenHauntsFarInteriorTarget`, `GhostEnemyTests.GhostUsesInvestigateStalkAndChaseBandsInsideEstate`, `GhostEnemyTests.GhostReturnsHomeAndDespawnsWhenPlayerLeavesThroughFrontGate`, `GhostEnemyTests.GhostNeverMovesTowardForestTargetPastGateBoundary`, `GhostEnemyTests.GhostUsesBaseControllerTrackingAndTerritoryState`, `EstateContentIntegrityTests.EstateHasRuntimeThreatSpawnerWithTerritoryActors`, `EstateContentIntegrityTests.RuntimeThreatSpawnerConfiguresGhostControllerWhenActivatingActor`
 
+- `6. Implement dokkaebi MVP behavior`
+  - Evidence: `DokkaebiEnemy` adds the forest-only state machine (`Lurk`, `Misdirect`, `BlockPath`, `Retreat`) on top of `EnemyController`/`EnemyBrain`. `RuntimeThreatSpawner` ensures pooled dokkaebi actors receive the controller, configures the current player target on activation, owns ticking, and retreats/despawns when the player crosses into estate interior.
+  - Tests: `DokkaebiEnemyTests.DokkaebiLurksWhenForestTargetIsFarAway`, `DokkaebiEnemyTests.DokkaebiMisdirectsThenBlocksPathInsideForest`, `DokkaebiEnemyTests.DokkaebiRetreatsAndDespawnsWhenPlayerEntersEstateInterior`, `EstateContentIntegrityTests.RuntimeThreatSpawnerConfiguresDokkaebiControllerWhenActivatingActor`, `EstateContentIntegrityTests.EstateHasRuntimeThreatSpawnerWithTerritoryActors`
+
 Left incomplete:
 
-- `6`: `EnemyBrain` exists, but the requested dedicated `DokkaebiEnemy` state set is not fully represented.
 - `7`, `9`, `11`, `12`, `13`, `15`, `16`, `17`, `18`, `20`, `21`, `22`: partial coverage exists, but the full task wording is not yet proven by current tests.
 
 ## k-horror-physical-cargo-loop

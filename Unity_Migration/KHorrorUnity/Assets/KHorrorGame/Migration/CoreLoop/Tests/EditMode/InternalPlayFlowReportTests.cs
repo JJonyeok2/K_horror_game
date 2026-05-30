@@ -63,6 +63,9 @@ namespace KHorrorGame.Migration.Tests
             StringAssert.Contains("Dormant -> Haunt -> Investigate -> Stalk -> Chase", report);
             StringAssert.Contains("front gate exit -> ReturnHome -> Despawn", report);
             StringAssert.Contains("ghost cannot cross into forest approach", report);
+            StringAssert.Contains("Lurk -> Misdirect -> BlockPath", report);
+            StringAssert.Contains("estate entry -> Retreat -> Despawn", report);
+            StringAssert.Contains("dokkaebi cannot cross into estate interior", report);
         }
 
         private static Type FindLoadedType(string fullName)

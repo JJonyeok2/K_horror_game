@@ -25,6 +25,7 @@ namespace KHorrorGame.Migration
         {
             EnsureReferences();
             EnsureGhostControllers(GetGhostActors());
+            EnsureDokkaebiControllers(GetDokkaebiActors());
             HideActors(GetGhostActors());
             HideActors(GetDokkaebiActors());
             SetCueVisible(false);
@@ -350,6 +351,14 @@ namespace KHorrorGame.Migration
             }
         }
 
+        private static void EnsureDokkaebiControllers(EnemyBrain[] actors)
+        {
+            foreach (var actor in actors)
+            {
+                EnsureControllerFor(actor, EnemyKind.Dokkaebi);
+            }
+        }
+
         private static EnemyController EnsureControllerFor(EnemyBrain actor, EnemyKind enemyKind)
         {
             if (actor == null)
@@ -361,6 +370,10 @@ namespace KHorrorGame.Migration
             if (controller == null && enemyKind == EnemyKind.Ghost)
             {
                 controller = actor.gameObject.AddComponent<GhostEnemy>();
+            }
+            else if (controller == null && enemyKind == EnemyKind.Dokkaebi)
+            {
+                controller = actor.gameObject.AddComponent<DokkaebiEnemy>();
             }
 
             if (controller != null)

@@ -409,6 +409,9 @@ namespace KHorrorGame.Editor
             var brain = actor.AddComponent<EnemyBrain>();
             brain.Configure(EnemyKind.Dokkaebi, ThreatStageProfile.ForStage(3), playerTarget, TerritoryKind.ForestApproach, position);
             brain.SetAutomaticTick(false);
+            var dokkaebi = actor.AddComponent<DokkaebiEnemy>();
+            dokkaebi.Configure(brain, playerTarget, TerritoryKind.ForestApproach, position);
+            dokkaebi.SetAutomaticTick(false);
 
             CreateLocalPrimitive(PrimitiveType.Cylinder, "RuntimeDokkaebiActor_Body", actor.transform, new Vector3(0f, 0.58f, 0f), new Vector3(0.42f, 0.58f, 0.42f), Materials.DokkaebiBody);
             CreateLocalPrimitive(PrimitiveType.Sphere, "RuntimeDokkaebiActor_Head", actor.transform, new Vector3(0f, 1.34f, 0f), new Vector3(0.58f, 0.5f, 0.58f), Materials.DokkaebiBody);

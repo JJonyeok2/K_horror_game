@@ -214,6 +214,9 @@ namespace KHorrorGame.Migration.Tests
             {
                 Assert.IsFalse(forestActor.gameObject.activeSelf, forestActor.name + " should start hidden until the director requests it.");
                 Assert.AreEqual(EnemyKind.Dokkaebi, forestActor.EnemyKind);
+                Assert.IsNotNull(
+                    forestActor.GetComponent<DokkaebiEnemy>(),
+                    forestActor.name + " should carry the DokkaebiEnemy forest-state controller.");
             }
         }
 
@@ -436,6 +439,94 @@ namespace KHorrorGame.Migration.Tests
                 UnityEngine.Object.DestroyImmediate(player);
                 UnityEngine.Object.DestroyImmediate(ghost);
                 UnityEngine.Object.DestroyImmediate(ghostAnchor);
+            }
+        }
+
+        [Test]
+        public void RuntimeThreatSpawnerConfiguresDokkaebiControllerWhenActivatingActor()
+        {
+            var root = new GameObject("DokkaebiControllerSpawnerFixture");
+            var player = new GameObject("PlayerFixture");
+            var dokkaebi = new GameObject("DokkaebiActorFixture");
+            var dokkaebiAnchor = new GameObject("DokkaebiAnchorFixture");
+            var spawner = root.AddComponent<RuntimeThreatSpawner>();
+
+            try
+            {
+                player.transform.position = new Vector3(3.2f, 0f, 36f);
+                var dokkaebiBrain = dokkaebi.AddComponent<EnemyBrain>();
+                var dokkaebiController = dokkaebi.AddComponent<DokkaebiEnemy>();
+                dokkaebi.SetActive(false);
+                dokkaebiAnchor.transform.position = new Vector3(0f, 0f, 36f);
+
+                SetObject(spawner, "playerTarget", player.transform);
+                SetObjectArray(spawner, "dokkaebiActors", dokkaebiBrain);
+                SetObjectArray(spawner, "dokkaebiSpawnAnchors", dokkaebiAnchor.transform);
+
+                spawner.EvaluateThreats(true, 3, GameMapId.JonggaEstate, TerritoryKind.ForestApproach);
+
+                Assert.IsTrue(dokkaebi.activeSelf, "Stage-three forest threat should activate the dokkaebi actor.");
+                Assert.IsFalse(dokkaebiController.AutomaticTickEnabled, "RuntimeThreatSpawner should own ticking for pooled dokkaebi actors.");
+
+                dokkaebiController.ManualTick(0.1f, TerritoryKind.ForestApproach);
+
+                Assert.AreEqual(DokkaebiEnemyState.BlockPath, dokkaebiController.State, "Activation should configure DokkaebiEnemy with the current player target.");
+                Assert.AreEqual(EnemyControllerState.Tracking, dokkaebiController.ControllerState);
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(root);
+                UnityEngine.Object.DestroyImmediate(player);
+                UnityEngine.Object.DestroyImmediate(dokkaebi);
+                UnityEngine.Object.DestroyImmediate(dokkaebiAnchor);
+            }
+        }
+
+        [Test]
+        public void RuntimeThreatSpawnerUpdateResolvesForestTerritoryAndTicksDokkaebiController()
+        {
+            var gameLoopObject = new GameObject("DokkaebiUpdateGameLoopFixture");
+            var spawnerObject = new GameObject("DokkaebiUpdateSpawnerFixture");
+            var player = new GameObject("PlayerFixture");
+            var dokkaebi = new GameObject("DokkaebiActorFixture");
+            var dokkaebiAnchor = new GameObject("DokkaebiAnchorFixture");
+
+            try
+            {
+                var gameLoop = gameLoopObject.AddComponent<GameLoopController>();
+                InvokeAwake(gameLoop);
+                Assert.IsTrue(gameLoop.State.TravelToRetrievalMap(GameMapId.JonggaEstate));
+                gameLoop.State.CompleteBongoTravel();
+                gameLoop.Resentment.AddResentment(ResentmentTracker.MinimumValueForStage(3), "forest pressure test");
+
+                player.transform.position = new Vector3(3.2f, 0f, 36f);
+                var dokkaebiBrain = dokkaebi.AddComponent<EnemyBrain>();
+                dokkaebi.SetActive(false);
+                dokkaebiAnchor.transform.position = new Vector3(0f, 0f, 36f);
+
+                var spawner = spawnerObject.AddComponent<RuntimeThreatSpawner>();
+                SetObject(spawner, "gameLoop", gameLoop);
+                SetObject(spawner, "playerTarget", player.transform);
+                SetObjectArray(spawner, "dokkaebiActors", dokkaebiBrain);
+                SetObjectArray(spawner, "dokkaebiSpawnAnchors", dokkaebiAnchor.transform);
+                InvokeAwake(spawner);
+
+                InvokeUpdate(spawner);
+
+                var controller = dokkaebi.GetComponent<DokkaebiEnemy>();
+                Assert.IsTrue(dokkaebi.activeSelf, "Spawner.Update should activate the forest dokkaebi when the player is outside the gate.");
+                Assert.IsNotNull(controller, "Spawner.Update should tick the dokkaebi-specific controller path.");
+                Assert.IsFalse(controller.AutomaticTickEnabled, "Spawner.Update should remain the only ticking owner.");
+                Assert.AreEqual(DokkaebiEnemyState.BlockPath, controller.State);
+                Assert.AreEqual(EnemyControllerState.Tracking, controller.ControllerState);
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(gameLoopObject);
+                UnityEngine.Object.DestroyImmediate(spawnerObject);
+                UnityEngine.Object.DestroyImmediate(player);
+                UnityEngine.Object.DestroyImmediate(dokkaebi);
+                UnityEngine.Object.DestroyImmediate(dokkaebiAnchor);
             }
         }
 
@@ -865,6 +956,13 @@ namespace KHorrorGame.Migration.Tests
         {
             target.GetType()
                 .GetMethod("Awake", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)
+                .Invoke(target, null);
+        }
+
+        private static void InvokeUpdate(UnityEngine.Object target)
+        {
+            target.GetType()
+                .GetMethod("Update", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)
                 .Invoke(target, null);
         }
 

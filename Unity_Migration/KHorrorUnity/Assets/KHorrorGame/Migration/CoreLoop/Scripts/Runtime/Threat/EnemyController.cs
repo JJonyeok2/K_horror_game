@@ -121,6 +121,11 @@ namespace KHorrorGame.Migration
 
         protected void ReturnHome(float deltaSeconds)
         {
+            if (ControllerState == EnemyControllerState.Despawn)
+            {
+                return;
+            }
+
             var wasReturning = ControllerState == EnemyControllerState.ReturnHome;
             ControllerState = EnemyControllerState.ReturnHome;
             var destination = FlattenToSelfHeight(homePosition);
