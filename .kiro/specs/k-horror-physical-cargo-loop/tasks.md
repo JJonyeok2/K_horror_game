@@ -50,7 +50,7 @@
   - 씬을 재생성하고 Unity YAML 변경을 확인한다.
   - _Requirements: 1.1, 1.6, 4.4, 4.5_
 
-- [ ] C8. 사용자 테스트 체크포인트
+- [x] C8. 사용자 테스트 체크포인트
   - EditMode 테스트와 `git diff --check`를 실행한다.
   - 변경 사항을 커밋하고 `origin/unity-conversion`에 푸시한다.
   - Unity를 실행해 사용자가 직접 다음 루프를 확인하게 한다: 종가 이동, 물건 줍기, 밴 복귀, `G` 적재, 재진입, cargo 재픽업, 정산.

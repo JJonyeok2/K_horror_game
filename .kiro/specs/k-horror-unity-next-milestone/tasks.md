@@ -100,7 +100,7 @@
   - Verified with Task 7 RED/GREEN tests and the full EditMode suite (`120 total / 120 passed / 0 failed`).
   - _Requirements: 1.1, 1.2, 6.1, 6.2, 6.4, 6.5, 8.4_
 
-- [ ] 8. Complete return, cargo, and settlement flow polish
+- [x] 8. Complete return, cargo, and settlement flow polish
   - Implement the Korean Kiro sub-spec in `.kiro/specs/k-horror-physical-cargo-loop`.
   - Replace value-only cargo extraction with visible physical cargo placed inside the return bongo.
   - Make settlement calculate from physical cargo in the bongo hold, not from an invisible pending value deposit.

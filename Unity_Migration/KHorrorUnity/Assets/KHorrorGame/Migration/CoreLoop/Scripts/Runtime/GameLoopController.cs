@@ -59,8 +59,6 @@ namespace KHorrorGame.Migration
 
             State.TravelStarted += OnTravelStarted;
             State.TravelCompleted += OnTravelCompleted;
-            State.CargoStored += OnCargoStored;
-            State.SettlementCompleted += OnSettlementCompleted;
             State.StateChanged += NotifyStateChanged;
         }
 
@@ -95,25 +93,22 @@ namespace KHorrorGame.Migration
             {
                 player.RefreshHeldItemViews();
             }
+            else if (!extracted)
+            {
+                ShowFeedback("Use the van cargo zone with [G]");
+            }
 
             return extracted;
         }
 
         public bool SettleStoredCargo()
         {
-            if (CanSettleLoadedCargo())
+            if (CanUsePhysicalSettlement())
             {
                 return SettleLoadedCargo();
             }
 
-            var settled = State.PendingRecoveredValue;
-            var succeeded = State.SettleStoredCargo();
-            if (succeeded)
-            {
-                ShowSettlementFeedback(settled);
-            }
-
-            return succeeded;
+            return false;
         }
 
         public bool ReturnToBongoHub()
@@ -147,7 +142,7 @@ namespace KHorrorGame.Migration
                 return "[E]\nUse Terminal";
             }
 
-            if (!State.IsTraveling && State.CurrentMap == GameMapId.BongoHub && LoadedCargoValue > 0)
+            if (CanSettleLoadedCargo())
             {
                 return "[E]\nSettle Cargo";
             }
@@ -162,7 +157,7 @@ namespace KHorrorGame.Migration
                 return "Use terminal";
             }
 
-            if (!State.IsTraveling && State.CurrentMap == GameMapId.BongoHub && LoadedCargoValue > 0)
+            if (CanSettleLoadedCargo())
             {
                 return "Settle loaded cargo";
             }
@@ -226,10 +221,15 @@ namespace KHorrorGame.Migration
         private bool CanSettleLoadedCargo()
         {
             EnsureCargoHoldReferences();
+            return CanUsePhysicalSettlement() && LoadedCargoValue > 0;
+        }
+
+        private bool CanUsePhysicalSettlement()
+        {
             return State != null
                    && !State.IsTraveling
-                   && State.CurrentMap == GameMapId.BongoHub
-                   && LoadedCargoValue > 0;
+                   && (State.CurrentMap == GameMapId.BongoHub
+                       || State.CurrentMap == GameMapId.SettlementOffice);
         }
 
         private bool SettleLoadedCargo()
@@ -335,16 +335,6 @@ namespace KHorrorGame.Migration
         private void ShowSettlementFeedback(int value)
         {
             ShowFeedback(string.Format("Settled +{0}", value));
-        }
-
-        private void OnCargoStored(object sender, CargoEventArgs args)
-        {
-            NotifyStateChanged();
-        }
-
-        private void OnSettlementCompleted(object sender, CargoEventArgs args)
-        {
-            NotifyStateChanged();
         }
 
         private void MovePlayerTo(GameMapId mapId)

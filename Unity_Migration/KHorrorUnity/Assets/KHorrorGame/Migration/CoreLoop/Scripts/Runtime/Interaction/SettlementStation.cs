@@ -20,8 +20,9 @@ namespace KHorrorGame.Migration
         {
             return actor != null
                    && gameLoop != null
-                   && gameLoop.State.CurrentMap == GameMapId.SettlementOffice
-                   && gameLoop.State.PendingRecoveredValue > 0;
+                   && gameLoop.State != null
+                   && !gameLoop.State.IsTraveling
+                   && gameLoop.State.CurrentMap == GameMapId.SettlementOffice;
         }
 
         public void Interact(UnityPlayerController actor)
