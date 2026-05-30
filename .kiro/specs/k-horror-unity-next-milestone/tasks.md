@@ -158,10 +158,11 @@
   - Verified with Task 16 RED/GREEN visual identity tests and the full EditMode suite (`147 total / 147 passed / 0 failed`).
   - _Requirements: 7.1, 7.2, 7.3_
 
-- [ ] 17. Tune lighting and visibility
+- [x] 17. Tune lighting and visibility
   - Keep low-spec mode off for development.
   - Tune flashlight range, moonlight, lantern anchors, exposure, fog, shadows, and post-processing.
   - Verify the scene is dark but navigable in forest, gate, courtyard, house, and shrine.
+  - Verified with Task 17 RED/GREEN lighting visibility tests and the full EditMode suite (`150 total / 150 passed / 0 failed`).
   - _Requirements: 7.4, 7.5, 7.6_
 
 - [ ] 18. Add audio event hooks
