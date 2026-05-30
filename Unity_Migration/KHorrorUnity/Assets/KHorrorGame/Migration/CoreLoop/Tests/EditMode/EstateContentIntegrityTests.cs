@@ -156,6 +156,21 @@ namespace KHorrorGame.Migration.Tests
         }
 
         [Test]
+        public void EstateHasInteractivePaperDoorAndTalismanSamples()
+        {
+            EditorSceneManager.OpenScene(ScenePath);
+
+            AssertInteractivePaperDoor("MainHousePaperDoor_2");
+            AssertInteractivePaperDoor("SarangchaeOpenPaperDoor_A");
+
+            var talisman = GameObject.Find("Artifact_KitchenCharm");
+            Assert.IsNotNull(talisman, "A talisman pickup should exist so the paper-door seal loop can be tested in the estate.");
+            var pickup = talisman.GetComponent<ArtifactPickup>();
+            Assert.IsNotNull(pickup, "Artifact_KitchenCharm should remain collectible.");
+            AssertSerializedStringArrayContains(pickup, "tags", PaperDoorInteraction.TalismanTag);
+        }
+
+        [Test]
         public void EstateHasRuntimeThreatSpawnerWithTerritoryActors()
         {
             EditorSceneManager.OpenScene(ScenePath);
@@ -195,6 +210,50 @@ namespace KHorrorGame.Migration.Tests
             {
                 Assert.IsFalse(forestActor.gameObject.activeSelf, forestActor.name + " should start hidden until the director requests it.");
                 Assert.AreEqual(EnemyKind.Dokkaebi, forestActor.EnemyKind);
+            }
+        }
+
+        [Test]
+        public void EstateThreatActorsHaveAudioOcclusionAndAtmosphereCue()
+        {
+            EditorSceneManager.OpenScene(ScenePath);
+
+            var spawner = UnityEngine.Object.FindObjectOfType<RuntimeThreatSpawner>(true);
+            Assert.IsNotNull(spawner, "RuntimeThreatSpawner scene object should exist.");
+
+            var atmosphere = UnityEngine.Object.FindObjectOfType<ThreatAtmosphereCue>(true);
+            Assert.IsNotNull(atmosphere, "ThreatAtmosphereCue should be wired into the estate runtime threat rig.");
+            Assert.GreaterOrEqual(atmosphere.LightCount, 3, "High-threat cue should pulse the shrine and rear-route lanterns.");
+            Assert.Greater(atmosphere.HighThreatFogDensity, RenderSettings.fogDensity, "High-threat cue should visibly thicken fog.");
+
+            var brains = Resources.FindObjectsOfTypeAll<EnemyBrain>()
+                .Where(brain => brain.gameObject.scene.IsValid())
+                .Where(brain => brain.name.StartsWith("RuntimeGhostActor", StringComparison.Ordinal) ||
+                                brain.name.StartsWith("RuntimeDokkaebiActor", StringComparison.Ordinal))
+                .ToArray();
+            Assert.IsNotEmpty(brains, "Runtime enemy actors should exist.");
+
+            foreach (var brain in brains)
+            {
+                var audio = brain.GetComponent<ThreatAudioOcclusion>();
+                Assert.IsNotNull(audio, brain.name + " needs threat audio occlusion.");
+
+                var source = brain.GetComponent<AudioSource>();
+                var filter = brain.GetComponent<AudioLowPassFilter>();
+                Assert.IsNotNull(source, brain.name + " needs a spatial AudioSource.");
+                Assert.IsNotNull(filter, brain.name + " needs an AudioLowPassFilter.");
+                Assert.AreEqual(1f, source.spatialBlend, 0.01f, brain.name + " should be fully spatialized.");
+
+                audio.ManualRefresh();
+                Assert.IsNotNull(source.clip, brain.name + " needs a generated playable threat cue clip.");
+                if (brain.EnemyKind == EnemyKind.Dokkaebi)
+                {
+                    Assert.AreEqual("forest_dokkaebi_presence", audio.CurrentCueLabel);
+                }
+                else
+                {
+                    Assert.AreEqual("estate_ghost_presence", audio.CurrentCueLabel);
+                }
             }
         }
 
@@ -698,6 +757,37 @@ namespace KHorrorGame.Migration.Tests
                 TryFindShortcutBlocker(origin, direction, out var hit),
                 failureMessage);
             Assert.LessOrEqual(hit.distance, 4f, "Main house side shortcut blocker is too far away: " + hit.collider.name);
+        }
+
+        private static void AssertInteractivePaperDoor(string objectName)
+        {
+            var doorObject = GameObject.Find(objectName);
+            Assert.IsNotNull(doorObject, objectName + " should exist.");
+
+            var door = doorObject.GetComponent<PaperDoorInteraction>();
+            Assert.IsNotNull(door, objectName + " should have PaperDoorInteraction.");
+            Assert.IsInstanceOf<IInteractable>(door, objectName + " should be targetable through PlayerInteractor.");
+
+            var collider = doorObject.GetComponent<Collider>();
+            Assert.IsNotNull(collider, objectName + " should keep a collider for interaction and AI blocking.");
+            Assert.IsTrue(collider.enabled, objectName + " collider should start enabled.");
+        }
+
+        private static void AssertSerializedStringArrayContains(UnityEngine.Object target, string propertyName, string expectedValue)
+        {
+            var serialized = new SerializedObject(target);
+            var property = serialized.FindProperty(propertyName);
+            Assert.IsNotNull(property, "Missing serialized array " + propertyName + ".");
+
+            for (var i = 0; i < property.arraySize; i++)
+            {
+                if (property.GetArrayElementAtIndex(i).stringValue == expectedValue)
+                {
+                    return;
+                }
+            }
+
+            Assert.Fail(target.name + " should contain tag " + expectedValue + ".");
         }
 
         private static int SerializedValue(UnityEngine.Object target, string propertyName)

@@ -22,11 +22,82 @@ namespace KHorrorGame.Migration.Tests
                 Assert.AreEqual(1, fixture.Hold.CargoCount);
                 Assert.AreEqual(230, fixture.Hold.TotalCargoValue);
                 Assert.AreEqual(fixture.Slot.position, cargoItem.transform.position);
-                Assert.IsNull(cargoItem.GetComponent<Collider>());
+                Assert.IsNotNull(cargoItem.GetComponent<Collider>(), "Loaded cargo needs a collider so the player can raycast it for re-pickup.");
                 Assert.IsTrue(cargoItem.gameObject.activeSelf);
             }
             finally
             {
+                fixture.Destroy();
+            }
+        }
+
+        [Test]
+        public void StoredCargoCanBePickedBackUpFromHold()
+        {
+            var fixture = new CargoHoldFixture();
+            var actor = CreateActor("CargoRepickupActor");
+            VanCargoItem cargoItem = null;
+
+            try
+            {
+                var ledger = new ArtifactDefinition("Ledger", 230, 1.5f, 1, new[] { "paper" }, 1);
+                Assert.IsTrue(fixture.Hold.TryStore(ledger, out cargoItem));
+
+                var interactable = cargoItem as IInteractable;
+                Assert.IsNotNull(interactable, "Loaded cargo should be interactable for E re-pickup.");
+                Assert.IsTrue(interactable.CanInteract(actor));
+
+                interactable.Interact(actor);
+
+                Assert.AreEqual(0, fixture.Hold.CargoCount);
+                Assert.AreEqual(0, fixture.Hold.TotalCargoValue);
+                Assert.AreEqual(1, actor.Inventory.Items.Count);
+                Assert.AreEqual("Ledger", actor.Inventory.Items[0].DisplayName);
+                Assert.AreEqual(230, actor.Inventory.Items[0].Value);
+                Assert.IsNotNull(GameObject.Find("Held_Ledger"), "Re-picked cargo should restore the first-person held view.");
+                Assert.IsTrue(cargoItem == null, "Cargo object should be removed from the van after re-pickup.");
+            }
+            finally
+            {
+                DestroyActor(actor);
+                if (cargoItem != null)
+                {
+                    Object.DestroyImmediate(cargoItem.gameObject);
+                }
+
+                fixture.Destroy();
+            }
+        }
+
+        [Test]
+        public void StoredCargoPickupFailsWhenHandsAreFull()
+        {
+            var fixture = new CargoHoldFixture();
+            var actor = CreateActor("CargoRepickupFullHandsActor");
+            var gameLoopObject = new GameObject("CargoRepickupFeedbackLoop");
+            var gameLoop = gameLoopObject.AddComponent<GameLoopController>();
+
+            try
+            {
+                Assert.IsTrue(actor.TryCollectArtifact(new ArtifactDefinition("Large Chest", 500, 4f, 2, null, 2)));
+                Assert.IsTrue(fixture.Hold.TryStore(new ArtifactDefinition("Ledger", 230, 1.5f, 1, null, 1), out var cargoItem));
+
+                var interactable = cargoItem as IInteractable;
+                Assert.IsNotNull(interactable, "Loaded cargo should be interactable even when pickup will fail.");
+                Assert.IsTrue(interactable.CanInteract(actor), "Loaded cargo should stay targetable so E can show failure feedback.");
+
+                interactable.Interact(actor);
+
+                Assert.AreEqual(1, fixture.Hold.CargoCount, "Failed re-pickup should leave cargo loaded in the van.");
+                Assert.AreEqual(230, fixture.Hold.TotalCargoValue);
+                Assert.AreEqual(1, actor.Inventory.Items.Count);
+                Assert.AreEqual("Hands full", gameLoop.FeedbackMessage);
+                Assert.IsFalse(cargoItem == null, "Cargo object should stay in the van when re-pickup fails.");
+            }
+            finally
+            {
+                Object.DestroyImmediate(gameLoopObject);
+                DestroyActor(actor);
                 fixture.Destroy();
             }
         }
@@ -146,6 +217,21 @@ namespace KHorrorGame.Migration.Tests
             {
                 source.Destroy();
                 destination.Destroy();
+            }
+        }
+
+        private static UnityPlayerController CreateActor(string name)
+        {
+            var actorObject = new GameObject(name);
+            actorObject.AddComponent<CharacterController>();
+            return actorObject.AddComponent<UnityPlayerController>();
+        }
+
+        private static void DestroyActor(UnityPlayerController actor)
+        {
+            if (actor != null)
+            {
+                Object.DestroyImmediate(actor.gameObject);
             }
         }
 

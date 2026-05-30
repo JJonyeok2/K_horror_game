@@ -69,7 +69,7 @@ namespace KHorrorGame.Migration
             var cargoCollider = cargoObject.GetComponent<Collider>();
             if (cargoCollider != null)
             {
-                DestroyCargoObject(cargoCollider);
+                cargoCollider.isTrigger = true;
             }
 
             cargoItem = cargoObject.AddComponent<VanCargoItem>();
@@ -168,6 +168,68 @@ namespace KHorrorGame.Migration
             }
 
             return removed;
+        }
+
+        public bool CanReleaseToInventory(VanCargoItem cargoItem, UnityPlayerController actor)
+        {
+            return CanReleaseToInventory(cargoItem, actor, out _);
+        }
+
+        public bool TryReleaseToInventory(VanCargoItem cargoItem, UnityPlayerController actor, out string failureReason)
+        {
+            if (!CanReleaseToInventory(cargoItem, actor, out failureReason))
+            {
+                return false;
+            }
+
+            var definition = cargoItem.Definition;
+            if (!actor.TryCollectArtifact(definition))
+            {
+                failureReason = "Hands full";
+                return false;
+            }
+
+            cargoItems.Remove(cargoItem);
+            DestroyCargoObject(cargoItem.gameObject);
+            failureReason = string.Empty;
+            return true;
+        }
+
+        private bool CanReleaseToInventory(VanCargoItem cargoItem, UnityPlayerController actor, out string failureReason)
+        {
+            if (cargoItem == null || cargoItem.CargoHold != this || !cargoItems.Contains(cargoItem))
+            {
+                failureReason = "Cargo hold missing";
+                return false;
+            }
+
+            if (actor == null)
+            {
+                failureReason = "No actor";
+                return false;
+            }
+
+            var definition = cargoItem.Definition;
+            if (definition == null)
+            {
+                failureReason = "Cargo unavailable";
+                return false;
+            }
+
+            if (actor.Inventory.FreeHandSlots() < definition.HandSlots)
+            {
+                failureReason = "Hands full";
+                return false;
+            }
+
+            if (actor.Inventory.TotalWeight() + definition.Weight > actor.Inventory.MaxWeight)
+            {
+                failureReason = "Too heavy";
+                return false;
+            }
+
+            failureReason = string.Empty;
+            return true;
         }
 
         private Transform ResolveStorageParent(out Vector3 localPosition)

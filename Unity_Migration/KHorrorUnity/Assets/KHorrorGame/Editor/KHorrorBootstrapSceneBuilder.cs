@@ -241,7 +241,7 @@ namespace KHorrorGame.Editor
             CreateArtifact("Artifact_CourtyardLedger", parent, gameLoop, new Vector3(-4.7f, 0.48f, 63.05f), new Vector3(0.46f, 0.12f, 0.34f), Materials.TalismanPaper, "Family ledger", 180, 0.8f, 1, 1);
             CreateArtifact("Artifact_MainHouseScroll", parent, gameLoop, new Vector3(-1.6f, 0.85f, 82.35f), new Vector3(0.22f, 0.22f, 0.64f), Materials.Rope, "Ancestral scroll", 320, 1.0f, 2, 1);
             CreateArtifact("Artifact_SarangchaeComb", parent, gameLoop, new Vector3(8.85f, 0.72f, 76.7f), new Vector3(0.36f, 0.08f, 0.22f), Materials.Artifact, "Horn comb", 140, 0.4f, 1, 1);
-            CreateArtifact("Artifact_KitchenCharm", parent, gameLoop, new Vector3(-3.4f, 0.72f, 90.4f), new Vector3(0.28f, 0.38f, 0.06f), Materials.TalismanPaper, "Kitchen talisman", 120, 0.2f, 1, 1);
+            CreateArtifact("Artifact_KitchenCharm", parent, gameLoop, new Vector3(-3.4f, 0.72f, 90.4f), new Vector3(0.28f, 0.38f, 0.06f), Materials.TalismanPaper, "Kitchen talisman", 120, 0.2f, 1, 1, new[] { PaperDoorInteraction.TalismanTag });
             CreateArtifact("Artifact_RearGardenKnife", parent, gameLoop, new Vector3(4.2f, 0.62f, 112.1f), new Vector3(0.58f, 0.08f, 0.16f), Materials.RustedMetal, "Ritual knife", 280, 0.7f, 2, 1);
             CreateArtifact("Artifact_ShrineBell", parent, gameLoop, new Vector3(ShrineX - 0.65f, 0.88f, ShrineZ - 0.8f), new Vector3(0.28f, 0.32f, 0.28f), Materials.ShrineToken, "Shrine bell", 420, 0.7f, 3, 1, new[] { "shrine_item" });
             CreateArtifact("Artifact_ShrineToken", parent, gameLoop, new Vector3(ShrineX + 0.45f, 0.88f, ShrineZ - 0.75f), new Vector3(0.36f, 0.28f, 0.36f), Materials.ShrineToken, "Shrine token", 500, 1.0f, 4, 1, new[] { "shrine_item" });
@@ -267,6 +267,13 @@ namespace KHorrorGame.Editor
             pickup.ApplyDefinition(new ArtifactDefinition(displayName, value, weight, resentmentGain, tags, handSlots));
             SetObject(pickup, "gameLoop", gameLoop);
             EditorUtility.SetDirty(pickup);
+        }
+
+        private static void AttachPaperDoorInteraction(GameObject doorObject, string displayName)
+        {
+            var door = doorObject.AddComponent<PaperDoorInteraction>();
+            door.Configure(displayName);
+            EditorUtility.SetDirty(door);
         }
 
         private static void CreateRuntimeThreatSpawner(Transform parent, GameLoopController gameLoop, UnityPlayerController player)
@@ -304,6 +311,26 @@ namespace KHorrorGame.Editor
             var cue = CreatePointLight("ThreatSpawnCueLight", root.transform, new Vector3(-4.9f, 2.3f, 136.2f), new Color(1f, 0.2f, 0.1f), 2.4f, 11f);
             cue.enabled = false;
 
+            foreach (var ghost in ghosts)
+            {
+                AttachThreatAudio(ghost, player.transform);
+            }
+
+            foreach (var forestActor in dokkaebi)
+            {
+                AttachThreatAudio(forestActor, player.transform);
+            }
+
+            var atmosphere = root.AddComponent<ThreatAtmosphereCue>();
+            SetObject(atmosphere, "gameLoop", gameLoop);
+            SetObjectArray(
+                atmosphere,
+                "threatLights",
+                cue,
+                FindSceneLight("DeepShrineLanternGlow"),
+                FindSceneLight("RearRouteLanternPool_Second"),
+                FindSceneLight("RearRouteLanternPool_Third"));
+
             SetObject(spawner, "ghostActor", ghosts[0]);
             SetObject(spawner, "dokkaebiActor", dokkaebi[0]);
             SetObject(spawner, "ghostSpawnAnchor", ghostAnchors[0]);
@@ -313,6 +340,33 @@ namespace KHorrorGame.Editor
             SetObjectArray(spawner, "ghostSpawnAnchors", ghostAnchors);
             SetObjectArray(spawner, "dokkaebiSpawnAnchors", dokkaebiAnchors);
             SetObject(spawner, "spawnCueLight", cue);
+        }
+
+        private static void AttachThreatAudio(EnemyBrain brain, Transform listener)
+        {
+            var actor = brain.gameObject;
+            var source = actor.AddComponent<AudioSource>();
+            source.spatialBlend = 1f;
+            source.playOnAwake = false;
+            source.loop = true;
+            source.volume = 0.15f;
+            source.minDistance = 1.5f;
+            source.maxDistance = 18f;
+
+            var filter = actor.AddComponent<AudioLowPassFilter>();
+            filter.cutoffFrequency = 22000f;
+
+            var occlusion = actor.AddComponent<ThreatAudioOcclusion>();
+            occlusion.Configure(brain, listener, source, filter);
+            EditorUtility.SetDirty(source);
+            EditorUtility.SetDirty(filter);
+            EditorUtility.SetDirty(occlusion);
+        }
+
+        private static Light FindSceneLight(string name)
+        {
+            var found = GameObject.Find(name);
+            return found != null ? found.GetComponent<Light>() : null;
         }
 
         private static EnemyBrain CreateGhostActor(
@@ -626,7 +680,12 @@ namespace KHorrorGame.Editor
                 }
 
                 CreateCube("MainHouseFrontColumn_" + i, parent, new Vector3(x, 1.75f, 79.55f), new Vector3(0.32f, 2.45f, 0.32f), Materials.DarkWood);
-                CreateCube("MainHousePaperDoor_" + i, parent, new Vector3(x, 1.75f, 79.38f), new Vector3(1.25f, 2.15f, 0.08f), Materials.DoorPaper);
+                var paperDoor = CreateCube("MainHousePaperDoor_" + i, parent, new Vector3(x, 1.75f, 79.38f), new Vector3(1.25f, 2.15f, 0.08f), Materials.DoorPaper);
+                if (i == 2)
+                {
+                    AttachPaperDoorInteraction(paperDoor, "main house paper door");
+                }
+
                 CreateCube("MainHouseDoorMuntinV_" + i, parent, new Vector3(x, 1.75f, 79.31f), new Vector3(0.08f, 2.25f, 0.08f), Materials.DarkWood);
                 CreateCube("MainHouseDoorMuntinH_" + i, parent, new Vector3(x, 1.75f, 79.3f), new Vector3(1.28f, 0.08f, 0.08f), Materials.DarkWood);
             }
@@ -667,7 +726,9 @@ namespace KHorrorGame.Editor
                 CreateCube("SarangchaeFrontColumn_" + i, parent, new Vector3(7.3f, 1.65f, z), new Vector3(0.28f, 2.35f, 0.28f), Materials.DarkWood);
             }
 
-            CreateCube("SarangchaeOpenPaperDoor_A", parent, new Vector3(7.22f, 1.55f, 74.3f), new Vector3(0.08f, 1.9f, 0.72f), Materials.DoorPaper);
+            AttachPaperDoorInteraction(
+                CreateCube("SarangchaeOpenPaperDoor_A", parent, new Vector3(7.22f, 1.55f, 74.3f), new Vector3(0.08f, 1.9f, 0.72f), Materials.DoorPaper),
+                "sarangchae paper door");
             CreateCube("SarangchaeOpenPaperDoor_B", parent, new Vector3(7.22f, 1.55f, 76.6f), new Vector3(0.08f, 1.9f, 0.72f), Materials.DoorPaper);
             CreateCube("SarangchaeInteriorScreen", parent, new Vector3(9.15f, 1.55f, 75.5f), new Vector3(0.12f, 2.0f, 3.2f), Materials.DoorPaper);
             CreateCube("SarangchaeFrontBeam", parent, new Vector3(7.32f, 3.1f, 75.5f), new Vector3(0.36f, 0.32f, 8.2f), Materials.DarkWood);
