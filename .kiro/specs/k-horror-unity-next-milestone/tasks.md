@@ -165,10 +165,11 @@
   - Verified with Task 17 RED/GREEN lighting visibility tests and the full EditMode suite (`150 total / 150 passed / 0 failed`).
   - _Requirements: 7.4, 7.5, 7.6_
 
-- [ ] 18. Add audio event hooks
+- [x] 18. Add audio event hooks
   - Add event hooks for gate transition, terminal accepted or denied, cargo loaded, resentment stage up, ghost nearby, and dokkaebi cue.
   - Use placeholders if final audio assets are not ready.
   - Prevent aggressive attack cues when grace or territory rules block spawning.
+  - Verified with Task 18 RED/GREEN audio hook tests and the full EditMode suite (`154 total / 154 passed / 0 failed`).
   - _Requirements: 8.1, 8.2, 8.3, 8.4, 8.5_
 
 - [x] 19. Add scene integrity tests
